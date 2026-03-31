@@ -1,0 +1,4 @@
+#!/command/with-contenv sh
+cd /workspace
+export HOME=/home/opencode
+exec s6-setuidgid opencode opencode web --port 4096 --hostname 0.0.0.0

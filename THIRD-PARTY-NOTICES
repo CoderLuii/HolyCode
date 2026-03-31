@@ -1,0 +1,127 @@
+# Third-Party Licenses
+
+HolyCode includes third-party software distributed within the Docker image.
+Each component retains its original license. HolyCode's own source code is
+licensed under MIT (see LICENSE).
+
+## OpenCode (opencode-ai)
+
+- License: MIT
+- Copyright: Anomaly
+- Source: https://github.com/anomalyco/opencode
+- npm: https://www.npmjs.com/package/opencode-ai
+- Website: https://opencode.ai
+
+OpenCode is the core AI coding agent bundled in HolyCode. It is installed
+via npm as a global package and runs as an s6-overlay supervised process.
+HolyCode does not modify OpenCode's source code.
+
+## opencode-claude-auth (optional plugin)
+
+- License: MIT
+- Copyright: Griffin Martin
+- Source: https://github.com/griffinmartin/opencode-claude-auth
+
+Optional OpenCode plugin that bridges Claude Code OAuth credentials into
+OpenCode. Not installed by default. Enabled via ENABLE_CLAUDE_AUTH=true
+environment variable. Auto-installed by OpenCode's plugin system at
+container startup when enabled. HolyCode does not modify this plugin.
+
+Note: This plugin impersonates the Claude CLI at the HTTP level to pass
+Anthropic OAuth validation. Use at your own risk regarding Anthropic's
+Terms of Service.
+
+## oh-my-openagent (optional plugin)
+
+- License: MIT
+- Copyright: Yeongyu Kim
+- Source: https://github.com/code-yeongyu/oh-my-openagent
+- npm: oh-my-opencode
+
+Optional OpenCode plugin for multi-agent orchestration. Not installed by
+default. Enabled via ENABLE_OH_MY_OPENAGENT=true environment variable.
+Auto-installed by OpenCode's plugin system at container startup when
+enabled. HolyCode does not modify this plugin.
+
+## s6-overlay
+
+- License: ISC
+- Source: https://github.com/just-containers/s6-overlay
+
+## Node.js
+
+- License: MIT
+- Source: https://github.com/nodejs/node
+
+## Chromium
+
+- License: BSD-3-Clause
+- Source: https://chromium.googlesource.com/chromium/src
+
+Installed via Debian's apt package manager. Used for headless browser
+automation via Playwright and Puppeteer.
+
+## Playwright
+
+- License: Apache-2.0
+- Copyright: Microsoft Corporation
+- Source: https://github.com/microsoft/playwright
+
+Installed via pip. Uses the system Chromium binary, not Playwright's
+bundled browsers.
+
+## GitHub CLI (gh)
+
+- License: MIT
+- Copyright: GitHub, Inc.
+- Source: https://github.com/cli/cli
+
+## lazygit
+
+- License: MIT
+- Copyright: Jesse Duffield
+- Source: https://github.com/jesseduffield/lazygit
+
+## delta
+
+- License: MIT
+- Copyright: Dan Davison
+- Source: https://github.com/dandavison/delta
+
+## eza
+
+- License: MIT
+- Copyright: eza community
+- Source: https://github.com/eza-community/eza
+
+## ripgrep
+
+- License: MIT / Unlicense (dual)
+- Copyright: Andrew Gallant
+- Source: https://github.com/BurntSushi/ripgrep
+
+## fd
+
+- License: MIT / Apache-2.0 (dual)
+- Copyright: David Peter
+- Source: https://github.com/sharkdp/fd
+
+## fzf
+
+- License: MIT
+- Copyright: Junegunn Choi
+- Source: https://github.com/junegunn/fzf
+
+## bat
+
+- License: MIT / Apache-2.0 (dual)
+- Copyright: David Peter
+- Source: https://github.com/sharkdp/bat
+
+## tmux
+
+- License: ISC
+- Source: https://github.com/tmux/tmux
+
+For a complete list of installed packages and their licenses, inspect the
+Docker image directly or refer to the Dockerfile.

@@ -1,0 +1,19 @@
+# HolyCode - Quick Start
+# Usage: docker compose up -d
+# Web UI: http://localhost:4096
+
+services:
+  holycode:
+    image: coderluii/holycode:latest
+    container_name: holycode
+    restart: unless-stopped
+    shm_size: 2g
+    ports:
+      - "4096:4096"
+    volumes:
+      - ./data/opencode:/home/opencode
+      - ./workspace:/workspace
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}

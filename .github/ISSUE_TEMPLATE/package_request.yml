@@ -1,0 +1,49 @@
+name: Package / Tool Request
+description: Request a new package or tool to be included in the image
+labels: ["enhancement", "package-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Want a tool or package added to HolyCode? Let us know!
+
+  - type: input
+    id: package-name
+    attributes:
+      label: Package / Tool name
+      placeholder: "e.g. kubectl, terraform, redis-cli"
+    validations:
+      required: true
+
+  - type: input
+    id: install-method
+    attributes:
+      label: How is it installed?
+      description: "apt, npm, pip, curl, etc."
+      placeholder: "e.g. apt install kubectl"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: variant
+    attributes:
+      label: Which variant?
+      description: Full includes everything, Slim is lightweight
+      options:
+        - Full only
+        - Both (full + slim)
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why should this be included?
+    validations:
+      required: true
+
+  - type: input
+    id: size
+    attributes:
+      label: Approximate size impact
+      placeholder: "e.g. ~50MB"

@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+LICENSE
+docs/
+
+# GitHub
+.github/
+
+# Assets (logo, screenshots)
+assets/
+
+# Runtime data (should never be in build context)
+data/
+workspace/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
