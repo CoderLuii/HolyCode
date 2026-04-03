@@ -54,6 +54,41 @@ if ! runuser -u "$OC_USER" -- test -w "$WORKSPACE_DIR"; then
     echo "[entrypoint] WARNING: /workspace is still not writable; fix host ownership or PUID/PGID"
 fi
 
+check_cifs_compatibility() {
+    [ -d "$OC_HOME" ] || return 0
+    local test_db
+    test_db=$(mktemp "${OC_HOME}/.holycode-wal-test-XXXXXX.db" 2>/dev/null) || return 0
+
+    if python3 -c "
+import sqlite3
+db = sqlite3.connect('${test_db}')
+db.execute('PRAGMA journal_mode=WAL')
+db.execute('CREATE TABLE _t (id INTEGER)')
+db.execute('INSERT INTO _t VALUES (1)')
+db.commit()
+db2 = sqlite3.connect('${test_db}')
+db2.execute('SELECT * FROM _t').fetchall()
+db2.close()
+db.execute('PRAGMA journal_mode=DELETE')
+db.close()
+" 2>/dev/null; then
+        rm -f "$test_db" "${test_db}-wal" "${test_db}-shm" 2>/dev/null || true
+        return 0
+    fi
+
+    rm -f "$test_db" "${test_db}-wal" "${test_db}-shm" 2>/dev/null || true
+    echo ""
+    echo "============================================================"
+    echo "  WARNING: SQLite WAL locking failed on this mount"
+    echo "============================================================"
+    echo "  If your data directory is on CIFS/SMB, add 'nobrl,mfsymlinks'"
+    echo "  to mount options in /etc/fstab on the host, then remount."
+    echo "============================================================"
+    echo ""
+}
+
+check_cifs_compatibility
+
 # ---------- First-boot bootstrap ----------
 SENTINEL="$OC_HOME/.config/opencode/.holycode-bootstrapped"
 if [ ! -f "$SENTINEL" ]; then

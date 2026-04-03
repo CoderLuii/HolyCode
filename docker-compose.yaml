@@ -12,6 +12,7 @@ services:
       - "4096:4096"
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace
     environment:
       - PUID=1000

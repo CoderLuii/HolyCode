@@ -97,11 +97,13 @@ services:
       - "4096:4096"
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here
+
 ```
 
 **第 3 步。** 启动。
@@ -221,11 +223,13 @@ services:
       - "4096:4096"           # OpenCode web UI
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace  # Your project files
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here  # Or swap for any provider key
+
 ```
 
 <p align="right">
@@ -255,7 +259,10 @@ services:
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
-      - ./data/opencode:/home/opencode   # Config, sessions, plugins, cache, all XDG paths
+      - ./data/opencode:/home/opencode   # Config, sessions, plugins, all XDG paths
+
+      # --- Cache isolation (keeps plugin cache on local disk, avoids CIFS/SMB symlink issues) ---
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
 
       # --- Workspace ---
       - ./workspace:/workspace   # Your project files
@@ -309,6 +316,7 @@ services:
       # Installs automatically on first boot when enabled
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_OH_MY_OPENAGENT=true
+
 ```
 
 <p align="right">
@@ -551,11 +559,13 @@ docker exec -it holycode bash -c "opencode providers login"
 | `./data/opencode/.config/opencode` | `/home/opencode/.config/opencode` | 设置、代理、MCP 配置、主题、插件 |
 | `./data/opencode/.local/share/opencode` | `/home/opencode/.local/share/opencode` | SQLite 会话数据库、MCP OAuth 令牌 |
 | `./data/opencode/.local/state/opencode` | `/home/opencode/.local/state/opencode` | 频率数据、模型缓存、键值存储 |
-| `./data/opencode/.cache/opencode` | `/home/opencode/.cache/opencode` | 插件 node_modules、自动安装的依赖 |
+| `./local-cache/opencode` | `/home/opencode/.cache/opencode` | 插件 node_modules、自动安装的依赖 |
 
 随时重建容器。运行 `docker compose pull && docker compose up -d`，你的会话、设置和配置会自动恢复。
 
 **SQLite WAL 注意事项。** 会话数据库使用预写日志。容器运行时不要复制 `.db` 文件。如需备份或迁移数据库文件，请先停止容器。
+
+**网络存储注意事项。** 如果 `./data/opencode` 位于 CIFS/SMB 网络挂载（NAS、Synology、TrueNAS）上，SQLite WAL 模式可能会失败，因为 SMB 默认不支持字节范围锁定。HolyCode 会在启动时检测此问题并打印修复建议。请参阅下面的故障排除部分。
 
 <p align="right">
   <a href="#top">返回顶部</a>
@@ -695,6 +705,38 @@ cap_add:
 security_opt:
   - seccomp=unconfined
 ```
+
+</details>
+
+<details>
+<summary><strong>SQLite WAL 在 CIFS/SMB 网络挂载上失败（NAS）</strong></summary>
+
+如果 `./data/opencode` 目录位于 CIFS/SMB 网络共享上，OpenCode 可能会失败并显示：
+
+```
+Failed to run the query 'PRAGMA journal_mode = WAL'
+```
+
+OpenCode 使用 SQLite 的 Write-Ahead Logging (WAL) 作为会话数据库。WAL 需要字节范围锁定，而 CIFS/SMB 默认不支持。HolyCode 会在启动时检测此问题。
+
+**修复：** 在 `/etc/fstab` 中的 CIFS 挂载选项中添加 `nobrl,mfsymlinks`：
+
+```
+# 修改前
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000 0 0
+
+# 修改后（添加 nobrl,mfsymlinks）
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000,nobrl,mfsymlinks 0 0
+```
+
+然后重新挂载：
+
+```bash
+sudo umount /mnt/share
+sudo mount /mnt/share
+```
+
+重启 HolyCode：`docker compose up -d --force-recreate`
 
 </details>
 

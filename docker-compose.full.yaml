@@ -14,7 +14,10 @@ services:
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
-      - ./data/opencode:/home/opencode   # Config, sessions, plugins, cache, all XDG paths
+      - ./data/opencode:/home/opencode   # Config, sessions, plugins, all XDG paths
+
+      # --- Cache path (keep this on local disk; if this folder lives on NAS/CIFS, replace with an absolute local path) ---
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
 
       # --- Workspace ---
       - ./workspace:/workspace   # Your project files

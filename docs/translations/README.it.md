@@ -97,11 +97,13 @@ services:
       - "4096:4096"
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here
+
 ```
 
 **Passo 3.** Avvialo.
@@ -221,11 +223,13 @@ services:
       - "4096:4096"           # Interfaccia web OpenCode
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace  # I file del tuo progetto
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here  # O sostituisci con qualsiasi chiave provider
+
 ```
 
 <p align="right">
@@ -255,7 +259,10 @@ services:
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
-      - ./data/opencode:/home/opencode   # Config, sessions, plugins, cache, all XDG paths
+      - ./data/opencode:/home/opencode   # Config, sessions, plugins, all XDG paths
+
+      # --- Cache isolation (keeps plugin cache on local disk, avoids CIFS/SMB symlink issues) ---
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
 
       # --- Workspace ---
       - ./workspace:/workspace   # Your project files
@@ -309,6 +316,7 @@ services:
       # Installs automatically on first boot when enabled
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_OH_MY_OPENAGENT=true
+
 ```
 
 <p align="right">
@@ -551,11 +559,13 @@ Tutto lo stato di OpenCode vive in un singolo bind mount su `./data/opencode`. I
 | `./data/opencode/.config/opencode` | `/home/opencode/.config/opencode` | Impostazioni, agenti, configurazioni MCP, temi, plugin |
 | `./data/opencode/.local/share/opencode` | `/home/opencode/.local/share/opencode` | Database SQLite delle sessioni, token OAuth MCP |
 | `./data/opencode/.local/state/opencode` | `/home/opencode/.local/state/opencode` | Dati di frequenza, cache dei modelli, archivio chiave-valore |
-| `./data/opencode/.cache/opencode` | `/home/opencode/.cache/opencode` | node_modules dei plugin, dipendenze installate automaticamente |
+| `./local-cache/opencode` | `/home/opencode/.cache/opencode` | node_modules dei plugin, dipendenze installate automaticamente |
 
 Ricostruisci il container quando vuoi. Esegui `docker compose pull && docker compose up -d` e le tue sessioni, impostazioni e configurazioni tornano automaticamente.
 
 **Nota su SQLite WAL.** Il database delle sessioni usa il Write-Ahead Logging. Non copiare il file `.db` mentre il container è in esecuzione. Ferma prima il container se devi fare il backup o migrare il file del database.
+
+**Nota sullo storage di rete.** Se `./data/opencode` si trova su un mount di rete CIFS/SMB (NAS, Synology, TrueNAS), la modalità WAL di SQLite potrebbe fallire perché SMB non supporta il byte-range locking per impostazione predefinita. HolyCode rileva questo all'avvio e stampa un avviso con la soluzione. Consulta la sezione Risoluzione dei problemi qui sotto.
 
 <p align="right">
   <a href="#top">torna su</a>
@@ -695,6 +705,40 @@ cap_add:
 security_opt:
   - seccomp=unconfined
 ```
+
+</details>
+
+<details>
+<summary><strong>SQLite WAL non funziona su mount di rete CIFS/SMB (NAS)</strong></summary>
+
+Se la directory `./data/opencode` si trova su una condivisione di rete CIFS/SMB, OpenCode potrebbe
+fallire con:
+
+```
+Failed to run the query 'PRAGMA journal_mode = WAL'
+```
+
+OpenCode usa SQLite con Write-Ahead Logging (WAL) per il database delle sessioni.
+WAL richiede il byte-range locking, che CIFS/SMB non supporta per impostazione predefinita. HolyCode rileva questo all'avvio.
+
+**Soluzione:** Aggiungi `nobrl,mfsymlinks` alle opzioni di montaggio CIFS in `/etc/fstab`:
+
+```
+# Prima
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000 0 0
+
+# Dopo (aggiungi nobrl,mfsymlinks)
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000,nobrl,mfsymlinks 0 0
+```
+
+Poi rimonta:
+
+```bash
+sudo umount /mnt/share
+sudo mount /mnt/share
+```
+
+Riavvia HolyCode: `docker compose up -d --force-recreate`
 
 </details>
 

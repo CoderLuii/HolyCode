@@ -102,6 +102,7 @@ services:
       - "4096:4096"
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace
     environment:
       - PUID=1000
@@ -118,6 +119,8 @@ docker compose up -d
 Open http://localhost:4096. You're in.
 
 > The shipped `docker-compose.yaml` uses `${ANTHROPIC_API_KEY}` syntax which reads from your shell environment or a `.env` file. Copy `.env.example` to `.env` and fill in your API key.
+
+> Keep `./local-cache/opencode` on local disk. If this project folder lives on NAS/CIFS/SMB storage, change that cache mount to an absolute local host path instead.
 
 <p align="right">
   <a href="#top">back to top</a>
@@ -226,6 +229,7 @@ services:
       - "4096:4096"           # OpenCode web UI
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace  # Your project files
     environment:
       - PUID=1000
@@ -260,7 +264,10 @@ services:
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
-      - ./data/opencode:/home/opencode   # Config, sessions, plugins, cache, all XDG paths
+      - ./data/opencode:/home/opencode   # Config, sessions, plugins, all XDG paths
+
+      # --- Cache path (keep this on local disk; if this folder lives on NAS/CIFS, replace with an absolute local path) ---
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
 
       # --- Workspace ---
       - ./workspace:/workspace   # Your project files
@@ -549,18 +556,26 @@ docker exec -it holycode bash -c "opencode providers login"
 
 ## 💾 Data and Persistence
 
-All OpenCode state lives in a single bind mount at `./data/opencode`. The container is stateless. The bind mount holds everything that matters.
+Most OpenCode state lives in `./data/opencode`. Plugin cache is mounted separately at `./local-cache/opencode` by default so you can keep that path on local disk.
 
 | Host Path | Container Path | What's in it |
 |-----------|---------------|-------------|
 | `./data/opencode/.config/opencode` | `/home/opencode/.config/opencode` | Settings, agents, MCP configs, themes, plugins |
 | `./data/opencode/.local/share/opencode` | `/home/opencode/.local/share/opencode` | SQLite sessions database, MCP OAuth tokens |
 | `./data/opencode/.local/state/opencode` | `/home/opencode/.local/state/opencode` | Frecency data, model cache, key-value store |
-| `./data/opencode/.cache/opencode` | `/home/opencode/.cache/opencode` | Plugin node_modules, auto-installed dependencies |
+| `./local-cache/opencode` | `/home/opencode/.cache/opencode` | Plugin node_modules, auto-installed dependencies |
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
+
+**Network storage note.** If `./data/opencode` is on a CIFS/SMB network mount (NAS, Synology, TrueNAS), you need two mount options:
+- `nobrl` — SQLite WAL mode requires this (byte-range locking workaround)
+- `mfsymlinks` — plugin installation requires this (symlink support for node_modules)
+
+Keep `./local-cache/opencode` on local disk. If your whole HolyCode folder lives on network storage, change that cache mount to an absolute local host path such as `/var/lib/holycode-cache/opencode:/home/opencode/.cache/opencode`.
+
+See the Troubleshooting section below.
 
 <p align="right">
   <a href="#top">back to top</a>
@@ -700,6 +715,42 @@ cap_add:
 security_opt:
   - seccomp=unconfined
 ```
+
+</details>
+
+<details>
+<summary><strong>SQLite WAL or plugins fail on CIFS/SMB network mounts (NAS)</strong></summary>
+
+If your `./data/opencode` directory lives on a CIFS/SMB network share (e.g. NAS, Synology, TrueNAS), OpenCode may fail with:
+
+```
+Failed to run the query 'PRAGMA journal_mode = WAL'
+```
+
+OpenCode uses SQLite with Write-Ahead Logging (WAL) for its sessions database. WAL requires byte-range locking, which CIFS/SMB doesn't support by default.
+
+HolyCode detects this at startup and prints a warning with the fix instructions.
+
+**Fix:** Add `nobrl,mfsymlinks` to your CIFS mount options in `/etc/fstab`:
+
+```
+# Before
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000 0 0
+
+# After — add nobrl and mfsymlinks
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000,nobrl,mfsymlinks 0 0
+```
+
+Then remount:
+
+```bash
+sudo umount /mnt/share
+sudo mount /mnt/share
+```
+
+Restart HolyCode: `docker compose up -d --force-recreate`
+
+If you are using the default HolyCode Compose files, the cache mount is `./local-cache/opencode:/home/opencode/.cache/opencode`. Keep that path on local disk. If your entire HolyCode folder lives on network storage, replace it with an absolute local host path.
 
 </details>
 

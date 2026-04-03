@@ -4,6 +4,19 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 03/31/2026
+
+### Fixed
+
+- Detect CIFS/SMB network mounts and warn about SQLite WAL incompatibility
+- Add `nobrl,mfsymlinks` mount option documentation for README Troubleshooting section
+
+### Changed
+
+- Expand SQLite WAL note with network storage guidance
+- Add startup check in entrypoint.sh for CIFS/SMB detection
+- Replace the `holycode-cache` named volume guidance with an explicit local-path cache bind mount for CIFS/SMB setups
+
 ## [1.0.0] - 03/30/2026
 
 ### Added

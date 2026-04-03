@@ -97,11 +97,13 @@ services:
       - "4096:4096"
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here
+
 ```
 
 **3단계.** 시작합니다.
@@ -221,11 +223,13 @@ services:
       - "4096:4096"           # OpenCode web UI
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace  # Your project files
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here  # Or swap for any provider key
+
 ```
 
 <p align="right">
@@ -255,7 +259,10 @@ services:
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
-      - ./data/opencode:/home/opencode   # Config, sessions, plugins, cache, all XDG paths
+      - ./data/opencode:/home/opencode   # Config, sessions, plugins, all XDG paths
+
+      # --- Cache isolation (keeps plugin cache on local disk, avoids CIFS/SMB symlink issues) ---
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
 
       # --- Workspace ---
       - ./workspace:/workspace   # Your project files
@@ -309,6 +316,7 @@ services:
       # Installs automatically on first boot when enabled
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_OH_MY_OPENAGENT=true
+
 ```
 
 <p align="right">
@@ -551,11 +559,13 @@ docker exec -it holycode bash -c "opencode providers login"
 | `./data/opencode/.config/opencode` | `/home/opencode/.config/opencode` | 설정, 에이전트, MCP 설정, 테마, 플러그인 |
 | `./data/opencode/.local/share/opencode` | `/home/opencode/.local/share/opencode` | SQLite 세션 데이터베이스, MCP OAuth 토큰 |
 | `./data/opencode/.local/state/opencode` | `/home/opencode/.local/state/opencode` | 빈도 데이터, 모델 캐시, 키-값 저장소 |
-| `./data/opencode/.cache/opencode` | `/home/opencode/.cache/opencode` | 플러그인 node_modules, 자동 설치된 의존성 |
+| `./local-cache/opencode` | `/home/opencode/.cache/opencode` | 플러그인 node_modules, 자동 설치된 의존성 |
 
 언제든지 컨테이너를 다시 빌드하세요. `docker compose pull && docker compose up -d`를 실행하면 세션, 설정, 설정 파일이 자동으로 돌아옵니다.
 
 **SQLite WAL 참고 사항.** 세션 데이터베이스는 Write-Ahead Logging을 사용합니다. 컨테이너가 실행 중일 때 `.db` 파일을 복사하지 마세요. 데이터베이스 파일을 백업하거나 마이그레이션해야 하는 경우 먼저 컨테이너를 중지하세요.
+
+**네트워크 스토리지 참고 사항.** `./data/opencode`가 CIFS/SMB 네트워크 마운트(NAS, Synology, TrueNAS)에 있는 경우, SMB가 기본적으로 바이트 범위 잠금을 지원하지 않아 SQLite WAL 모드가 실패할 수 있습니다. HolyCode는 시작 시 이를 감지하고 해결 방법과 함께 경고를 표시합니다. 아래 문제 해결 섹션을 참조하세요.
 
 <p align="right">
   <a href="#top">맨 위로</a>
@@ -695,6 +705,40 @@ cap_add:
 security_opt:
   - seccomp=unconfined
 ```
+
+</details>
+
+<details>
+<summary><strong>SQLite WAL이 CIFS/SMB 네트워크 마운트에서 실패함 (NAS)</strong></summary>
+
+`./data/opencode` 디렉토리가 CIFS/SMB 네트워크 공유에 있는 경우, OpenCode가
+다음 오류와 함께 실패할 수 있습니다:
+
+```
+Failed to run the query 'PRAGMA journal_mode = WAL'
+```
+
+OpenCode는 세션 데이터베이스에 SQLite Write-Ahead Logging(WAL)을 사용합니다.
+WAL은 바이트 범위 잠금이 필요하지만, CIFS/SMB는 기본적으로 이를 지원하지 않습니다. HolyCode는 시작 시 이를 감지합니다.
+
+**해결 방법:** `/etc/fstab`의 CIFS 마운트 옵션에 `nobrl,mfsymlinks`를 추가하세요:
+
+```
+# 변경 전
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000 0 0
+
+# 변경 후 (nobrl,mfsymlinks 추가)
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000,nobrl,mfsymlinks 0 0
+```
+
+그런 다음 다시 마운트:
+
+```bash
+sudo umount /mnt/share
+sudo mount /mnt/share
+```
+
+HolyCode 재시작: `docker compose up -d --force-recreate`
 
 </details>
 

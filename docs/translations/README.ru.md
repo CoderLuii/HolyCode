@@ -97,11 +97,13 @@ services:
       - "4096:4096"
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here
+
 ```
 
 **Шаг 3.** Запустите.
@@ -221,11 +223,13 @@ services:
       - "4096:4096"           # OpenCode web UI
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace  # Your project files
     environment:
       - PUID=1000
       - PGID=1000
       - ANTHROPIC_API_KEY=your-key-here  # Or swap for any provider key
+
 ```
 
 <p align="right">
@@ -255,7 +259,10 @@ services:
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
-      - ./data/opencode:/home/opencode   # Config, sessions, plugins, cache, all XDG paths
+      - ./data/opencode:/home/opencode   # Config, sessions, plugins, all XDG paths
+
+      # --- Cache isolation (keeps plugin cache on local disk, avoids CIFS/SMB symlink issues) ---
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
 
       # --- Workspace ---
       - ./workspace:/workspace   # Your project files
@@ -309,6 +316,7 @@ services:
       # Installs automatically on first boot when enabled
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_OH_MY_OPENAGENT=true
+
 ```
 
 <p align="right">
@@ -551,11 +559,13 @@ docker exec -it holycode bash -c "opencode providers login"
 | `./data/opencode/.config/opencode` | `/home/opencode/.config/opencode` | Настройки, агенты, MCP-конфиги, темы, плагины |
 | `./data/opencode/.local/share/opencode` | `/home/opencode/.local/share/opencode` | SQLite-база сессий, OAuth-токены MCP |
 | `./data/opencode/.local/state/opencode` | `/home/opencode/.local/state/opencode` | Данные frecency, кэш моделей, хранилище ключ-значение |
-| `./data/opencode/.cache/opencode` | `/home/opencode/.cache/opencode` | node_modules плагинов, автоустановленные зависимости |
+| `./local-cache/opencode` | `/home/opencode/.cache/opencode` | node_modules плагинов, автоустановленные зависимости |
 
 Пересобирайте контейнер в любое время. Запустите `docker compose pull && docker compose up -d` — ваши сессии, настройки и конфиги вернутся автоматически.
 
 **Примечание о SQLite WAL.** База данных сессий использует Write-Ahead Logging. Не копируйте файл `.db` во время работы контейнера. Остановите контейнер, если нужно сделать резервную копию или перенести базу данных.
+
+**Примечание о сетевом хранилище.** Если `./data/opencode` находится на сетевом монтировании CIFS/SMB (NAS, Synology, TrueNAS), режим WAL SQLite может не работать, так как SMB по умолчанию не поддерживает блокировку диапазона байтов. HolyCode обнаруживает это при запуске и выводит предупреждение с решением. См. раздел Устранение неполадок ниже.
 
 <p align="right">
   <a href="#top">наверх</a>
@@ -695,6 +705,40 @@ cap_add:
 security_opt:
   - seccomp=unconfined
 ```
+
+</details>
+
+<details>
+<summary><strong>SQLite WAL не работает на сетевых монтированиях CIFS/SMB (NAS)</strong></summary>
+
+Если директория `./data/opencode` находится на сетевом ресурсе CIFS/SMB, OpenCode может
+завершиться с ошибкой:
+
+```
+Failed to run the query 'PRAGMA journal_mode = WAL'
+```
+
+OpenCode использует SQLite с Write-Ahead Logging (WAL) для базы данных сессий.
+WAL требует блокировки диапазона байтов, которую CIFS/SMB не поддерживает по умолчанию. HolyCode обнаруживает это при запуске.
+
+**Решение:** Добавьте `nobrl,mfsymlinks` к параметрам монтирования CIFS в `/etc/fstab`:
+
+```
+# До
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000 0 0
+
+# После (добавить nobrl,mfsymlinks)
+//192.168.1.100/share /mnt/share cifs credentials=/etc/smbcreds,uid=1000,gid=1000,nobrl,mfsymlinks 0 0
+```
+
+Затем перемонтируйте:
+
+```bash
+sudo umount /mnt/share
+sudo mount /mnt/share
+```
+
+Перезапустите HolyCode: `docker compose up -d --force-recreate`
 
 </details>
 
