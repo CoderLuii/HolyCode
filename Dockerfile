@@ -121,6 +121,7 @@ RUN npm i -g opencode-ai
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/bootstrap.sh /usr/local/bin/bootstrap.sh
 COPY config/opencode.json /usr/local/share/holycode/opencode.json
+COPY config/skills /usr/local/share/holycode/skills
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/bootstrap.sh
 
 # ---------- s6-overlay service: opencode web ----------

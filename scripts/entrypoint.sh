@@ -11,6 +11,44 @@ OC_USER="opencode"
 OC_HOME="/home/opencode"
 WORKSPACE_DIR="/workspace"
 
+sync_shipped_skills() {
+    local source_skills_dir="/usr/local/share/holycode/skills"
+    local target_skills_dir="$OC_HOME/.config/opencode/skills"
+
+    [ -d "$source_skills_dir" ] || return 0
+
+    mkdir -p "$target_skills_dir"
+    chown "$PUID:$PGID" "$target_skills_dir"
+
+    find "$source_skills_dir" -mindepth 1 -maxdepth 1 -type d | while read -r skill_dir; do
+        local skill_name target_dir
+        skill_name=$(basename "$skill_dir")
+        target_dir="$target_skills_dir/$skill_name"
+
+        if [ -e "$target_dir" ]; then
+            continue
+        fi
+
+        cp -R "$skill_dir" "$target_dir"
+        chown -R "$PUID:$PGID" "$target_dir"
+        echo "[entrypoint] Installed built-in skill '$skill_name'"
+    done
+}
+
+ensure_plugin_installed() {
+    local plugin_name="$1"
+    local plugin_dir="$OC_HOME/.cache/opencode/node_modules/$plugin_name"
+
+    if [ -f "$plugin_dir/package.json" ]; then
+        return 0
+    fi
+
+    echo "[entrypoint] Plugin '$plugin_name' missing, installing"
+    if ! runuser -u "$OC_USER" -- opencode plugin "$plugin_name" -g; then
+        echo "[entrypoint] WARNING: Failed to install plugin '$plugin_name'"
+    fi
+}
+
 # ---------- UID/GID remapping ----------
 PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
@@ -34,6 +72,7 @@ chown "$PUID:$PGID" "$OC_HOME"
 # Pre-create OpenCode directories (bind mount may start empty)
 for dir in \
     "$OC_HOME/.config/opencode" \
+    "$OC_HOME/.config/opencode/skills" \
     "$OC_HOME/.local/share/opencode" \
     "$OC_HOME/.local/state/opencode" \
     "$OC_HOME/.cache/opencode" \
@@ -98,6 +137,8 @@ if [ ! -f "$SENTINEL" ]; then
     fi
 fi
 
+sync_shipped_skills
+
 # ---------- Plugin toggles (run every boot for enable/disable) ----------
 CONFIG_FILE="$OC_HOME/.config/opencode/opencode.json"
 if [ -f "$CONFIG_FILE" ]; then
@@ -115,6 +156,7 @@ with open('$CONFIG_FILE', 'w') as f:
     json.dump(config, f, indent=2)
 " 2>/dev/null && echo "[entrypoint] Claude Auth plugin enabled"
         fi
+        ensure_plugin_installed "opencode-claude-auth"
     else
         if grep -q "opencode-claude-auth" "$CONFIG_FILE" 2>/dev/null; then
             runuser -u "$OC_USER" -- python3 -c "
@@ -143,6 +185,7 @@ with open('$CONFIG_FILE', 'w') as f:
     json.dump(config, f, indent=2)
 " 2>/dev/null && echo "[entrypoint] oh-my-openagent plugin enabled"
         fi
+        ensure_plugin_installed "oh-my-openagent"
     else
         if grep -q "oh-my-openagent" "$CONFIG_FILE" 2>/dev/null; then
             runuser -u "$OC_USER" -- python3 -c "

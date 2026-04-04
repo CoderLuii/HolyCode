@@ -370,9 +370,9 @@ services:
 
 > Plugin toggles (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) take effect on container restart. Set the env var and run `docker compose down && up -d`.
 
-> `ENABLE_OH_MY_OPENAGENT=true` enables the plugin through the main OpenCode config at `/home/opencode/.config/opencode/opencode.json`. On the host, that file appears under whatever host path you bind to `/home/opencode`.
+> `ENABLE_OH_MY_OPENAGENT=true` enables the plugin through the main OpenCode config at `/home/opencode/.config/opencode/opencode.json`. On the host, that file appears under whatever host path you bind to `/home/opencode`. On boot, HolyCode also checks whether the plugin package is missing and installs it if needed.
 
-> This toggle should not be read as “HolyCode will always auto-create a separate plugin-specific config file on the host.” The guaranteed file to check first is `opencode.json` in the OpenCode config directory.
+> `ENABLE_OH_MY_OPENAGENT=true` enables the plugin. The built-in `/oh-my-openagent-setup` skill is the supported way to create or update the plugin-specific config file at `~/.config/opencode/oh-my-openagent.jsonc`.
 
 > `GIT_USER_NAME` and `GIT_USER_EMAIL` are only applied on first boot. To re-apply, delete the sentinel file and restart: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` then `docker compose restart`.
 
@@ -541,6 +541,34 @@ docker exec -it holycode bash -c "opencode providers list"
 docker exec -it holycode bash -c "opencode providers login"
 ```
 
+### oh-my-openagent setup and reconfiguration
+
+If you enabled `ENABLE_OH_MY_OPENAGENT=true`, use the shipped setup skill to create or refresh the plugin-specific config:
+
+```text
+/oh-my-openagent-setup
+```
+
+That flow is the supported path for:
+
+- first-time oh-my-openagent setup
+- reconfiguring after adding or removing providers
+- restoring the intended picker defaults so only the primary agents are visible
+
+HolyCode's default picker policy is:
+
+- visible: `sisyphus`, `hephaestus`, `prometheus`, `atlas`
+- hidden subagents: `oracle`, `librarian`, `explore`, `metis`, `momus`, `multimodal-looker`, `sisyphus-junior`
+
+If you add a new provider later and the visible default model still looks stale, rerun `/oh-my-openagent-setup`, then run:
+
+```bash
+docker exec -it holycode bash -c "bunx oh-my-opencode doctor"
+docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities"
+```
+
+HolyCode can guide the supported refresh path, but upstream OpenCode and oh-my-openagent model-resolution behavior still controls the final visible model state.
+
 ### Useful commands
 
 | Command | What it does |
@@ -552,6 +580,8 @@ docker exec -it holycode bash -c "opencode providers login"
 | `opencode serve` | Headless API server |
 | `opencode providers list` | Show configured providers |
 | `opencode providers login` | Add or switch provider |
+| `bunx oh-my-opencode doctor` | Diagnose oh-my-openagent config and model resolution |
+| `bunx oh-my-opencode refresh-model-capabilities` | Refresh provider/model capability cache after provider changes |
 | `opencode models` | List available models |
 | `opencode models <provider>` | List models for a specific provider |
 | `opencode stats` | Show token usage and costs |

@@ -4,6 +4,23 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.3] - 04/04/2026
+
+### Added
+
+- Ship a built-in `/oh-my-openagent-setup` skill for first-time setup and reruns after provider changes
+- Copy HolyCode-managed OpenCode skills into `~/.config/opencode/skills` on boot without overwriting existing user skill folders
+- Ensure enabled plugin packages are installed on boot if they are missing from the OpenCode cache
+
+### Changed
+
+- Document `/oh-my-openagent-setup` as the supported path for writing `oh-my-openagent.jsonc`
+- Document the default picker policy so only Sisyphus, Hephaestus, Prometheus, and Atlas are visible by default
+
+### Fixed
+
+- Add an explicit rerun + doctor + model-capability refresh path for stale visible default-model behavior after provider changes
+
 ## [1.0.2] - 04/03/2026
 
 ### Changed
