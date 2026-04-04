@@ -14,16 +14,40 @@ WORKSPACE_DIR="/workspace"
 sync_shipped_skills() {
     local source_skills_dir="/usr/local/share/holycode/skills"
     local target_skills_dir="$OC_HOME/.config/opencode/skills"
+    local oh_my_openagent_skill="oh-my-openagent-setup"
 
     [ -d "$source_skills_dir" ] || return 0
 
     mkdir -p "$target_skills_dir"
     chown "$PUID:$PGID" "$target_skills_dir"
 
+    local oh_skill_target="$target_skills_dir/$oh_my_openagent_skill"
+    local oh_skill_marker="$oh_skill_target/.holycode-managed"
+
+    if [ "${ENABLE_OH_MY_OPENAGENT}" = "true" ]; then
+        if [ ! -e "$oh_skill_target" ]; then
+            if [ -d "$source_skills_dir/$oh_my_openagent_skill" ]; then
+                cp -R "$source_skills_dir/$oh_my_openagent_skill" "$oh_skill_target"
+                touch "$oh_skill_marker"
+                chown -R "$PUID:$PGID" "$oh_skill_target"
+                echo "[entrypoint] Installed built-in skill '$oh_my_openagent_skill'"
+            fi
+        elif [ ! -f "$oh_skill_marker" ]; then
+            echo "[entrypoint] Skill '$oh_my_openagent_skill' exists (not HolyCode-managed), skipping"
+        fi
+    else
+        if [ -f "$oh_skill_marker" ]; then
+            rm -rf "$oh_skill_target"
+            echo "[entrypoint] Removed HolyCode-managed skill '$oh_my_openagent_skill'"
+        fi
+    fi
+
     find "$source_skills_dir" -mindepth 1 -maxdepth 1 -type d | while read -r skill_dir; do
         local skill_name target_dir
         skill_name=$(basename "$skill_dir")
         target_dir="$target_skills_dir/$skill_name"
+
+        [ "$skill_name" = "$oh_my_openagent_skill" ] && continue
 
         if [ -e "$target_dir" ]; then
             continue
@@ -38,8 +62,19 @@ sync_shipped_skills() {
 ensure_plugin_installed() {
     local plugin_name="$1"
     local plugin_dir="$OC_HOME/.cache/opencode/node_modules/$plugin_name"
+    local update_mode="${HOLYCODE_PLUGIN_UPDATE:-manual}"
+
+    if [ "$update_mode" != "auto" ]; then
+        update_mode="manual"
+    fi
 
     if [ -f "$plugin_dir/package.json" ]; then
+        if [ "$update_mode" = "auto" ]; then
+            echo "[entrypoint] Plugin '$plugin_name' updating (auto mode)"
+            if ! runuser -u "$OC_USER" -- opencode plugin "$plugin_name" -g; then
+                echo "[entrypoint] WARNING: Failed to update plugin '$plugin_name'"
+            fi
+        fi
         return 0
     fi
 

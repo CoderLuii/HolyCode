@@ -356,7 +356,7 @@ services:
 | `AZURE_OPENAI_ENDPOINT` | (none) | Azure OpenAI - set all three Azure vars |
 | `AZURE_OPENAI_API_KEY` | (none) | Azure OpenAI |
 | `AZURE_OPENAI_API_VERSION` | (none) | Azure OpenAI API version |
-| `OPENCODE_DISABLE_AUTOUPDATE` | `true` | Prevent OpenCode from self-updating inside the container |
+| `OPENCODE_DISABLE_AUTOUPDATE` | `true` | Prevent OpenCode from self-updating inside the container (does not affect plugins) |
 | `OPENCODE_DISABLE_TERMINAL_TITLE` | `true` | Prevent OpenCode from changing the terminal title |
 | `OPENCODE_MODEL` | (none) | Override the default model |
 | `OPENCODE_PERMISSION` | (none) | Set to `auto` to skip permission prompts |
@@ -367,12 +367,15 @@ services:
 | `OPENCODE_SERVER_USERNAME` | `opencode` | Username for web UI basic auth |
 | `ENABLE_CLAUDE_AUTH` | (none) | Set to `true` to use Claude subscription instead of API key |
 | `ENABLE_OH_MY_OPENAGENT` | (none) | Set to `true` to enable multi-agent orchestration plugin |
+| `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin update mode: `manual` (install if missing) or `auto` (install and update on boot) |
 
 > Plugin toggles (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) take effect on container restart. Set the env var and run `docker compose down && up -d`.
 
+> `HOLYCODE_PLUGIN_UPDATE` controls plugin package updates. `manual` (default) installs enabled plugins only if they are missing. `auto` installs missing plugins and updates enabled plugins on every boot. This is separate from `OPENCODE_DISABLE_AUTOUPDATE`, which only affects OpenCode itself.
+
 > `ENABLE_OH_MY_OPENAGENT=true` enables the plugin through the main OpenCode config at `/home/opencode/.config/opencode/opencode.json`. On the host, that file appears under whatever host path you bind to `/home/opencode`. On boot, HolyCode also checks whether the plugin package is missing and installs it if needed.
 
-> `ENABLE_OH_MY_OPENAGENT=true` enables the plugin. The built-in `/oh-my-openagent-setup` skill is the supported way to create or update the plugin-specific config file at `~/.config/opencode/oh-my-openagent.jsonc`.
+> `ENABLE_OH_MY_OPENAGENT=true` enables the plugin and exposes the built-in `/oh-my-openagent-setup` skill. The skill only appears when the plugin is enabled. Use it to create or update the plugin-specific config file at `~/.config/opencode/oh-my-openagent.jsonc`.
 
 > `GIT_USER_NAME` and `GIT_USER_EMAIL` are only applied on first boot. To re-apply, delete the sentinel file and restart: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` then `docker compose restart`.
 
@@ -543,7 +546,7 @@ docker exec -it holycode bash -c "opencode providers login"
 
 ### oh-my-openagent setup and reconfiguration
 
-If you enabled `ENABLE_OH_MY_OPENAGENT=true`, use the shipped setup skill to create or refresh the plugin-specific config:
+If you enabled `ENABLE_OH_MY_OPENAGENT=true`, the `/oh-my-openagent-setup` skill becomes available. Use it to create or refresh the plugin-specific config:
 
 ```text
 /oh-my-openagent-setup

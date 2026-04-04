@@ -49,6 +49,7 @@ services:
       # - AZURE_OPENAI_API_VERSION=
 
       # --- OpenCode behavior (set by default in image, override if needed) ---
+      # OPENCODE_DISABLE_AUTOUPDATE only affects OpenCode itself, not plugins
       # - OPENCODE_DISABLE_AUTOUPDATE=true
       # - OPENCODE_DISABLE_TERMINAL_TITLE=true
       # - OPENCODE_MODEL=claude-sonnet-4-6
@@ -71,3 +72,8 @@ services:
       # Installs automatically on first boot when enabled
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_OH_MY_OPENAGENT=true
+
+      # --- Plugin Updates ---
+      # manual: install enabled plugins only if missing (default)
+      # auto: install if missing AND update enabled plugins on boot
+      # - HOLYCODE_PLUGIN_UPDATE=manual
