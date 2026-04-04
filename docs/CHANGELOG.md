@@ -4,7 +4,15 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.0.1] - 03/31/2026
+## [1.0.2] - 04/03/2026
+
+### Changed
+
+- Clarify that `/home/opencode` is the fixed container path while the host data path depends on the bind mount the user chooses
+- Clarify that main data can live on remote storage while the cache path should remain local
+- Clarify that `ENABLE_OH_MY_OPENAGENT=true` enables the plugin through `opencode.json` without promising a separate plugin-specific config file on the host
+
+## [1.0.1] - 04/02/2026
 
 ### Fixed
 
