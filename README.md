@@ -110,6 +110,8 @@ services:
       - ANTHROPIC_API_KEY=your-key-here
 ```
 
+In that example, `/home/opencode` is the fixed path **inside** the container. On the host, `./data/opencode` and `./local-cache/opencode` are just example bind-mount paths relative to the folder containing your `docker-compose.yaml`. You can replace them with any host paths you want.
+
 **Step 3.** Start it.
 
 ```bash
@@ -119,6 +121,8 @@ docker compose up -d
 Open http://localhost:4096. You're in.
 
 > The shipped `docker-compose.yaml` uses `${ANTHROPIC_API_KEY}` syntax which reads from your shell environment or a `.env` file. Copy `.env.example` to `.env` and fill in your API key.
+
+> `./data/opencode` is only an example host path. If your compose file lives at `/opt/holycode`, that same bind mount becomes `/opt/holycode/data/opencode` on the host.
 
 > Keep `./local-cache/opencode` on local disk. If this project folder lives on NAS/CIFS/SMB storage, change that cache mount to an absolute local host path instead.
 
@@ -263,10 +267,14 @@ services:
       - "4096:4096"   # OpenCode web UI
 
     volumes:
-      # --- Persistent state (all OpenCode data under home dir) ---
-      - ./data/opencode:/home/opencode   # Config, sessions, plugins, all XDG paths
+      # --- Main HolyCode data ---
+      # Pick any host path you want here. This path maps to /home/opencode in the container.
+      # It can live on local disk or network storage.
+      - ./data/opencode:/home/opencode
 
-      # --- Cache path (keep this on local disk; if this folder lives on NAS/CIFS, replace with an absolute local path) ---
+      # --- Cache path ---
+      # Keep this one on LOCAL disk for plugin/cache reliability.
+      # If your main data path lives on NAS/CIFS/SMB, make this a separate local path.
       - ./local-cache/opencode:/home/opencode/.cache/opencode
 
       # --- Workspace ---
@@ -318,7 +326,7 @@ services:
       # - ENABLE_CLAUDE_AUTH=true
 
       # --- oh-my-openagent (multi-agent orchestration for OpenCode) ---
-      # Installs automatically on first boot when enabled
+      # Enables the plugin through OpenCode config on container start
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_OH_MY_OPENAGENT=true
 ```
@@ -361,6 +369,10 @@ services:
 | `ENABLE_OH_MY_OPENAGENT` | (none) | Set to `true` to enable multi-agent orchestration plugin |
 
 > Plugin toggles (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) take effect on container restart. Set the env var and run `docker compose down && up -d`.
+
+> `ENABLE_OH_MY_OPENAGENT=true` enables the plugin through the main OpenCode config at `/home/opencode/.config/opencode/opencode.json`. On the host, that file appears under whatever host path you bind to `/home/opencode`.
+
+> This toggle should not be read as “HolyCode will always auto-create a separate plugin-specific config file on the host.” The guaranteed file to check first is `opencode.json` in the OpenCode config directory.
 
 > `GIT_USER_NAME` and `GIT_USER_EMAIL` are only applied on first boot. To re-apply, delete the sentinel file and restart: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` then `docker compose restart`.
 
@@ -556,14 +568,18 @@ docker exec -it holycode bash -c "opencode providers login"
 
 ## 💾 Data and Persistence
 
-Most OpenCode state lives in `./data/opencode`. Plugin cache is mounted separately at `./local-cache/opencode` by default so you can keep that path on local disk.
+Most OpenCode state lives under `/home/opencode` inside the container. On the host, that data appears wherever you bind-mount `/home/opencode`. In the default examples below, the host path is `./data/opencode`, but you can replace it with any path you want.
+
+Plugin cache is mounted separately at `./local-cache/opencode` by default so you can keep that cache path on local disk even if your main data path is somewhere else.
 
 | Host Path | Container Path | What's in it |
 |-----------|---------------|-------------|
-| `./data/opencode/.config/opencode` | `/home/opencode/.config/opencode` | Settings, agents, MCP configs, themes, plugins |
-| `./data/opencode/.local/share/opencode` | `/home/opencode/.local/share/opencode` | SQLite sessions database, MCP OAuth tokens |
-| `./data/opencode/.local/state/opencode` | `/home/opencode/.local/state/opencode` | Frecency data, model cache, key-value store |
+| `./data/opencode/.config/opencode`* | `/home/opencode/.config/opencode` | Settings, agents, MCP configs, themes, plugins |
+| `./data/opencode/.local/share/opencode`* | `/home/opencode/.local/share/opencode` | SQLite sessions database, MCP OAuth tokens |
+| `./data/opencode/.local/state/opencode`* | `/home/opencode/.local/state/opencode` | Frecency data, model cache, key-value store |
 | `./local-cache/opencode` | `/home/opencode/.cache/opencode` | Plugin node_modules, auto-installed dependencies |
+
+\* These `./data/opencode/...` paths are example host paths from the sample compose file. If you bind `/home/opencode` to a different host path, the same subdirectories will appear there instead.
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 

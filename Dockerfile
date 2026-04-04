@@ -87,10 +87,11 @@ RUN LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygi
     rm /tmp/lazygit.tar.gz
 
 # ---------- delta (git diff pager) ----------
-RUN DELTA_VERSION=$(curl -s "https://api.github.com/repos/dandavison/delta/releases/latest" | jq -r '.tag_name') && \
+RUN DELTA_TAG=$(curl -s "https://api.github.com/repos/dandavison/delta/releases/latest" | jq -r '.tag_name') && \
+    DELTA_VERSION=${DELTA_TAG#v} && \
     DELTA_DEB_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
     curl -fsSL -o /tmp/delta.deb \
-      "https://github.com/dandavison/delta/releases/latest/download/git-delta_${DELTA_VERSION}_${DELTA_DEB_ARCH}.deb" && \
+      "https://github.com/dandavison/delta/releases/download/${DELTA_TAG}/git-delta_${DELTA_VERSION}_${DELTA_DEB_ARCH}.deb" && \
     dpkg -i /tmp/delta.deb && \
     rm /tmp/delta.deb
 
