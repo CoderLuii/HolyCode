@@ -88,7 +88,6 @@ For each chosen provider, run inside the container:
 | Codex (oauth)| `docker exec -it holycode cli-proxy-api -codex-login -no-browser`                                  |
 | Gemini       | `docker exec -it holycode cli-proxy-api -login -no-browser`                                        |
 | Antigravity  | `docker exec -it holycode cli-proxy-api -antigravity-login -no-browser`                            |
-| Kimi         | `docker exec -it holycode cli-proxy-api -kimi-login -no-browser`                                   |
 
 The command prints a URL. Walk the user through:
 
@@ -168,6 +167,8 @@ Show the resulting diffs:
 - **Add model aliases:** add a `models:` list under any provider block and reference the alias from OpenCode.
 - **Inspect proxy logs:** `docker logs holycode 2>&1 | grep -i cli-proxy`.
 - **Disable auto-wire without losing your edits:** the `_holycode_cli_proxy_managed` sentinel makes off-toggling clean — entrypoint only reverts keys it set.
+- **Changing `CLI_PROXY_API_KEY` after first boot:** does **not** automatically rewrite `~/.cli-proxy-api/config.yaml`'s `api-keys:` list. OpenCode and Hermes will start using the new key and get 401s from the proxy. Edit `config.yaml` to add or replace the key (proxy hot-reloads).
+- **Security warning before publishing port 8317:** if `CLI_PROXY_API_KEY` is the default `holycode-local` (which is committed to the public repo), anyone with network reach to the host can use your subscription tokens. Always change it before exposing the port.
 
 ---
 
@@ -175,6 +176,7 @@ Show the resulting diffs:
 
 - Do not invent provider names that are not supported by the upstream binary.
 - Do not store API keys in `opencode.json` directly — always use `{env:CLI_PROXY_API_KEY}` substitution.
-- If the user has hand-edited `opencode.json` and the `_holycode_cli_proxy_managed` sentinel is missing, do not silently overwrite their `provider.*.options.baseURL` — explain the conflict and ask first.
+- The auto-wire entrypoint already skips providers/Hermes when it detects user-managed values without a sentinel — surface those skip warnings to the user and explain how to resolve (either remove the conflicting value, or accept they want to manage it themselves).
 - Always remind the user about the TOS disclaimer before they run their first OAuth login.
+- Always warn about port-publishing security before they uncomment `8317:8317` if `CLI_PROXY_API_KEY` is still `holycode-local`.
 - Keep responses short. Show the exact command, not a paragraph about it.

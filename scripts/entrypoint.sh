@@ -305,12 +305,12 @@ PY
 
     # CLI Proxy auto-wire (OpenCode providers)
     CLI_PROXY_AUTOWIRE_SPEC="${CLI_PROXY_AUTOWIRE:-}"
-    OC_PROXY_MARKER="$OC_HOME/.config/opencode/.holycode-cli-proxy-managed.json"
+    OC_PROXY_MARKER="$OC_HOME/.config/opencode/.holycode-cli-proxy-managed"
     runuser -u "$OC_USER" -- python3 - \
         "$CONFIG_FILE" \
         "$OC_PROXY_MARKER" \
         "CLI_PROXY_API_KEY" \
-        "$CLI_PROXY_AUTOWIRE_SPEC" <<'PY'
+        "$CLI_PROXY_AUTOWIRE_SPEC" <<'PY' || echo "[entrypoint] WARNING: CLI Proxy auto-wire (OpenCode) failed; check $CONFIG_FILE for malformed JSON"
 import json
 import os
 import sys
@@ -328,11 +328,12 @@ legacy = {"anthropic": "opencode-anthropic", "openai": "opencode-openai", "googl
 
 if spec in ("", "false", "none"):
     requested = set()
-elif spec == "all":
-    requested = set(oc_targets)
 else:
     tokens = [t.strip().lower() for t in spec.split(",") if t.strip()]
-    requested = {legacy.get(t, t) for t in tokens}
+    if "all" in tokens:
+        requested = set(oc_targets) | {"hermes"}
+    else:
+        requested = {legacy.get(t, t) for t in tokens}
 
 to_wire = requested & oc_targets
 
@@ -370,26 +371,46 @@ for token in prev:
     if not p:
         cfg["provider"].pop(name, None)
 
-# Apply new wiring
+# Apply new wiring -- skip providers where the user has set a custom baseURL
+# or apiKey we did not write previously, to avoid clobbering hand-edited config.
+prev_set = set(prev)
+applied = []
+skipped = []
 for token in sorted(to_wire):
     name, base = mapping[token]
     p = cfg["provider"].setdefault(name, {})
     opts = p.setdefault("options", {})
+    existing_base = opts.get("baseURL")
+    existing_key = opts.get("apiKey")
+    user_managed = token not in prev_set and (
+        (existing_base is not None and existing_base != base)
+        or (existing_key is not None and existing_key != api_ref)
+    )
+    if user_managed:
+        skipped.append(name)
+        continue
     opts["baseURL"] = base
     opts["apiKey"] = api_ref
+    applied.append(token)
 
 with open(config_file, "w", encoding="utf-8") as f:
     json.dump(cfg, f, indent=2)
 
-if to_wire:
+if applied:
     os.makedirs(os.path.dirname(marker_file), exist_ok=True)
     with open(marker_file, "w", encoding="utf-8") as f:
-        json.dump({"providers": sorted(to_wire)}, f, indent=2)
-    print("[entrypoint] CLI Proxy auto-wire (OpenCode): " + ",".join(sorted(to_wire)))
+        json.dump({"providers": sorted(applied)}, f, indent=2)
+    print("[entrypoint] CLI Proxy auto-wire (OpenCode): " + ",".join(sorted(applied)))
 elif os.path.isfile(marker_file):
     os.remove(marker_file)
     if prev:
         print("[entrypoint] CLI Proxy auto-wire (OpenCode): reverted")
+if skipped:
+    print(
+        "[entrypoint] WARNING: CLI Proxy auto-wire skipped provider(s) "
+        + ",".join(sorted(skipped))
+        + " due to user-managed baseURL/apiKey in opencode.json"
+    )
 PY
 fi
 
@@ -404,7 +425,7 @@ if [ "${ENABLE_HERMES}" = "true" ]; then
         "$HERMES_TEMPLATE" \
         "CLI_PROXY_API_KEY" \
         "${CLI_PROXY_AUTOWIRE:-}" \
-        "$HERMES_PROVIDER" <<'PY'
+        "$HERMES_PROVIDER" <<'PY' || echo "[entrypoint] WARNING: CLI Proxy auto-wire (Hermes) failed; check $HERMES_CONFIG for malformed YAML"
 import os
 import sys
 
@@ -427,15 +448,17 @@ api_ref = "${" + api_env_var + "}"
 legacy = {"anthropic": "opencode-anthropic", "openai": "opencode-openai", "google": "opencode-google"}
 if spec in ("", "false", "none"):
     requested = set()
-elif spec == "all":
-    requested = {"opencode-anthropic", "opencode-openai", "opencode-google", "hermes"}
 else:
     tokens = [t.strip().lower() for t in spec.split(",") if t.strip()]
-    requested = {legacy.get(t, t) for t in tokens}
+    if "all" in tokens:
+        requested = {"opencode-anthropic", "opencode-openai", "opencode-google", "hermes"}
+    else:
+        requested = {legacy.get(t, t) for t in tokens}
 wire_hermes = "hermes" in requested
 
 if wire_hermes:
-    if not os.path.isfile(config_file):
+    file_existed = os.path.isfile(config_file)
+    if not file_existed:
         os.makedirs(os.path.dirname(config_file), exist_ok=True)
         with open(template_file, "r", encoding="utf-8") as src:
             with open(config_file, "w", encoding="utf-8") as dst:
@@ -444,26 +467,41 @@ if wire_hermes:
     with open(config_file, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f) or {}
 
-    cfg.setdefault("model", {})
-    cfg["model"]["provider"] = provider
-    cfg["model"]["base_url"] = base_url
-    cfg["model"]["api_key"] = api_ref
+    sentinel_present = isinstance(cfg.get("_holycode_cli_proxy_managed"), dict)
+    existing_model = cfg.get("model") if isinstance(cfg.get("model"), dict) else {}
+    # Only treat as user-managed if the file was here before our run and lacks
+    # our sentinel. Template-seeded content is not user-managed.
+    user_managed_model = file_existed and (not sentinel_present) and any(
+        existing_model.get(k) is not None and existing_model.get(k) != v
+        for k, v in (("provider", provider), ("base_url", base_url), ("api_key", api_ref))
+    )
 
-    cfg.setdefault("auxiliary", {})
-    for aux in ("vision", "web_extract", "compression"):
-        cfg["auxiliary"].setdefault(aux, {})
-        cfg["auxiliary"][aux]["base_url"] = base_url
-        cfg["auxiliary"][aux]["api_key"] = api_ref
+    if user_managed_model:
+        print(
+            "[entrypoint] WARNING: CLI Proxy auto-wire (Hermes) skipped — "
+            "user-managed model.{provider,base_url,api_key} present without a managed sentinel"
+        )
+    else:
+        cfg.setdefault("model", {})
+        cfg["model"]["provider"] = provider
+        cfg["model"]["base_url"] = base_url
+        cfg["model"]["api_key"] = api_ref
 
-    cfg["_holycode_cli_proxy_managed"] = {
-        "applied_provider": provider,
-        "applied_base_url": base_url,
-        "applied_api_ref": api_ref,
-    }
+        cfg.setdefault("auxiliary", {})
+        for aux in ("vision", "web_extract", "compression"):
+            cfg["auxiliary"].setdefault(aux, {})
+            cfg["auxiliary"][aux]["base_url"] = base_url
+            cfg["auxiliary"][aux]["api_key"] = api_ref
 
-    with open(config_file, "w", encoding="utf-8") as f:
-        yaml.safe_dump(cfg, f, sort_keys=False)
-    print("[entrypoint] CLI Proxy auto-wire (Hermes): provider=" + provider)
+        cfg["_holycode_cli_proxy_managed"] = {
+            "applied_provider": provider,
+            "applied_base_url": base_url,
+            "applied_api_ref": api_ref,
+        }
+
+        with open(config_file, "w", encoding="utf-8") as f:
+            yaml.safe_dump(cfg, f, sort_keys=False)
+        print("[entrypoint] CLI Proxy auto-wire (Hermes): provider=" + provider)
 elif os.path.isfile(config_file):
     with open(config_file, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f) or {}

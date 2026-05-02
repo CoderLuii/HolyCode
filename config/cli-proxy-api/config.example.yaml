@@ -7,7 +7,17 @@
 # Full reference (every option): https://github.com/router-for-me/CLIProxyAPI
 # ==============================================================================
 
-host: ""           # Bind all interfaces inside the container
+# Bind all interfaces inside the container so Docker port publishing
+# (-p 8317:8317) and OAuth callback flows work from the host browser.
+# Set to "127.0.0.1" only if you do NOT publish ports and only call the
+# proxy from OpenCode/Hermes inside the same container.
+#
+# SECURITY: when publishing port 8317, the proxy is reachable from any
+# network interface on the host. The default `api-keys` value below
+# (holycode-local) is shipped publicly in the HolyCode repo. Change
+# CLI_PROXY_API_KEY (.env) to a private value before exposing this port
+# anywhere beyond your own machine.
+host: ""
 port: 8317
 
 # Where OAuth tokens are stored. Resolves to /home/opencode/.cli-proxy-api/

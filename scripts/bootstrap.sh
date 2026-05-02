@@ -56,8 +56,9 @@ CLI_PROXY_CONFIG="$CLI_PROXY_DIR/config.yaml"
 mkdir -p "$CLI_PROXY_DIR"
 if [ ! -f "$CLI_PROXY_CONFIG" ]; then
     cp "$SOURCE_DIR/cli-proxy-api/config.example.yaml" "$CLI_PROXY_CONFIG"
+    # Mutate as root (cp wrote as root) — chown happens below for both files.
     if [ -n "${CLI_PROXY_API_KEY}" ] && [ "${CLI_PROXY_API_KEY}" != "holycode-local" ]; then
-        runuser -u "$OC_USER" -- python3 - "$CLI_PROXY_CONFIG" "$CLI_PROXY_API_KEY" <<'PY'
+        python3 - "$CLI_PROXY_CONFIG" "$CLI_PROXY_API_KEY" <<'PY' || echo "[bootstrap] WARNING: failed to inject CLI_PROXY_API_KEY into config.yaml"
 import sys
 import yaml
 config_file, api_key = sys.argv[1], sys.argv[2]
