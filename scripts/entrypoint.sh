@@ -195,6 +195,25 @@ else
     rm -f /etc/s6-overlay/s6-rc.d/user/contents.d/paperclip
 fi
 
+# Export proxy API key once for both OpenCode {env:...} and Hermes ${...} expansion.
+CLI_PROXY_API_KEY="${CLI_PROXY_API_KEY:-holycode-local}"
+export CLI_PROXY_API_KEY
+
+if [ "${ENABLE_CLI_PROXY}" = "true" ]; then
+    export CLI_PROXY_HOME="${CLI_PROXY_HOME:-$OC_HOME/.cli-proxy-api}"
+    mkdir -p "$CLI_PROXY_HOME"
+    chown "$PUID:$PGID" "$CLI_PROXY_HOME" 2>/dev/null || true
+    touch /etc/s6-overlay/s6-rc.d/user/contents.d/cli-proxy-api
+    mkdir -p /etc/s6-overlay/s6-rc.d/opencode/dependencies.d
+    touch /etc/s6-overlay/s6-rc.d/opencode/dependencies.d/cli-proxy-api
+else
+    rm -f /etc/s6-overlay/s6-rc.d/user/contents.d/cli-proxy-api
+    rm -f /etc/s6-overlay/s6-rc.d/opencode/dependencies.d/cli-proxy-api
+    # Auto-wire only makes sense when the proxy is running. Force revert if
+    # the user disabled the proxy but left CLI_PROXY_AUTOWIRE set.
+    CLI_PROXY_AUTOWIRE="false"
+fi
+
 # ---------- Plugin toggles (run every boot for enable/disable) ----------
 CONFIG_FILE="$OC_HOME/.config/opencode/opencode.json"
 if [ -f "$CONFIG_FILE" ]; then
@@ -283,6 +302,201 @@ with open(config_file, 'w', encoding='utf-8') as f:
 PY
         fi
     fi
+
+    # CLI Proxy auto-wire (OpenCode providers)
+    CLI_PROXY_AUTOWIRE_SPEC="${CLI_PROXY_AUTOWIRE:-}"
+    OC_PROXY_MARKER="$OC_HOME/.config/opencode/.holycode-cli-proxy-managed.json"
+    runuser -u "$OC_USER" -- python3 - \
+        "$CONFIG_FILE" \
+        "$OC_PROXY_MARKER" \
+        "CLI_PROXY_API_KEY" \
+        "$CLI_PROXY_AUTOWIRE_SPEC" <<'PY'
+import json
+import os
+import sys
+
+config_file, marker_file, api_env_var, spec = sys.argv[1:5]
+spec = (spec or "").strip().lower()
+
+oc_targets = {"opencode-anthropic", "opencode-openai", "opencode-google"}
+mapping = {
+    "opencode-anthropic": ("anthropic", "http://localhost:8317"),
+    "opencode-openai":    ("openai",    "http://localhost:8317/v1"),
+    "opencode-google":    ("google",    "http://localhost:8317/v1beta"),
+}
+legacy = {"anthropic": "opencode-anthropic", "openai": "opencode-openai", "google": "opencode-google"}
+
+if spec in ("", "false", "none"):
+    requested = set()
+elif spec == "all":
+    requested = set(oc_targets)
+else:
+    tokens = [t.strip().lower() for t in spec.split(",") if t.strip()]
+    requested = {legacy.get(t, t) for t in tokens}
+
+to_wire = requested & oc_targets
+
+with open(config_file, "r", encoding="utf-8") as f:
+    cfg = json.load(f)
+cfg.setdefault("provider", {})
+
+prev = []
+if os.path.isfile(marker_file):
+    try:
+        with open(marker_file, "r", encoding="utf-8") as f:
+            prev = json.load(f).get("providers", []) or []
+    except Exception:
+        prev = []
+
+api_ref = "{env:" + api_env_var + "}"
+
+# Revert previously-managed wiring (only when value still matches what we wrote)
+for token in prev:
+    if token not in mapping:
+        continue
+    name, base = mapping[token]
+    p = cfg["provider"].get(name)
+    if not isinstance(p, dict):
+        continue
+    opts = p.get("options")
+    if not isinstance(opts, dict):
+        continue
+    if opts.get("baseURL") == base:
+        opts.pop("baseURL", None)
+    if opts.get("apiKey") == api_ref:
+        opts.pop("apiKey", None)
+    if not opts:
+        p.pop("options", None)
+    if not p:
+        cfg["provider"].pop(name, None)
+
+# Apply new wiring
+for token in sorted(to_wire):
+    name, base = mapping[token]
+    p = cfg["provider"].setdefault(name, {})
+    opts = p.setdefault("options", {})
+    opts["baseURL"] = base
+    opts["apiKey"] = api_ref
+
+with open(config_file, "w", encoding="utf-8") as f:
+    json.dump(cfg, f, indent=2)
+
+if to_wire:
+    os.makedirs(os.path.dirname(marker_file), exist_ok=True)
+    with open(marker_file, "w", encoding="utf-8") as f:
+        json.dump({"providers": sorted(to_wire)}, f, indent=2)
+    print("[entrypoint] CLI Proxy auto-wire (OpenCode): " + ",".join(sorted(to_wire)))
+elif os.path.isfile(marker_file):
+    os.remove(marker_file)
+    if prev:
+        print("[entrypoint] CLI Proxy auto-wire (OpenCode): reverted")
+PY
+fi
+
+# ---------- Hermes auto-wire (only when Hermes is enabled) ----------
+if [ "${ENABLE_HERMES}" = "true" ]; then
+    HERMES_HOME="${HERMES_HOME:-$OC_HOME/.hermes}"
+    HERMES_CONFIG="$HERMES_HOME/config.yaml"
+    HERMES_TEMPLATE="/usr/local/share/holycode/hermes/config.example.yaml"
+    HERMES_PROVIDER="${CLI_PROXY_HERMES_PROVIDER:-anthropic}"
+    runuser -u "$OC_USER" -- python3 - \
+        "$HERMES_CONFIG" \
+        "$HERMES_TEMPLATE" \
+        "CLI_PROXY_API_KEY" \
+        "${CLI_PROXY_AUTOWIRE:-}" \
+        "$HERMES_PROVIDER" <<'PY'
+import os
+import sys
+
+import yaml
+
+config_file, template_file, api_env_var, spec, provider = sys.argv[1:6]
+spec = (spec or "").strip().lower()
+provider = (provider or "anthropic").strip().lower()
+
+provider_paths = {
+    "anthropic": "http://localhost:8317",
+    "openai":    "http://localhost:8317/v1",
+    "google":    "http://localhost:8317/v1beta",
+}
+if provider not in provider_paths:
+    provider = "anthropic"
+base_url = provider_paths[provider]
+api_ref = "${" + api_env_var + "}"
+
+legacy = {"anthropic": "opencode-anthropic", "openai": "opencode-openai", "google": "opencode-google"}
+if spec in ("", "false", "none"):
+    requested = set()
+elif spec == "all":
+    requested = {"opencode-anthropic", "opencode-openai", "opencode-google", "hermes"}
+else:
+    tokens = [t.strip().lower() for t in spec.split(",") if t.strip()]
+    requested = {legacy.get(t, t) for t in tokens}
+wire_hermes = "hermes" in requested
+
+if wire_hermes:
+    if not os.path.isfile(config_file):
+        os.makedirs(os.path.dirname(config_file), exist_ok=True)
+        with open(template_file, "r", encoding="utf-8") as src:
+            with open(config_file, "w", encoding="utf-8") as dst:
+                dst.write(src.read())
+
+    with open(config_file, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f) or {}
+
+    cfg.setdefault("model", {})
+    cfg["model"]["provider"] = provider
+    cfg["model"]["base_url"] = base_url
+    cfg["model"]["api_key"] = api_ref
+
+    cfg.setdefault("auxiliary", {})
+    for aux in ("vision", "web_extract", "compression"):
+        cfg["auxiliary"].setdefault(aux, {})
+        cfg["auxiliary"][aux]["base_url"] = base_url
+        cfg["auxiliary"][aux]["api_key"] = api_ref
+
+    cfg["_holycode_cli_proxy_managed"] = {
+        "applied_provider": provider,
+        "applied_base_url": base_url,
+        "applied_api_ref": api_ref,
+    }
+
+    with open(config_file, "w", encoding="utf-8") as f:
+        yaml.safe_dump(cfg, f, sort_keys=False)
+    print("[entrypoint] CLI Proxy auto-wire (Hermes): provider=" + provider)
+elif os.path.isfile(config_file):
+    with open(config_file, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f) or {}
+    sentinel = cfg.get("_holycode_cli_proxy_managed")
+    if isinstance(sentinel, dict):
+        prev_provider = sentinel.get("applied_provider", "anthropic")
+        prev_base = sentinel.get("applied_base_url", provider_paths.get(prev_provider, ""))
+        prev_api = sentinel.get("applied_api_ref", api_ref)
+
+        model = cfg.get("model")
+        if isinstance(model, dict):
+            if model.get("provider") == prev_provider:
+                model.pop("provider", None)
+            if model.get("base_url") == prev_base:
+                model.pop("base_url", None)
+            if model.get("api_key") == prev_api:
+                model.pop("api_key", None)
+
+        aux_root = cfg.get("auxiliary", {})
+        for aux in ("vision", "web_extract", "compression"):
+            aux_cfg = aux_root.get(aux)
+            if not isinstance(aux_cfg, dict):
+                continue
+            if aux_cfg.get("base_url") == prev_base:
+                aux_cfg.pop("base_url", None)
+            if aux_cfg.get("api_key") == prev_api:
+                aux_cfg.pop("api_key", None)
+
+        cfg.pop("_holycode_cli_proxy_managed", None)
+        with open(config_file, "w", encoding="utf-8") as f:
+            yaml.safe_dump(cfg, f, sort_keys=False)
+        print("[entrypoint] CLI Proxy auto-wire (Hermes): reverted")
+PY
 fi
 
 # ---------- Hand off to s6-overlay ----------

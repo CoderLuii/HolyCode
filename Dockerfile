@@ -3,6 +3,10 @@
 # https://github.com/coderluii/holycode
 # ==============================================================================
 
+# CLIProxyAPI binary is extracted from the official upstream image.
+# Pinned for reproducible builds — bump together with HolyCode releases.
+FROM eceasy/cli-proxy-api:v6.10.1 AS cliproxy
+
 FROM node:22-bookworm-slim
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode
@@ -165,7 +169,13 @@ COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/bootstrap.sh /usr/local/bin/bootstrap.sh
 COPY config/opencode.json /usr/local/share/holycode/opencode.json
 COPY config/skills /usr/local/share/holycode/skills
+COPY config/cli-proxy-api/config.example.yaml /usr/local/share/holycode/cli-proxy-api/config.example.yaml
+COPY config/hermes/config.example.yaml /usr/local/share/holycode/hermes/config.example.yaml
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/bootstrap.sh
+
+# ---------- CLIProxyAPI binary ----------
+COPY --from=cliproxy /CLIProxyAPI/CLIProxyAPI /usr/local/bin/cli-proxy-api
+RUN chmod +x /usr/local/bin/cli-proxy-api
 
 # ---------- s6-overlay service: opencode web ----------
 COPY s6-overlay/s6-rc.d/opencode/type /etc/s6-overlay/s6-rc.d/opencode/type
@@ -183,7 +193,11 @@ COPY s6-overlay/s6-rc.d/hermes/type /etc/s6-overlay/s6-rc.d/hermes/type
 COPY s6-overlay/s6-rc.d/hermes/run /etc/s6-overlay/s6-rc.d/hermes/run
 COPY s6-overlay/s6-rc.d/paperclip/type /etc/s6-overlay/s6-rc.d/paperclip/type
 COPY s6-overlay/s6-rc.d/paperclip/run /etc/s6-overlay/s6-rc.d/paperclip/run
-RUN chmod +x /etc/s6-overlay/s6-rc.d/hermes/run /etc/s6-overlay/s6-rc.d/paperclip/run
+COPY s6-overlay/s6-rc.d/cli-proxy-api/type /etc/s6-overlay/s6-rc.d/cli-proxy-api/type
+COPY s6-overlay/s6-rc.d/cli-proxy-api/run /etc/s6-overlay/s6-rc.d/cli-proxy-api/run
+RUN chmod +x /etc/s6-overlay/s6-rc.d/hermes/run \
+    /etc/s6-overlay/s6-rc.d/paperclip/run \
+    /etc/s6-overlay/s6-rc.d/cli-proxy-api/run
 
 # ---------- Working directory ----------
 WORKDIR /workspace

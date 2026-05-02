@@ -1,0 +1,32 @@
+# ==============================================================================
+# Hermes - HolyCode auto-wired config seed
+#
+# Seeded into ~/.hermes/config.yaml on first boot when:
+#   ENABLE_HERMES=true   AND   CLI_PROXY_AUTOWIRE includes "hermes" (or "all")
+#
+# After seeding, entrypoint.sh keeps the {model, auxiliary.*} blocks in sync
+# with CLI_PROXY_HERMES_PROVIDER on every container restart. Other sections
+# you add here are preserved.
+#
+# The ${CLI_PROXY_API_KEY} placeholder is expanded by Hermes at config-load
+# time using the value exported by entrypoint.sh.
+# ==============================================================================
+
+model:
+  provider: "anthropic"
+  base_url: "http://localhost:8317"
+  api_key: "${CLI_PROXY_API_KEY}"
+
+auxiliary:
+  vision:
+    provider: "auto"
+    base_url: "http://localhost:8317"
+    api_key: "${CLI_PROXY_API_KEY}"
+  web_extract:
+    provider: "auto"
+    base_url: "http://localhost:8317"
+    api_key: "${CLI_PROXY_API_KEY}"
+  compression:
+    provider: "auto"
+    base_url: "http://localhost:8317"
+    api_key: "${CLI_PROXY_API_KEY}"

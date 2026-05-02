@@ -1,0 +1,65 @@
+# ==============================================================================
+# CLIProxyAPI - HolyCode default config
+#
+# Edit this file at: ./data/opencode/.cli-proxy-api/config.yaml on the host.
+# CLIProxyAPI hot-reloads on save, so most changes take effect within ~1 second.
+#
+# Full reference (every option): https://github.com/router-for-me/CLIProxyAPI
+# ==============================================================================
+
+host: ""           # Bind all interfaces inside the container
+port: 8317
+
+# Where OAuth tokens are stored. Resolves to /home/opencode/.cli-proxy-api/
+# inside the container == ./data/opencode/.cli-proxy-api/ on the host.
+auth-dir: "~/.cli-proxy-api"
+
+# Client-facing API keys. Anything that calls the proxy must present one of
+# these via Authorization, x-api-key, or X-Goog-Api-Key headers.
+# Override at container start by setting CLI_PROXY_API_KEY in your .env.
+api-keys:
+  - "holycode-local"
+
+debug: false
+usage-statistics-enabled: false
+
+remote-management:
+  allow-remote: false   # localhost-only management endpoints
+  secret-key: ""        # leave empty to fully disable /v0/management
+  disable-control-panel: false
+
+# Routing strategy for selecting credentials when multiple match.
+routing:
+  strategy: "round-robin"
+  session-affinity: false
+
+# OAuth-backed providers (Claude / Codex / Gemini / Antigravity / Kimi):
+# run the matching login command and CLIProxyAPI auto-discovers tokens
+# under auth-dir. No config block needed here.
+#
+# Examples:
+#   docker exec -it holycode cli-proxy-api -claude-login -no-browser
+#   docker exec -it holycode cli-proxy-api -codex-device-login
+#   docker exec -it holycode cli-proxy-api -login                   # Gemini
+
+# ------------------------------------------------------------------------------
+# Direct API-key providers (uncomment and fill what you need):
+# ------------------------------------------------------------------------------
+
+# claude-api-key:
+#   - api-key: "sk-ant-..."
+
+# gemini-api-key:
+#   - api-key: "AIza..."
+
+# codex-api-key:
+#   - api-key: "sk-..."
+
+# openai-compatibility:
+#   - name: "openrouter"
+#     base-url: "https://openrouter.ai/api/v1"
+#     api-key-entries:
+#       - api-key: "sk-or-v1-..."
+#     models:
+#       - name: "moonshotai/kimi-k2:free"
+#         alias: "kimi-k2"

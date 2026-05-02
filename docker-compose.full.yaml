@@ -13,6 +13,15 @@ services:
       - "4096:4096" # OpenCode web UI
       # - "3100:3100" # Paperclip dashboard
       # - "8642:8642" # Hermes API server
+      # --- CLI Proxy API + OAuth callback ports (uncomment what you need) ---
+      # The proxy accepts requests on 8317. OAuth providers redirect the user's
+      # host browser to provider-specific callback ports — publish only the
+      # callback ports for the providers you actually log into.
+      # - "8317:8317"   # CLI Proxy API (OpenAI/Anthropic/Gemini-compatible)
+      # - "54545:54545" # CLI Proxy: Claude OAuth callback
+      # - "1455:1455"   # CLI Proxy: Codex OAuth callback (skip if using -codex-device-login)
+      # - "8085:8085"   # CLI Proxy: Gemini OAuth callback
+      # - "51121:51121" # CLI Proxy: Antigravity OAuth callback
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
@@ -90,3 +99,21 @@ services:
       # Hermes starts an OpenAI-compatible API + messaging-capable meta-agent
       # - ENABLE_HERMES=true
       # - HERMES_PORT=8642
+
+      # --- CLI Proxy API ---
+      # Routes OpenCode (and Paperclip workers, and optionally Hermes) through
+      # subscription-backed Claude/Codex/Gemini accounts via OAuth, instead of
+      # exposing API keys. Tokens persist under ./data/opencode/.cli-proxy-api/.
+      # See /cli-proxy-api-setup skill or README for the full setup walkthrough.
+      # - ENABLE_CLI_PROXY=true
+      # - CLI_PROXY_API_KEY=holycode-local
+      # CLI_PROXY_AUTOWIRE selects which surfaces auto-route through the proxy:
+      #   all                                  # everything (Hermes only when ENABLE_HERMES=true)
+      #   opencode-anthropic,opencode-openai   # comma-list, fine-grained
+      #   hermes                               # only Hermes
+      #   false / none / unset                 # no auto-wire (you manage configs yourself)
+      # - CLI_PROXY_AUTOWIRE=all
+      # CLI_PROXY_HERMES_PROVIDER controls which protocol Hermes uses to talk
+      # to the proxy. Pick the protocol that matches the upstream OAuth account
+      # most likely to serve your Hermes prompts.
+      # - CLI_PROXY_HERMES_PROVIDER=anthropic   # anthropic | openai | google

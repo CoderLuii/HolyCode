@@ -48,6 +48,32 @@ else
     echo "[bootstrap] opencode.json already exists, skipping"
 fi
 
+# ---------- Seed CLIProxyAPI config ----------
+# Always seeded (even when ENABLE_CLI_PROXY=false) so that toggling on later
+# does not require a re-bootstrap. Cheap (~50 lines of YAML).
+CLI_PROXY_DIR="$OC_HOME/.cli-proxy-api"
+CLI_PROXY_CONFIG="$CLI_PROXY_DIR/config.yaml"
+mkdir -p "$CLI_PROXY_DIR"
+if [ ! -f "$CLI_PROXY_CONFIG" ]; then
+    cp "$SOURCE_DIR/cli-proxy-api/config.example.yaml" "$CLI_PROXY_CONFIG"
+    if [ -n "${CLI_PROXY_API_KEY}" ] && [ "${CLI_PROXY_API_KEY}" != "holycode-local" ]; then
+        runuser -u "$OC_USER" -- python3 - "$CLI_PROXY_CONFIG" "$CLI_PROXY_API_KEY" <<'PY'
+import sys
+import yaml
+config_file, api_key = sys.argv[1], sys.argv[2]
+with open(config_file, "r", encoding="utf-8") as f:
+    cfg = yaml.safe_load(f) or {}
+cfg["api-keys"] = [api_key]
+with open(config_file, "w", encoding="utf-8") as f:
+    yaml.safe_dump(cfg, f, sort_keys=False)
+PY
+    fi
+    echo "[bootstrap] Seeded CLIProxyAPI config at $CLI_PROXY_CONFIG"
+else
+    echo "[bootstrap] CLIProxyAPI config.yaml already exists, skipping"
+fi
+chown -R "$PUID:$PGID" "$CLI_PROXY_DIR"
+
 sync_shipped_skills
 
 # ---------- Git configuration ----------

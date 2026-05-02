@@ -1,0 +1,17 @@
+#!/command/with-contenv sh
+set -e
+
+CLI_PROXY_HOME="${CLI_PROXY_HOME:-/home/opencode/.cli-proxy-api}"
+config_file="$CLI_PROXY_HOME/config.yaml"
+
+if [ ! -f "$config_file" ]; then
+  echo "[cli-proxy-api] config.yaml missing at $config_file; seeding default"
+  mkdir -p "$CLI_PROXY_HOME"
+  install -m 0644 -o opencode -g opencode \
+    /usr/local/share/holycode/cli-proxy-api/config.example.yaml \
+    "$config_file"
+fi
+
+exec s6-setuidgid opencode env \
+  HOME="/home/opencode" \
+  cli-proxy-api --config "$config_file"

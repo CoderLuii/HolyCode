@@ -378,6 +378,10 @@ services:
 | `PAPERCLIP_DEPLOYMENT_MODE` | `authenticated` | Docker-safe Paperclip startup mode; HolyCode defaults this away from `local_trusted` |
 | `ENABLE_HERMES` | (none) | Set to `true` to start Hermes as a bundled meta-agent API |
 | `HERMES_PORT` | `8642` | Override the container port used by Hermes |
+| `ENABLE_CLI_PROXY` | (none) | Set to `true` to start the CLI Proxy API (port `8317`) and route OpenCode + Hermes through subscription-backed Claude/Codex/Gemini accounts |
+| `CLI_PROXY_API_KEY` | `holycode-local` | Shared API key used by CLI Proxy clients (OpenCode, Hermes) |
+| `CLI_PROXY_AUTOWIRE` | (none) | `all` to auto-wire every facet, or comma-list of `opencode-anthropic`, `opencode-openai`, `opencode-google`, `hermes`. `false`/`none` reverts wiring. |
+| `CLI_PROXY_HERMES_PROVIDER` | `anthropic` | Protocol Hermes uses to talk to the proxy: `anthropic`, `openai`, or `google` |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin update mode: `manual` (install if missing) or `auto` (install and update on boot) |
 
 > Plugin toggles (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) take effect on container restart. Set the env var and run `docker compose down && up -d`.
@@ -395,6 +399,8 @@ services:
 > `ENABLE_HERMES=true` starts Hermes on port `8642` inside the container. Hermes persists under `~/.hermes`, uses the already-installed `opencode` binary, and can expose an OpenAI-compatible API while delegating code work back into HolyCode.
 
 > Hermes is an API service, not a landing page. A `404` at `http://localhost:8642/` is expected. The important signal is that the port is listening and the process stays healthy.
+
+> `ENABLE_CLI_PROXY=true` starts the bundled CLI Proxy API on port `8317`. Combined with `CLI_PROXY_AUTOWIRE=all`, it transparently routes OpenCode and Hermes calls through subscription-backed Claude, Codex, and Gemini accounts (no API keys). OAuth flows have provider-specific callback ports — see the [CLI Proxy API](#cli-proxy-api) section and `/cli-proxy-api-setup` skill for the supported setup walkthrough.
 
 > `GIT_USER_NAME` and `GIT_USER_EMAIL` are only applied on first boot. To re-apply, delete the sentinel file and restart: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` then `docker compose restart`.
 
@@ -506,10 +512,11 @@ s6-overlay supervises OpenCode and Xvfb. If a process crashes, it restarts autom
 
 ## 🧩 Bundled Services
 
-HolyCode now ships with two optional layers on top of OpenCode. You do **not** need them to use the container. But if plain OpenCode gives you the hands, these two give you a brain and a control room.
+HolyCode ships with three optional layers on top of OpenCode. You do **not** need them to use the container, but each of them changes what HolyCode is for.
 
 - **Hermes Agent** is for when you want a smarter coordinator sitting above OpenCode.
 - **Paperclip** is for when you want a board, a workflow, and actual agent management instead of just one-off prompts.
+- **CLI Proxy API** is for when you want OpenCode and Hermes to talk to your Claude / Codex / Gemini **subscription** accounts via OAuth, without exposing API keys.
 
 Flip the env var, restart the container, and the service comes up alongside the normal web UI.
 
@@ -560,6 +567,54 @@ environment:
 
 Paperclip state lives under `/home/opencode/.paperclip`. HolyCode bootstraps it in `authenticated` mode so Docker port publishing works cleanly. Open the dashboard, set up your company, and hire OpenCode-backed employees from there.
 
+### CLI Proxy API
+
+CLI Proxy API is the credentials layer. It runs inside the container on port `8317`, exposes OpenAI-, Anthropic-, and Gemini-compatible endpoints, and lets you sign in to Claude, Codex, Gemini and Antigravity with your **subscription accounts** via OAuth — no raw API keys required. OpenCode (and Paperclip workers, since they spawn OpenCode) and Hermes can be auto-wired through it so every model call rides on those credentials.
+
+Why that matters:
+
+- **Subscription-backed model access.** Sign in once with your existing Claude / Codex / Gemini plan. Tokens persist under `~/.cli-proxy-api/` and the proxy refreshes them automatically.
+- **One key, three protocols.** The proxy accepts Anthropic `x-api-key`, OpenAI `Authorization: Bearer`, and Google `X-Goog-Api-Key` against the same allowlist, so a single shared `CLI_PROXY_API_KEY` covers all three OpenCode provider blocks.
+- **Pool credentials.** Add multiple accounts and let the proxy round-robin or stick to one until quota is hit. Fall back to API keys for providers without a subscription path (OpenRouter, DeepSeek, etc.).
+- **Auto-wire is reversible.** A managed-state sentinel tracks exactly which keys we set. Toggling `CLI_PROXY_AUTOWIRE=false` reverts cleanly without trampling your edits.
+
+Turn it on with:
+
+```yaml
+environment:
+  - ENABLE_CLI_PROXY=true
+  - CLI_PROXY_AUTOWIRE=all
+  # - CLI_PROXY_API_KEY=holycode-local
+  # - CLI_PROXY_HERMES_PROVIDER=anthropic
+```
+
+Then publish `8317:8317` for the API plus the OAuth callback port for whichever providers you log into:
+
+| Provider     | Callback port | Notes                                                  |
+| ------------ | ------------- | ------------------------------------------------------ |
+| Claude       | `54545`       | `cli-proxy-api -claude-login -no-browser`              |
+| Codex        | `1455`        | OR use `-codex-device-login` (no port required)        |
+| Gemini       | `8085`        | `cli-proxy-api -login -no-browser`                     |
+| Antigravity  | `51121`       | `cli-proxy-api -antigravity-login -no-browser`         |
+
+Run the matching login command from the host, e.g.:
+
+```bash
+docker exec -it holycode cli-proxy-api -codex-device-login
+```
+
+Then verify:
+
+```bash
+curl -s http://localhost:8317/v1/models -H "x-api-key: holycode-local" | head
+```
+
+The full setup walkthrough lives in the bundled `/cli-proxy-api-setup` skill — invoke it from inside OpenCode for an interactive flow tailored to your provider mix.
+
+CLI Proxy state lives under `/home/opencode/.cli-proxy-api`. The config file (`config.yaml`) hot-reloads on save, so most changes take effect within ~1 second.
+
+> **Sidecar mode:** if you'd rather run CLIProxyAPI standalone, the upstream image (`eceasy/cli-proxy-api:v6.10.1`) works fine — just point OpenCode at it manually. The bundled, auto-wired path documented above is the supported workflow.
+
 <p align="right">
   <a href="#top">back to top</a>
 </p>
@@ -581,6 +636,7 @@ graph TD
     G --> I[opencode web :4096]
     G --> Q[Hermes API :8642]
     G --> R[Paperclip UI :3100]
+    G --> S[CLI Proxy API :8317]
     I --> J[Web UI]
     J --> K[Your Browser]
     I --> L[CLI Access]
@@ -668,6 +724,38 @@ docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities
 
 HolyCode can guide the supported refresh path, but upstream OpenCode and oh-my-openagent model-resolution behavior still controls the final visible model state.
 
+### CLI Proxy API setup
+
+If you enabled `ENABLE_CLI_PROXY=true`, the `/cli-proxy-api-setup` skill walks you through:
+
+```text
+/cli-proxy-api-setup
+```
+
+That flow is the supported path for:
+
+- choosing which providers (Claude, Codex, Gemini, Antigravity) to log into
+- publishing the right OAuth callback ports in compose
+- running the right login command per provider
+- deciding which surfaces to auto-wire (`opencode-anthropic`, `opencode-openai`, `opencode-google`, `hermes`)
+- verifying the proxy is serving model lists and chat traffic
+
+Common follow-up commands:
+
+```bash
+# Codex device-flow login (no callback port required)
+docker exec -it holycode cli-proxy-api -codex-device-login
+
+# Claude OAuth (requires -p 54545:54545 in compose)
+docker exec -it holycode cli-proxy-api -claude-login -no-browser
+
+# Verify the proxy is up
+curl -s http://localhost:8317/v1/models -H "x-api-key: holycode-local" | head
+
+# Inspect or edit the proxy config (hot-reloads on save)
+$EDITOR ./data/opencode/.cli-proxy-api/config.yaml
+```
+
 ### Useful commands
 
 | Command | What it does |
@@ -681,6 +769,10 @@ HolyCode can guide the supported refresh path, but upstream OpenCode and oh-my-o
 | `opencode providers login` | Add or switch provider |
 | `bunx oh-my-opencode doctor` | Diagnose oh-my-openagent config and model resolution |
 | `bunx oh-my-opencode refresh-model-capabilities` | Refresh provider/model capability cache after provider changes |
+| `cli-proxy-api -claude-login -no-browser` | Log in to Claude subscription via the proxy (needs `-p 54545:54545`) |
+| `cli-proxy-api -codex-device-login` | Log in to Codex via device-code flow (no callback port required) |
+| `cli-proxy-api -login -no-browser` | Log in to Gemini via the proxy (needs `-p 8085:8085`) |
+| `curl http://localhost:8317/v1/models -H "x-api-key: holycode-local"` | Verify CLI Proxy is serving model lists |
 | `opencode models` | List available models |
 | `opencode models <provider>` | List models for a specific provider |
 | `opencode stats` | Show token usage and costs |

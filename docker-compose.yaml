@@ -10,8 +10,13 @@ services:
     shm_size: 2g
     ports:
       - "4096:4096"
-      # - "3100:3100"   # Paperclip dashboard
-      # - "8642:8642"   # Hermes API server
+      # - "3100:3100"    # Paperclip dashboard
+      # - "8642:8642"    # Hermes API server
+      # - "8317:8317"    # CLI Proxy API (OpenAI/Anthropic/Gemini-compatible)
+      # - "54545:54545"  # CLI Proxy: Claude OAuth callback
+      # - "1455:1455"    # CLI Proxy: Codex OAuth callback (skip if using -codex-device-login)
+      # - "8085:8085"    # CLI Proxy: Gemini OAuth callback
+      # - "51121:51121"  # CLI Proxy: Antigravity OAuth callback
     volumes:
       - ./data/opencode:/home/opencode
       - ./local-cache/opencode:/home/opencode/.cache/opencode
@@ -25,3 +30,8 @@ services:
       # - PAPERCLIP_DEPLOYMENT_MODE=authenticated
       # - ENABLE_HERMES=true
       # - HERMES_PORT=8642
+      # --- CLI Proxy API ---
+      # - ENABLE_CLI_PROXY=true
+      # - CLI_PROXY_AUTOWIRE=all                  # all | comma-list of opencode-anthropic, opencode-openai, opencode-google, hermes | false
+      # - CLI_PROXY_API_KEY=holycode-local
+      # - CLI_PROXY_HERMES_PROVIDER=anthropic     # anthropic | openai | google -- which protocol Hermes speaks to the proxy
