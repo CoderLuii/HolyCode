@@ -70,19 +70,20 @@ You pull it. You run it. You open your browser. You build.
 | 5 | [Provider Support](#-provider-support) |
 | 6 | [Docker Compose - Quick](#-docker-compose---quick) |
 | 7 | [Docker Compose - Full](#-docker-compose---full) |
-| 8 | [Environment Variables](#-environment-variables) |
-| 9 | [What's Inside](#-whats-inside) |
-| 10 | [Bundled Services](#-bundled-services) |
-| 11 | [Architecture](#-architecture) |
-| 12 | [CLI Usage](#-cli-usage) |
-| 13 | [Data and Persistence](#-data-and-persistence) |
-| 14 | [Permissions](#-permissions) |
-| 15 | [Upgrading](#-upgrading) |
-| 16 | [Troubleshooting](#-troubleshooting) |
-| 17 | [Building Locally](#-building-locally) |
-| 18 | [Contributing](#-contributing) |
-| 19 | [Support](#-support) |
-| 20 | [License](#-license) |
+| 8 | [Podman](#-podman) |
+| 9 | [Environment Variables](#-environment-variables) |
+| 10 | [What's Inside](#-whats-inside) |
+| 11 | [Bundled Services](#-bundled-services) |
+| 12 | [Architecture](#-architecture) |
+| 13 | [CLI Usage](#-cli-usage) |
+| 14 | [Data and Persistence](#-data-and-persistence) |
+| 15 | [Permissions](#-permissions) |
+| 16 | [Upgrading](#-upgrading) |
+| 17 | [Troubleshooting](#-troubleshooting) |
+| 18 | [Building Locally](#-building-locally) |
+| 19 | [Contributing](#-contributing) |
+| 20 | [Support](#-support) |
+| 21 | [License](#-license) |
 
 ---
 
@@ -397,6 +398,35 @@ services:
 > Hermes is an API service, not a landing page. A `404` at `http://localhost:8642/` is expected. The important signal is that the port is listening and the process stays healthy.
 
 > `GIT_USER_NAME` and `GIT_USER_EMAIL` are only applied on first boot. To re-apply, delete the sentinel file and restart: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` then `docker compose restart`.
+
+<p align="right">
+  <a href="#top">back to top</a>
+</p>
+
+---
+
+## 🐳 Podman
+
+Prefer Podman? Same image, one command. No compose file needed.
+
+```bash
+mkdir -p data/opencode local-cache/opencode workspace
+
+podman start holycode 2>/dev/null || podman run -d \
+  --name holycode \
+  --restart unless-stopped \
+  --shm-size=2g \
+  -p 4096:4096 \
+  -v ./data/opencode:/home/opencode \
+  -v ./local-cache/opencode:/home/opencode/.cache/opencode \
+  -v ./workspace:/workspace \
+  -e PUID=$(id -u) \
+  -e PGID=$(id -g) \
+  -e ANTHROPIC_API_KEY=your-key-here \
+  docker.io/coderluii/holycode:latest
+```
+
+Open http://localhost:4096. You're in.
 
 <p align="right">
   <a href="#top">back to top</a>
