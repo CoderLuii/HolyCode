@@ -23,6 +23,7 @@ services:
       # - "8642:8642" # Hermes API server
     volumes:
       - ./data/opencode:/home/opencode
+      - ./local-cache/opencode:/home/opencode/.cache/opencode
       - ./workspace:/workspace
     environment:
       - ANTHROPIC_API_KEY=your-key-here

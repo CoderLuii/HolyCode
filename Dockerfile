@@ -8,7 +8,11 @@ FROM node:22-bookworm-slim
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode
 
 # ---------- Build args ----------
-ARG S6_OVERLAY_VERSION=3.2.0.2
+ARG S6_OVERLAY_VERSION=3.2.3.0
+ARG LAZYGIT_VERSION=0.62.0
+ARG DELTA_VERSION=0.19.2
+ARG EZA_VERSION=0.23.4
+ARG HERMES_AGENT_REF=v2026.5.16
 ARG TARGETARCH
 
 # ---------- Environment ----------
@@ -88,27 +92,23 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     apt-get update && apt-get install -y gh && rm -rf /var/lib/apt/lists/*
 
 # ---------- lazygit ----------
-RUN LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | jq -r '.tag_name' | sed 's/^v//') && \
-    LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
+RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
     curl -fsSL -o /tmp/lazygit.tar.gz \
-      "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${LAZYGIT_ARCH}.tar.gz" && \
+      "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_${LAZYGIT_ARCH}.tar.gz" && \
     tar -C /usr/local/bin -xzf /tmp/lazygit.tar.gz lazygit && \
     rm /tmp/lazygit.tar.gz
 
 # ---------- delta (git diff pager) ----------
-RUN DELTA_TAG=$(curl -s "https://api.github.com/repos/dandavison/delta/releases/latest" | jq -r '.tag_name') && \
-    DELTA_VERSION=${DELTA_TAG#v} && \
-    DELTA_DEB_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
+RUN DELTA_DEB_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
     curl -fsSL -o /tmp/delta.deb \
-      "https://github.com/dandavison/delta/releases/download/${DELTA_TAG}/git-delta_${DELTA_VERSION}_${DELTA_DEB_ARCH}.deb" && \
+      "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/git-delta_${DELTA_VERSION}_${DELTA_DEB_ARCH}.deb" && \
     dpkg -i /tmp/delta.deb && \
     rm /tmp/delta.deb
 
 # ---------- eza (modern ls replacement) ----------
-RUN EZA_VERSION=$(curl -s "https://api.github.com/repos/eza-community/eza/releases/latest" | jq -r '.tag_name' | sed 's/^v//') && \
-    EZA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; esac) && \
+RUN EZA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; esac) && \
     curl -fsSL -o /tmp/eza.tar.gz \
-      "https://github.com/eza-community/eza/releases/latest/download/eza_${EZA_ARCH}-unknown-linux-gnu.tar.gz" && \
+      "https://github.com/eza-community/eza/releases/download/v${EZA_VERSION}/eza_${EZA_ARCH}-unknown-linux-gnu.tar.gz" && \
     tar -C /usr/local/bin -xzf /tmp/eza.tar.gz && \
     rm /tmp/eza.tar.gz
 
@@ -120,21 +120,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- Playwright (Python, uses system Chromium via env vars) ----------
-RUN pip install --no-cache-dir --break-system-packages playwright
+RUN pip install --no-cache-dir --break-system-packages playwright==1.60.0
 
 RUN pip install --no-cache-dir --break-system-packages \
-    requests httpx beautifulsoup4 lxml \
-    Pillow openpyxl python-docx \
-    pandas numpy matplotlib seaborn \
-    rich click tqdm apprise \
-    jinja2 pyyaml python-dotenv markdown \
-    fastapi uvicorn
+    requests==2.34.2 httpx==0.28.1 beautifulsoup4==4.14.3 lxml==6.1.1 \
+    Pillow==12.2.0 openpyxl==3.1.5 python-docx==1.2.0 \
+    pandas==3.0.3 numpy==2.4.6 matplotlib==3.10.9 seaborn==0.13.2 \
+    rich==15.0.0 click==8.4.1 tqdm==4.67.3 apprise==1.10.0 \
+    jinja2==3.1.6 pyyaml==6.0.3 python-dotenv==1.2.2 markdown==3.10.2 \
+    fastapi==0.136.3 uvicorn==0.48.0
 
 RUN rm -f /usr/local/bin/dotenv
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
-RUN npm i -g opencode-ai
+RUN npm i -g opencode-ai@1.15.10
 
 WORKDIR /workspace
 USER opencode
@@ -143,22 +143,22 @@ USER root
 ENV PATH="/home/opencode/.local/bin:${PATH}"
 
 RUN npm i -g \
-    typescript tsx \
-    pnpm \
-    vite esbuild \
-    eslint prettier \
-    serve nodemon concurrently \
-    dotenv-cli \
-    wrangler vercel netlify-cli \
-    pm2 \
-    prisma drizzle-kit \
-    lighthouse @lhci/cli \
-    sharp-cli json-server http-server
+    typescript@6.0.3 tsx@4.22.3 \
+    pnpm@11.3.0 \
+    vite@8.0.14 esbuild@0.28.0 \
+    eslint@10.4.0 prettier@3.8.3 \
+    serve@14.2.6 nodemon@3.1.14 concurrently@9.2.1 \
+    dotenv-cli@11.0.0 \
+    wrangler@4.95.0 vercel@54.5.0 netlify-cli@26.0.2 \
+    pm2@7.0.1 \
+    prisma@7.8.0 drizzle-kit@0.31.10 \
+    lighthouse@13.3.0 @lhci/cli@0.15.1 \
+    sharp-cli@5.2.0 json-server@0.17.4 http-server@14.1.1
 
 RUN pip install --no-cache-dir --break-system-packages \
-    "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@d618d30f670f600a013b7a38c420d194e24d7d04"
+    "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}"
 
-RUN npm i -g paperclipai@2026.403.0
+RUN npm i -g paperclipai@2026.525.0
 
 # ---------- Copy config files ----------
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh

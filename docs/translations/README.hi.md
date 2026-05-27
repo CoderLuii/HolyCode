@@ -867,7 +867,7 @@ image: holycode:local
 4. पुश करें: `git push origin feature/your-feature`
 5. एक pull request खोलें
 
-पूर्ण गाइडलाइन के लिए [CONTRIBUTING.md](.github/CONTRIBUTING.md) देखें।
+पूर्ण गाइडलाइन के लिए [CONTRIBUTING.md](../../.github/CONTRIBUTING.md) देखें।
 
 <p align="right">
   <a href="#top">ऊपर जाएं</a>

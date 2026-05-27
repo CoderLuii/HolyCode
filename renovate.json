@@ -1,0 +1,88 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["github-actions", "dockerfile", "custom.regex"],
+  "automerge": false,
+  "dependencyDashboard": true,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "ARG S6_OVERLAY_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "just-containers/s6-overlay",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "ARG LAZYGIT_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "jesseduffield/lazygit",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "ARG DELTA_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "dandavison/delta",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "ARG EZA_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "eza-community/eza",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "ARG HERMES_AGENT_REF=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "NousResearch/hermes-agent",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "(?<depName>(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*)@(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)"
+      ],
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "(?<depName>[A-Za-z0-9][A-Za-z0-9_.-]*)==(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)"
+      ],
+      "datasourceTemplate": "pypi",
+      "versioningTemplate": "pep440"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions", "dockerfile", "custom.regex"],
+      "automerge": false
+    }
+  ]
+}

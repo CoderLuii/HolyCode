@@ -866,7 +866,7 @@ image: holycode:local
 4. Запушьте: `git push origin feature/your-feature`
 5. Откройте pull request
 
-Полные правила см. в [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+Полные правила см. в [CONTRIBUTING.md](../../.github/CONTRIBUTING.md).
 
 <p align="right">
   <a href="#top">наверх</a>
