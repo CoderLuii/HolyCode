@@ -866,7 +866,7 @@ image: holycode:local
 4. Pushen: `git push origin feature/your-feature`
 5. Einen Pull Request öffnen
 
-Siehe [CONTRIBUTING.md](.github/CONTRIBUTING.md) für vollständige Richtlinien.
+Siehe [CONTRIBUTING.md](../../.github/CONTRIBUTING.md) für vollständige Richtlinien.
 
 <p align="right">
   <a href="#top">nach oben</a>

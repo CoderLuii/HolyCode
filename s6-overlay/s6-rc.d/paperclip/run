@@ -6,12 +6,14 @@ config_path="${paperclip_home}/instances/${instance_id}/config.json"
 paperclip_host="${PAPERCLIP_HOST:-0.0.0.0}"
 paperclip_port="${PAPERCLIP_PORT:-3100}"
 paperclip_mode="${PAPERCLIP_DEPLOYMENT_MODE:-authenticated}"
+paperclip_allowed_hostnames="${PAPERCLIP_ALLOWED_HOSTNAMES:-}"
 
 if [ ! -f "$config_path" ]; then
   s6-setuidgid opencode env \
     HOST="$paperclip_host" \
     PORT="$paperclip_port" \
     PAPERCLIP_DEPLOYMENT_MODE="$paperclip_mode" \
+    PAPERCLIP_ALLOWED_HOSTNAMES="$paperclip_allowed_hostnames" \
     PAPERCLIP_HOME="$paperclip_home" \
     PAPERCLIP_INSTANCE_ID="$instance_id" \
     paperclipai onboard --yes --data-dir "$paperclip_home"
@@ -22,6 +24,7 @@ s6-setuidgid opencode env \
   PAPERCLIP_EFFECTIVE_HOST="$paperclip_host" \
   PAPERCLIP_EFFECTIVE_PORT="$paperclip_port" \
   PAPERCLIP_EFFECTIVE_MODE="$paperclip_mode" \
+  PAPERCLIP_EFFECTIVE_ALLOWED_HOSTNAMES="$paperclip_allowed_hostnames" \
   python3 - <<'PY'
 import json
 import os
@@ -36,6 +39,28 @@ server["exposure"] = server.get("exposure", "private")
 server["host"] = os.environ["PAPERCLIP_EFFECTIVE_HOST"]
 server["port"] = int(os.environ["PAPERCLIP_EFFECTIVE_PORT"])
 
+allowed_hostnames = [
+    value.strip().lower()
+    for value in os.environ["PAPERCLIP_EFFECTIVE_ALLOWED_HOSTNAMES"].split(",")
+    if value.strip()
+]
+if allowed_hostnames:
+    existing_allowed_hostnames = server.get("allowedHostnames", [])
+    if not isinstance(existing_allowed_hostnames, list):
+        existing_allowed_hostnames = []
+
+    merged_allowed_hostnames = []
+    seen_allowed_hostnames = set()
+    for value in [*existing_allowed_hostnames, *allowed_hostnames]:
+        if not isinstance(value, str):
+            continue
+        normalized_value = value.strip().lower()
+        if normalized_value and normalized_value not in seen_allowed_hostnames:
+            merged_allowed_hostnames.append(normalized_value)
+            seen_allowed_hostnames.add(normalized_value)
+
+    server["allowedHostnames"] = merged_allowed_hostnames
+
 auth = config.setdefault("auth", {})
 auth["baseUrlMode"] = auth.get("baseUrlMode", "auto")
 
@@ -48,6 +73,7 @@ exec s6-setuidgid opencode env \
   HOST="$paperclip_host" \
   PORT="$paperclip_port" \
   PAPERCLIP_DEPLOYMENT_MODE="$paperclip_mode" \
+  PAPERCLIP_ALLOWED_HOSTNAMES="$paperclip_allowed_hostnames" \
   PAPERCLIP_HOME="$paperclip_home" \
   PAPERCLIP_INSTANCE_ID="$instance_id" \
   paperclipai run --data-dir "$paperclip_home" --instance "$instance_id"

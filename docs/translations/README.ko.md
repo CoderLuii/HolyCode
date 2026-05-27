@@ -866,7 +866,7 @@ image: holycode:local
 4. 푸시: `git push origin feature/your-feature`
 5. 풀 리퀘스트 열기
 
-전체 가이드라인은 [CONTRIBUTING.md](.github/CONTRIBUTING.md)를 참조하세요.
+전체 가이드라인은 [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)를 참조하세요.
 
 <p align="right">
   <a href="#top">맨 위로</a>

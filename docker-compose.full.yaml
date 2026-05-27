@@ -86,7 +86,32 @@ services:
       # - PAPERCLIP_PORT=3100
       # - PAPERCLIP_INSTANCE_ID=default
       # - PAPERCLIP_DEPLOYMENT_MODE=authenticated
+      # - PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
 
       # Hermes starts an OpenAI-compatible API + messaging-capable meta-agent
       # - ENABLE_HERMES=true
       # - HERMES_PORT=8642
+
+      # --- CLIProxyAPI (optional sidecar; start with --profile cliproxyapi) ---
+      # Adds a separate OpenCode provider named "cliproxyapi". Does not replace Claude Auth.
+      # - CLIPROXYAPI_ENABLED=true
+      # - CLIPROXYAPI_BASE_URL=http://cliproxyapi:8317/v1
+      # - CLIPROXYAPI_API_KEY=
+      # - CLIPROXYAPI_MODEL=${CLIPROXYAPI_MODEL:-}
+      # - CLIPROXYAPI_SMALL_MODEL=${CLIPROXYAPI_SMALL_MODEL:-}
+
+  cliproxyapi:
+    image: eceasy/cli-proxy-api:v7.1.23
+    profiles:
+      - cliproxyapi
+    restart: unless-stopped
+    expose:
+      - "8317"
+    # Optional host access for local setup/admin only. Keep disabled unless needed.
+    # ports:
+    #   - "127.0.0.1:<host-port>:8317"
+    volumes:
+      # Create this config file before enabling the profile.
+      - ./local-cache/cliproxyapi-config/config.yaml:/CLIProxyAPI/config.yaml:ro
+      - ./local-cache/cliproxyapi-auth:/root/.cli-proxy-api
+      - ./local-cache/cliproxyapi-logs:/CLIProxyAPI/logs

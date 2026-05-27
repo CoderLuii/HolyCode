@@ -20,6 +20,7 @@ node_modules/
 
 # Docker overrides
 data/
+local-cache/
 workspace/
 docker-compose.override.yaml
 docker-compose.override.yml

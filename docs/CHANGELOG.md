@@ -4,6 +4,44 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.8] - 05/27/2026
+
+### Fixed
+
+- Allow Paperclip remote LAN/private hostnames to be configured with `PAPERCLIP_ALLOWED_HOSTNAMES`
+
+## [1.0.7] - 05/27/2026
+
+### Added
+
+- Add optional CLIProxyAPI sidecar support in the full Docker Compose reference
+- Add runtime OpenCode `cliproxyapi` provider wiring behind `CLIPROXYAPI_ENABLED`
+
+### Changed
+
+- Document CLIProxyAPI setup, environment variables, and isolated local-cache state paths in English docs
+
+### Fixed
+
+- Keep CLIProxyAPI configuration isolated from `ENABLE_CLAUDE_AUTH`, `opencode-claude-auth`, and Claude credential paths
+
+## [1.0.6] - 05/27/2026
+
+### Added
+
+- Add Renovate-only dependency automation for GitHub Actions, Dockerfile pins, Docker ARGs, npm packages, and PyPI packages with automerge disabled
+
+### Changed
+
+- Pin Docker and runtime dependency versions for repeatable builds
+- Refresh workflow action versions to current stable tags
+
+### Fixed
+
+- Preserve user-owned `oh-my-openagent-setup` skill folders while cleaning up HolyCode-managed copies when the plugin is disabled
+- Document local `local-cache/` guidance for quick-start setups
+- Repair translated README contributing links so they resolve to the source repo contribution guide
+
 ## [1.0.5] - 04/10/2026
 
 ### Added

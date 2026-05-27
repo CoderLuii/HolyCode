@@ -283,6 +283,131 @@ with open(config_file, 'w', encoding='utf-8') as f:
 PY
         fi
     fi
+
+    # CLIProxyAPI provider
+    CLIPROXYAPI_MARKER="$OC_HOME/.config/opencode/.holycode-cliproxyapi-provider.sha256"
+    if ! runuser -u "$OC_USER" -- python3 - "$CONFIG_FILE" "$CLIPROXYAPI_MARKER" "${CLIPROXYAPI_ENABLED:-}" "${CLIPROXYAPI_BASE_URL:-http://cliproxyapi:8317/v1}" "${CLIPROXYAPI_MODEL:-}" "${CLIPROXYAPI_SMALL_MODEL:-}" "${CLIPROXYAPI_API_KEY:+set}" <<'PY'; then
+import hashlib
+import json
+import os
+import sys
+
+config_file = sys.argv[1]
+marker_file = sys.argv[2]
+enabled = sys.argv[3] == 'true'
+base_url = sys.argv[4]
+model = sys.argv[5]
+small_model = sys.argv[6]
+api_key_is_set = sys.argv[7] == 'set'
+provider_name = 'cliproxyapi'
+
+
+def provider_hash(provider):
+    payload = json.dumps(provider, sort_keys=True, separators=(',', ':'))
+    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+
+
+def read_marker():
+    try:
+        with open(marker_file, 'r', encoding='utf-8') as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return ''
+
+
+def write_marker(provider):
+    with open(marker_file, 'w', encoding='utf-8') as f:
+        f.write(provider_hash(provider))
+
+
+def remove_marker():
+    try:
+        os.remove(marker_file)
+    except FileNotFoundError:
+        pass
+
+
+def is_holycode_managed(provider):
+    marker = read_marker()
+    return bool(marker) and provider_hash(provider) == marker
+
+
+def build_provider():
+    provider = {
+        'npm': '@ai-sdk/openai-compatible',
+        'name': 'CLIProxyAPI',
+        'options': {
+            'baseURL': base_url,
+        },
+    }
+    if api_key_is_set:
+        provider['options']['apiKey'] = '{env:CLIPROXYAPI_API_KEY}'
+    models = {}
+    if model:
+        models[model] = {'name': f'{model} via CLIProxyAPI'}
+    if small_model and small_model != model:
+        models[small_model] = {'name': f'{small_model} via CLIProxyAPI'}
+    if models:
+        provider['models'] = models
+    return provider
+
+
+try:
+    with open(config_file, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+except Exception as exc:
+    print(f'[entrypoint] WARNING: Skipping CLIProxyAPI provider config: invalid opencode.json ({exc})')
+    sys.exit(0)
+
+if not isinstance(config, dict):
+    print('[entrypoint] WARNING: Skipping CLIProxyAPI provider config: opencode.json is not an object')
+    sys.exit(0)
+
+providers = config.get('provider')
+if providers is None:
+    providers = {}
+elif not isinstance(providers, dict):
+    print('[entrypoint] WARNING: Skipping CLIProxyAPI provider config: provider is not an object')
+    sys.exit(0)
+
+current = providers.get(provider_name)
+
+if enabled:
+    next_provider = build_provider()
+    if current is not None and not is_holycode_managed(current):
+        remove_marker()
+        print('[entrypoint] CLIProxyAPI provider exists (not HolyCode-managed), preserving user config')
+        sys.exit(0)
+    providers[provider_name] = next_provider
+    config['provider'] = providers
+    with open(config_file, 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2)
+        f.write('\n')
+    write_marker(next_provider)
+    if not model:
+        print('[entrypoint] WARNING: CLIPROXYAPI_ENABLED=true but CLIPROXYAPI_MODEL is empty')
+    print('[entrypoint] CLIProxyAPI provider enabled')
+else:
+    if current is None:
+        remove_marker()
+        sys.exit(0)
+    if not is_holycode_managed(current):
+        remove_marker()
+        print('[entrypoint] CLIProxyAPI provider exists (not HolyCode-managed), preserving user config')
+        sys.exit(0)
+    providers.pop(provider_name, None)
+    if providers:
+        config['provider'] = providers
+    else:
+        config.pop('provider', None)
+    with open(config_file, 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2)
+        f.write('\n')
+    remove_marker()
+    print('[entrypoint] CLIProxyAPI provider disabled')
+PY
+        echo "[entrypoint] WARNING: Failed to update CLIProxyAPI provider config"
+    fi
 fi
 
 # ---------- Hand off to s6-overlay ----------

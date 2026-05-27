@@ -866,7 +866,7 @@ image: holycode:local
 4. プッシュ：`git push origin feature/your-feature`
 5. プルリクエストを開く
 
-完全なガイドラインは [CONTRIBUTING.md](.github/CONTRIBUTING.md) を参照。
+完全なガイドラインは [CONTRIBUTING.md](../../.github/CONTRIBUTING.md) を参照。
 
 <p align="right">
   <a href="#top">トップへ戻る</a>

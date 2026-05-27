@@ -864,7 +864,7 @@ image: holycode:local
 4. 推送：`git push origin feature/your-feature`
 5. 打开 pull request
 
-完整指南见 [CONTRIBUTING.md](.github/CONTRIBUTING.md)。
+完整指南见 [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)。
 
 <p align="right">
   <a href="#top">返回顶部</a>

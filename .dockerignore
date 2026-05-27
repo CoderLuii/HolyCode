@@ -15,6 +15,7 @@ assets/
 
 # Runtime data (should never be in build context)
 data/
+local-cache/
 workspace/
 
 # Editor files
