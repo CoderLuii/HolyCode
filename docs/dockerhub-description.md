@@ -96,3 +96,4 @@ CLIProxyAPI support is disabled by default and lives in the full Compose profile
 - [HolyCode Page](https://holycode.coderluii.dev)
 - [HolyCode Cloud (early access)](https://holycode.coderluii.dev/cloud)
 - [Full Documentation](https://github.com/coderluii/holycode#readme)
+- [Podman Guide](https://github.com/CoderLuii/HolyCode/blob/main/docs/podman.md)

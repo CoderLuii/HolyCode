@@ -4,6 +4,12 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.9] - 05/27/2026
+
+### Added
+
+- Add a dedicated Podman guide covering env-file setup, SELinux bind mounts, rootless permissions, updates, and minimal web UI usage
+
 ## [1.0.8] - 05/27/2026
 
 ### Fixed
