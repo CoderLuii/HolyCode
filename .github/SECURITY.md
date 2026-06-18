@@ -15,5 +15,8 @@ If you discover a security vulnerability in HolyCode:
 
 | Version | Supported |
 |---------|-----------|
-| latest  | Yes       |
+| latest Docker image | Yes |
+| current GitHub release | Yes |
 | < 1.0.0 | No        |
+
+HolyCode ships many third-party CLIs inside one Docker image. Tagged releases refresh the pinned Dockerfile tools, but optional OpenCode plugins are installed by OpenCode at container startup when you enable them. Dependabot alerts are not currently enabled for this repository, so release audits record npm, PyPI, OSV, Docker, and workflow checks directly.

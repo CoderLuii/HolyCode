@@ -28,8 +28,10 @@ services:
     environment:
       - ANTHROPIC_API_KEY=your-key-here
       # - ENABLE_PAPERCLIP=true
+      # - PAPERCLIP_BIND=lan
       # - PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
       # - ENABLE_HERMES=true
+      # - API_SERVER_KEY=replace-with-a-real-secret
 ```
 
 ```bash
@@ -49,7 +51,7 @@ That's it. Open your browser and start building.
 
 🌐 **Headless Browser** — Chromium + Xvfb + Playwright, pre-configured for screenshots, scraping, and browser automation.
 
-🛠️ **50+ Dev Tools** — Node.js 22, Python 3, git, ripgrep, fzf, bat, eza, lazygit, delta, gh CLI, pnpm, TypeScript, Prisma, and more.
+🛠️ **50+ Dev Tools** — Node.js 22.23.0 LTS with npm 10.9.8, Python 3, git, ripgrep, fzf, bat, eza, lazygit, delta, gh CLI, pnpm, TypeScript, Prisma, and more.
 
 🧩 **Bundled Services** — Optional Hermes Agent on port 8642, Paperclip on port 3100, and CLIProxyAPI sidecar support in the full Compose profile. Flip an env var, restart, and they come up beside OpenCode.
 
@@ -74,21 +76,34 @@ That's it. Open your browser and start building.
 | `ENABLE_OH_MY_OPENAGENT` | Enable multi-agent orchestration |
 | `ENABLE_PAPERCLIP` | Start the Paperclip dashboard |
 | `PAPERCLIP_DEPLOYMENT_MODE` | Keep Paperclip in Docker-safe authenticated mode |
+| `PAPERCLIP_BIND` | Paperclip reachability preset; defaults to `lan` for Docker port publishing |
 | `PAPERCLIP_ALLOWED_HOSTNAMES` | Allow comma-separated Paperclip remote hostnames/IPs, without scheme or port |
 | `ENABLE_HERMES` | Start Hermes API + messaging bridge |
+| `API_SERVER_KEY` | Required when Hermes API server is enabled |
 | `CLIPROXYAPI_ENABLED` | Add optional OpenCode `cliproxyapi` provider for a CLIProxyAPI sidecar |
 | `CLIPROXYAPI_BASE_URL` | CLIProxyAPI base URL, usually `http://cliproxyapi:8317/v1` in full Compose |
 | `CLIPROXYAPI_API_KEY` | Optional CLIProxyAPI API key env reference |
 | `CLIPROXYAPI_MODEL` | Optional model key exposed as `cliproxyapi/<model>` |
 | `OPENCODE_SERVER_PASSWORD` | Protect web UI with basic auth |
 
-Paperclip defaults to `authenticated` mode inside HolyCode so it can bind to `0.0.0.0` and still pass upstream doctor checks in Docker.
+Paperclip defaults to `authenticated` mode with the `lan` bind preset inside HolyCode so it can bind to `0.0.0.0` and still pass upstream doctor checks in Docker.
 
 Set `PAPERCLIP_ALLOWED_HOSTNAMES` only for trusted LAN/private hostnames or IPs. Restart after changing it; hostname guard and authentication remain enabled.
 
-Hermes exposes an API service. A `404` from `/` is normal as long as the process is healthy and port `8642` is listening.
+Hermes exposes an API service. Set `API_SERVER_KEY` to a real bearer token before enabling it; Hermes refuses to bind without one. A `404` from `/` is normal as long as the process is healthy and port `8642` is listening.
 
 CLIProxyAPI support is disabled by default and lives in the full Compose profile. It adds a separate `cliproxyapi` provider without changing `ENABLE_CLAUDE_AUTH`, `opencode-claude-auth`, or `/home/opencode/.claude`.
+
+## Updates and Audit Notes
+
+Update with:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Tagged images pin the Dockerfile-installed npm, PyPI, and GitHub-release tools. Hermes keeps its own Python dependency pins so its package set stays internally consistent. The Claude installer still comes from Claude's upstream installer, and optional OpenCode plugins are installed by OpenCode when you enable them. Some current third-party CLIs still report transitive npm advisories at their latest stable versions, so release notes call that out instead of claiming a clean audit.
 
 ## Links
 

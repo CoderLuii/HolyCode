@@ -4,4 +4,4 @@ exec s6-setuidgid opencode env \
   API_SERVER_HOST="${API_SERVER_HOST:-0.0.0.0}" \
   API_SERVER_PORT="${HERMES_PORT:-8642}" \
   HERMES_HOME="${HERMES_HOME:-/home/opencode/.hermes}" \
-  hermes gateway run
+  hermes gateway run --no-supervise --accept-hooks

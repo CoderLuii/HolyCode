@@ -4,24 +4,26 @@ instance_id="${PAPERCLIP_INSTANCE_ID:-default}"
 paperclip_home="${PAPERCLIP_HOME:-/home/opencode/.paperclip}"
 config_path="${paperclip_home}/instances/${instance_id}/config.json"
 paperclip_host="${PAPERCLIP_HOST:-0.0.0.0}"
+paperclip_bind="${PAPERCLIP_BIND:-lan}"
 paperclip_port="${PAPERCLIP_PORT:-3100}"
 paperclip_mode="${PAPERCLIP_DEPLOYMENT_MODE:-authenticated}"
 paperclip_allowed_hostnames="${PAPERCLIP_ALLOWED_HOSTNAMES:-}"
 
 if [ ! -f "$config_path" ]; then
-  s6-setuidgid opencode env \
+  exec s6-setuidgid opencode env \
     HOST="$paperclip_host" \
     PORT="$paperclip_port" \
     PAPERCLIP_DEPLOYMENT_MODE="$paperclip_mode" \
     PAPERCLIP_ALLOWED_HOSTNAMES="$paperclip_allowed_hostnames" \
     PAPERCLIP_HOME="$paperclip_home" \
     PAPERCLIP_INSTANCE_ID="$instance_id" \
-    paperclipai onboard --yes --data-dir "$paperclip_home"
+    paperclipai onboard --yes --bind "$paperclip_bind" --data-dir "$paperclip_home"
 fi
 
 s6-setuidgid opencode env \
   PAPERCLIP_CONFIG_PATH="$config_path" \
   PAPERCLIP_EFFECTIVE_HOST="$paperclip_host" \
+  PAPERCLIP_EFFECTIVE_BIND="$paperclip_bind" \
   PAPERCLIP_EFFECTIVE_PORT="$paperclip_port" \
   PAPERCLIP_EFFECTIVE_MODE="$paperclip_mode" \
   PAPERCLIP_EFFECTIVE_ALLOWED_HOSTNAMES="$paperclip_allowed_hostnames" \
@@ -36,6 +38,7 @@ with open(config_path, "r", encoding="utf-8") as f:
 server = config.setdefault("server", {})
 server["deploymentMode"] = os.environ["PAPERCLIP_EFFECTIVE_MODE"]
 server["exposure"] = server.get("exposure", "private")
+server["bind"] = os.environ["PAPERCLIP_EFFECTIVE_BIND"]
 server["host"] = os.environ["PAPERCLIP_EFFECTIVE_HOST"]
 server["port"] = int(os.environ["PAPERCLIP_EFFECTIVE_PORT"])
 

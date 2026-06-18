@@ -7,7 +7,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
+      "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
         "ARG S6_OVERLAY_VERSION=(?<currentValue>[^\\s]+)"
       ],
@@ -18,7 +18,7 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
+      "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
         "ARG LAZYGIT_VERSION=(?<currentValue>[^\\s]+)"
       ],
@@ -29,7 +29,7 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
+      "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
         "ARG DELTA_VERSION=(?<currentValue>[^\\s]+)"
       ],
@@ -40,7 +40,7 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
+      "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
         "ARG EZA_VERSION=(?<currentValue>[^\\s]+)"
       ],
@@ -51,7 +51,7 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
+      "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
         "ARG HERMES_AGENT_REF=(?<currentValue>[^\\s]+)"
       ],
@@ -62,7 +62,7 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
+      "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
         "(?<depName>(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*)@(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)"
       ],
@@ -71,7 +71,7 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
+      "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
         "(?<depName>[A-Za-z0-9][A-Za-z0-9_.-]*)==(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)"
       ],

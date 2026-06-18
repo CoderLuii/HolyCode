@@ -364,8 +364,10 @@ services:
 | `ENABLE_PAPERCLIP` | (nenhuma) | Configure como `true` para iniciar o painel e o quadro de agentes do Paperclip |
 | `PAPERCLIP_PORT` | `3100` | Substitui a porta do container usada pelo Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Nome da instância local do Paperclip para estado isolado |
+| `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
 | `ENABLE_HERMES` | (nenhuma) | Configure como `true` para iniciar o Hermes como API de meta-agente integrada |
 | `HERMES_PORT` | `8642` | Substitui a porta do container usada pelo Hermes |
+| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Modo de atualização de plugins: `manual` (instala se ausente) ou `auto` (instala e atualiza na inicialização) |
 
 > Os toggles de plugins (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) têm efeito ao reiniciar o container. Configure a variável de ambiente e execute `docker compose down && up -d`.
@@ -418,8 +420,8 @@ services:
 
 | Runtime | Versão |
 |---------|---------|
-| Node.js | 22 (LTS) |
-| npm | Incluído com Node.js 22 |
+| Node.js | 22.23.0 (LTS) |
+| npm | Incluído com Node.js 22.23.0 |
 | Python | 3 (sistema) |
 | pip | Incluído com Python 3 |
 
@@ -502,7 +504,10 @@ Ative com:
 environment:
   - ENABLE_HERMES=true
   - HERMES_PORT=8642
+  - API_SERVER_KEY=replace-with-a-real-secret
 ```
+
+Set `API_SERVER_KEY` to a real bearer token; Hermes does not start the API server without it.
 
 O estado do Hermes vive em `/home/opencode/.hermes`, seguindo a mesma história de persistência do resto do HolyCode.
 

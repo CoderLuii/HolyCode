@@ -112,9 +112,11 @@ Paperclip and Hermes can be enabled with the same environment variables used by 
 ENABLE_PAPERCLIP=true
 PAPERCLIP_PORT=3100
 PAPERCLIP_DEPLOYMENT_MODE=authenticated
+PAPERCLIP_BIND=lan
 PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
 ENABLE_HERMES=true
 HERMES_PORT=8642
+API_SERVER_KEY=replace-with-a-real-secret
 ```
 
 If you enable them, publish the ports you need:
@@ -125,7 +127,7 @@ If you enable them, publish the ports you need:
 -p 8642:8642
 ```
 
-Paperclip listens on `3100` when enabled. Hermes exposes an API service on `8642`; a `404` at `/` is normal as long as the process stays healthy.
+Paperclip listens on `3100` when enabled. `PAPERCLIP_BIND=lan` lets the service bind inside the container so the Podman port publish can reach it. Hermes exposes an API service on `8642`; set `API_SERVER_KEY` to a real bearer token before enabling it. A `404` at `/` is normal as long as the process stays healthy.
 
 CLIProxyAPI is different. In HolyCode it is documented as a full Compose sidecar profile, not as part of the one-container Podman command. Use `docker-compose.full.yaml` when you need the supported CLIProxyAPI sidecar workflow.
 

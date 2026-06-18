@@ -147,7 +147,7 @@ Same 50+ tools. Same 10+ providers. Same persistent state. No Docker. No termina
 **What you get with Cloud:**
 - Zero setup. No Docker, no config files, no terminal commands.
 - Works on any device. Laptop, tablet, phone. Open a browser and go.
-- Always updated. Latest OpenCode, latest tools. We handle it.
+- Tagged releases refresh OpenCode and the tool pins for you.
 - Your state follows you. Sessions, settings, MCP configs saved between uses.
 
 **Early access is free.** No credit card required.
@@ -397,9 +397,11 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | `PAPERCLIP_PORT` | `3100` | Override the container port used by Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Local Paperclip instance name for isolated state |
 | `PAPERCLIP_DEPLOYMENT_MODE` | `authenticated` | Docker-safe Paperclip startup mode; HolyCode defaults this away from `local_trusted` |
+| `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset used on first boot; `lan` binds inside Docker on `0.0.0.0` |
 | `PAPERCLIP_ALLOWED_HOSTNAMES` | (none) | Comma-separated Paperclip remote hostnames/IPs to allow; use hostname/IP only, no scheme or port |
 | `ENABLE_HERMES` | (none) | Set to `true` to start Hermes as a bundled meta-agent API |
 | `HERMES_PORT` | `8642` | Override the container port used by Hermes |
+| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token, such as `openssl rand -hex 32` |
 | `CLIPROXYAPI_ENABLED` | (none) | Set to `true` to add the optional OpenCode `cliproxyapi` provider |
 | `CLIPROXYAPI_BASE_URL` | `http://cliproxyapi:8317/v1` | CLIProxyAPI OpenAI-compatible base URL from the HolyCode container |
 | `CLIPROXYAPI_API_KEY` | (none) | Optional API key for CLIProxyAPI, stored only as an OpenCode env reference when set |
@@ -417,11 +419,11 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 > `ENABLE_PAPERCLIP=true` starts Paperclip on port `3100` inside the container. Open the dashboard, create a company, then hire OpenCode-backed agents there. Paperclip persists under `~/.paperclip` automatically.
 
-> HolyCode forces `PAPERCLIP_DEPLOYMENT_MODE=authenticated` by default because Paperclip's upstream `local_trusted` mode only allows loopback binding. In Docker, that would block port publishing on `0.0.0.0`.
+> HolyCode starts Paperclip with `PAPERCLIP_DEPLOYMENT_MODE=authenticated` and `PAPERCLIP_BIND=lan` by default. That keeps authentication on while allowing Docker port publishing through `0.0.0.0`.
 
 > `PAPERCLIP_ALLOWED_HOSTNAMES` lets Paperclip accept listed LAN/private hostnames or IPs. Use comma-separated hostname/IP values only, without `http://`, `https://`, or ports. Restart the container after changing it. The hostname guard and Paperclip authentication stay enabled.
 
-> `ENABLE_HERMES=true` starts Hermes on port `8642` inside the container. Hermes persists under `~/.hermes`, uses the already-installed `opencode` binary, and can expose an OpenAI-compatible API while delegating code work back into HolyCode.
+> `ENABLE_HERMES=true` starts Hermes on port `8642` inside the container. Hermes persists under `~/.hermes`, uses the already-installed `opencode` binary, and can expose an OpenAI-compatible API while delegating code work back into HolyCode. Set `API_SERVER_KEY` to a real bearer token before enabling the API server; Hermes refuses to bind without it.
 
 > Hermes is an API service, not a landing page. A `404` at `http://localhost:8642/` is expected. The important signal is that the port is listening and the process stays healthy.
 
@@ -467,8 +469,8 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 | Runtime | Version |
 |---------|---------|
-| Node.js | 22 (LTS) |
-| npm | Bundled with Node.js 22 |
+| Node.js | 22.23.0 (LTS) |
+| npm | 10.9.8, bundled with Node.js 22.23.0 |
 | Python | 3 (system) |
 | pip | Bundled with Python 3 |
 
@@ -567,9 +569,10 @@ Turn it on with:
 environment:
   - ENABLE_HERMES=true
   - HERMES_PORT=8642
+  - API_SERVER_KEY=replace-with-a-real-secret
 ```
 
-Hermes state lives under `/home/opencode/.hermes`, so it follows the same persistence story as the rest of HolyCode.
+Hermes state lives under `/home/opencode/.hermes`, so it follows the same persistence story as the rest of HolyCode. Generate `API_SERVER_KEY` with a secret generator such as `openssl rand -hex 32`; do not reuse an AI provider key.
 
 ### Paperclip
 
@@ -591,10 +594,11 @@ environment:
   - ENABLE_PAPERCLIP=true
   - PAPERCLIP_PORT=3100
   - PAPERCLIP_DEPLOYMENT_MODE=authenticated
+  - PAPERCLIP_BIND=lan
   - PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
 ```
 
-Paperclip state lives under `/home/opencode/.paperclip`. HolyCode bootstraps it in `authenticated` mode so Docker port publishing works cleanly. Open the dashboard, set up your company, and hire OpenCode-backed employees from there.
+Paperclip state lives under `/home/opencode/.paperclip`. HolyCode bootstraps it in `authenticated` mode with the `lan` bind preset so Docker port publishing works cleanly. Open the dashboard, set up your company, and hire OpenCode-backed employees from there.
 
 When opening Paperclip from another machine, set `PAPERCLIP_ALLOWED_HOSTNAMES` to the hostname or IP from the browser URL, without `http://`, `https://`, or `:3100`. Use commas for multiple values and restart the container after changes. This only allowlists those private hostnames; it does not make Paperclip public or disable authentication.
 
@@ -780,6 +784,8 @@ Plugin cache is mounted separately at `./local-cache/opencode` by default so you
 \* These `./data/opencode/...` paths are example host paths from the sample compose file. If you bind `/home/opencode` to a different host path, the same subdirectories will appear there instead.
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
+
+The image pins the Dockerfile-installed npm, PyPI, and GitHub-release tools so a tagged image can be rebuilt and audited. Hermes keeps its own Python dependency pins so its package set stays internally consistent. The Claude installer is still fetched from Claude's upstream installer, and optional OpenCode plugins are installed by OpenCode's plugin system when you enable them. A clean `npm audit` is not promised: some current third-party CLI packages still carry transitive advisories at their latest stable versions, so HolyCode documents those instead of hiding them.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
 

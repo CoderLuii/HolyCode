@@ -3,16 +3,16 @@
 # https://github.com/coderluii/holycode
 # ==============================================================================
 
-FROM node:22-bookworm-slim
+FROM node:22.23.0-bookworm-slim
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode
 
 # ---------- Build args ----------
 ARG S6_OVERLAY_VERSION=3.2.3.0
-ARG LAZYGIT_VERSION=0.62.0
+ARG LAZYGIT_VERSION=0.62.2
 ARG DELTA_VERSION=0.19.2
 ARG EZA_VERSION=0.23.4
-ARG HERMES_AGENT_REF=v2026.5.16
+ARG HERMES_AGENT_REF=v2026.6.5
 ARG TARGETARCH
 
 # ---------- Environment ----------
@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends locales sudo &&
     sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 # ---------- Rename node user to opencode ----------
-# node:22-bookworm-slim already has UID 1000 as 'node', rename it to 'opencode'
+# The Node 22 slim image already has UID 1000 as 'node', rename it to 'opencode'
 RUN usermod -l opencode -d /home/opencode -m node && \
     groupmod -n opencode node && \
     echo "opencode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/opencode && \
@@ -123,18 +123,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir --break-system-packages playwright==1.60.0
 
 RUN pip install --no-cache-dir --break-system-packages \
-    requests==2.34.2 httpx==0.28.1 beautifulsoup4==4.14.3 lxml==6.1.1 \
+    requests==2.34.2 httpx==0.28.1 beautifulsoup4==4.15.0 lxml==6.1.1 \
     Pillow==12.2.0 openpyxl==3.1.5 python-docx==1.2.0 \
-    pandas==3.0.3 numpy==2.4.6 matplotlib==3.10.9 seaborn==0.13.2 \
-    rich==15.0.0 click==8.4.1 tqdm==4.67.3 apprise==1.10.0 \
+    pandas==3.0.3 numpy==2.4.6 matplotlib==3.11.0 seaborn==0.13.2 \
+    rich==15.0.0 click==8.4.1 tqdm==4.68.3 apprise==1.11.0 \
     jinja2==3.1.6 pyyaml==6.0.3 python-dotenv==1.2.2 markdown==3.10.2 \
-    fastapi==0.136.3 uvicorn==0.48.0
+    fastapi==0.137.2 uvicorn==0.49.0
 
 RUN rm -f /usr/local/bin/dotenv
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
-RUN npm i -g opencode-ai@1.15.10
+RUN npm i -g opencode-ai@1.17.8
 
 WORKDIR /workspace
 USER opencode
@@ -143,22 +143,28 @@ USER root
 ENV PATH="/home/opencode/.local/bin:${PATH}"
 
 RUN npm i -g \
-    typescript@6.0.3 tsx@4.22.3 \
-    pnpm@11.3.0 \
-    vite@8.0.14 esbuild@0.28.0 \
-    eslint@10.4.0 prettier@3.8.3 \
-    serve@14.2.6 nodemon@3.1.14 concurrently@9.2.1 \
+    typescript@6.0.3 tsx@4.22.4 \
+    pnpm@11.8.0 \
+    vite@8.0.16 esbuild@0.28.1 \
+    eslint@10.5.0 prettier@3.8.4 \
+    serve@14.2.6 nodemon@3.1.14 concurrently@10.0.3 \
     dotenv-cli@11.0.0 \
-    wrangler@4.95.0 vercel@54.5.0 netlify-cli@26.0.2 \
+    wrangler@4.102.0 vercel@54.14.2 netlify-cli@26.1.0 \
     pm2@7.0.1 \
     prisma@7.8.0 drizzle-kit@0.31.10 \
-    lighthouse@13.3.0 @lhci/cli@0.15.1 \
+    lighthouse@13.4.0 @lhci/cli@0.15.1 \
     sharp-cli@5.2.0 json-server@0.17.4 http-server@14.1.1
 
 RUN pip install --no-cache-dir --break-system-packages \
     "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}"
 
-RUN npm i -g paperclipai@2026.525.0
+RUN npm i -g paperclipai@2026.609.0
+RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
+      -path '*/native/lib' -type d -exec sh -c '\
+        for lib_dir do \
+          [ -f "$lib_dir/libcrypto.so.1.1" ] && ln -sf libcrypto.so.1.1 "$lib_dir/libcrypto.so.1"; \
+          [ -f "$lib_dir/libssl.so.1.1" ] && ln -sf libssl.so.1.1 "$lib_dir/libssl.so.1"; \
+        done' sh {} +
 
 # ---------- Copy config files ----------
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh

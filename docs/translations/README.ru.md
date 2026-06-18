@@ -137,7 +137,7 @@ docker compose up -d
 **Что вы получаете с Cloud:**
 - Нулевая настройка. Без Docker, без конфигурационных файлов, без команд в терминале.
 - Работает на любом устройстве. Ноутбук, планшет, телефон. Откройте браузер и вперёд.
-- Всегда обновлено. Последняя версия OpenCode, последние инструменты. Мы всё берём на себя.
+- Тегированные релизы обновляют OpenCode и закреплённые версии инструментов.
 - Ваше состояние следует за вами. Сессии, настройки, MCP-конфиги сохраняются между использованиями.
 
 **Ранний доступ бесплатный.** Кредитная карта не требуется.
@@ -364,8 +364,10 @@ services:
 | `ENABLE_PAPERCLIP` | (нет) | Установите `true` для запуска панели управления и доски агентов Paperclip |
 | `PAPERCLIP_PORT` | `3100` | Переопределяет порт контейнера для Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Имя локального экземпляра Paperclip для изолированного состояния |
+| `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
 | `ENABLE_HERMES` | (нет) | Установите `true` для запуска Hermes как встроенного мета-агентного API |
 | `HERMES_PORT` | `8642` | Переопределяет порт контейнера для Hermes |
+| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Режим обновления плагинов: `manual` (устанавливает если отсутствует) или `auto` (устанавливает и обновляет при каждом запуске) |
 
 > Переключатели плагинов (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) вступают в силу при перезапуске контейнера. Установите переменную и выполните `docker compose down && up -d`.
@@ -418,8 +420,8 @@ services:
 
 | Среда выполнения | Версия |
 |---------|---------|
-| Node.js | 22 (LTS) |
-| npm | Поставляется с Node.js 22 |
+| Node.js | 22.23.0 (LTS) |
+| npm | Поставляется с Node.js 22.23.0 |
 | Python | 3 (системный) |
 | pip | Поставляется с Python 3 |
 
@@ -502,7 +504,10 @@ Hermes — это опция «умного мозга». Он работает 
 environment:
   - ENABLE_HERMES=true
   - HERMES_PORT=8642
+  - API_SERVER_KEY=replace-with-a-real-secret
 ```
+
+Set `API_SERVER_KEY` to a real bearer token; Hermes does not start the API server without it.
 
 Состояние Hermes хранится в `/home/opencode/.hermes` и следует той же истории постоянства, что и остальная часть HolyCode.
 

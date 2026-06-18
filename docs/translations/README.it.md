@@ -137,7 +137,7 @@ Gli stessi 50+ strumenti. Gli stessi 10+ provider. Lo stesso stato persistente. 
 **Cosa ottieni con Cloud:**
 - Configurazione zero. Niente Docker, niente file di configurazione, niente comandi da terminale.
 - Funziona su qualsiasi dispositivo. Laptop, tablet, telefono. Apri un browser e vai.
-- Sempre aggiornato. Ultimo OpenCode, ultimi strumenti. Ci pensiamo noi.
+- Le release taggate aggiornano OpenCode e i pin degli strumenti per te.
 - Il tuo stato ti segue. Sessioni, impostazioni, configurazioni MCP salvate tra un utilizzo e l'altro.
 
 **L'accesso anticipato è gratuito.** Nessuna carta di credito richiesta.
@@ -364,8 +364,10 @@ services:
 | `ENABLE_PAPERCLIP` | (nessuna) | Imposta su `true` per avviare il dashboard e il tabellone agenti di Paperclip |
 | `PAPERCLIP_PORT` | `3100` | Sovrascrive la porta del container usata da Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Nome dell'istanza Paperclip locale per stato isolato |
+| `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
 | `ENABLE_HERMES` | (nessuna) | Imposta su `true` per avviare Hermes come API meta-agente integrata |
 | `HERMES_PORT` | `8642` | Sovrascrive la porta del container usata da Hermes |
+| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Modalità aggiornamento plugin: `manual` (installa se mancante) o `auto` (installa e aggiorna ad ogni avvio) |
 
 > I toggle dei plugin (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) hanno effetto al riavvio del container. Imposta la variabile d'ambiente ed esegui `docker compose down && up -d`.
@@ -418,8 +420,8 @@ services:
 
 | Runtime | Versione |
 |---------|---------|
-| Node.js | 22 (LTS) |
-| npm | Incluso con Node.js 22 |
+| Node.js | 22.23.0 (LTS) |
+| npm | Incluso con Node.js 22.23.0 |
 | Python | 3 (sistema) |
 | pip | Incluso con Python 3 |
 
@@ -502,7 +504,10 @@ Attivalo con:
 environment:
   - ENABLE_HERMES=true
   - HERMES_PORT=8642
+  - API_SERVER_KEY=replace-with-a-real-secret
 ```
+
+Set `API_SERVER_KEY` to a real bearer token; Hermes does not start the API server without it.
 
 Lo stato di Hermes vive in `/home/opencode/.hermes`, seguendo la stessa storia di persistenza del resto di HolyCode.
 

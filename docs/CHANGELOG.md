@@ -4,6 +4,23 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.10] - 06/18/2026
+
+### Changed
+
+- Refresh the Docker runtime to Node.js 22.23.0 LTS with npm 10.9.8
+- Refresh pinned npm, PyPI, GitHub-release, and git-tag tool versions in the Docker image
+- Update GitHub Actions checkout/QEMU pins and add read-only permissions to read-only workflow jobs
+- Migrate Renovate custom managers from `fileMatch` to `managerFilePatterns`
+- Document the supported Docker update path, Hermes API key requirement, and the remaining third-party CLI audit caveat
+
+### Fixed
+
+- Remove the critical npm audit findings produced by the previous Dockerfile npm pin set
+- Keep shell and s6 service files on LF endings so Docker images built from Windows checkouts start correctly
+- Start Hermes in foreground mode under HolyCode's own s6 supervision
+- Start Paperclip with a Docker-reachable bind preset and pre-create embedded Postgres compatibility symlinks
+
 ## [1.0.9] - 05/27/2026
 
 ### Added

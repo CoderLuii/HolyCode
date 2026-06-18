@@ -4,6 +4,15 @@ HolyCode includes third-party software distributed within the Docker image.
 Each component retains its original license. HolyCode's own source code is
 licensed under MIT (see LICENSE).
 
+Pinned Dockerfile tools are refreshed through tagged HolyCode image releases.
+The Claude Code CLI installer is fetched from Claude's upstream installer at
+build time, and optional OpenCode plugins are installed by OpenCode's plugin
+system at container startup when enabled. Hermes keeps its own Python
+dependency pins so its package set stays internally consistent. Some bundled
+third-party CLI packages can still report transitive npm advisories at their
+latest stable versions. HolyCode keeps those CLIs available and records the
+audit result in release notes instead of claiming a clean dependency tree.
+
 ## OpenCode (opencode-ai)
 
 - License: MIT
@@ -69,6 +78,28 @@ automation via Playwright and Puppeteer.
 
 Installed via pip. Uses the system Chromium binary, not Playwright's
 bundled browsers.
+
+## Claude Code CLI
+
+- Source: https://claude.ai
+
+Installed through Claude's upstream install script during the Docker build.
+Used for Claude subscription authentication flows when
+ENABLE_CLAUDE_AUTH=true.
+
+## Hermes Agent
+
+- Source: https://github.com/NousResearch/hermes-agent
+
+Installed from the pinned git tag in the Dockerfile. Used only when
+ENABLE_HERMES=true.
+
+## Paperclip
+
+- Source: https://github.com/paperclipai/paperclip
+- npm: https://www.npmjs.com/package/paperclipai
+
+Installed via npm as a global package. Used only when ENABLE_PAPERCLIP=true.
 
 ## GitHub CLI (gh)
 

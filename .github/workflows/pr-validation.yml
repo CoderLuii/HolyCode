@@ -10,10 +10,12 @@ concurrency:
 jobs:
   build-and-smoke-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.0
 
       - name: Build image
         run: docker build -t holycode-pr-test .
