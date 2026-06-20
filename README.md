@@ -419,6 +419,8 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 > `ENABLE_PAPERCLIP=true` starts Paperclip on port `3100` inside the container. Open the dashboard, create a company, then hire OpenCode-backed agents there. Paperclip persists under `~/.paperclip` automatically.
 
+> Paperclip runs with `HOME=/home/opencode` and XDG paths under `/home/opencode`, matching the OpenCode web service. That keeps the OpenCode adapter on `/home/opencode/.config/opencode` instead of `/root/.config/opencode`.
+
 > HolyCode starts Paperclip with `PAPERCLIP_DEPLOYMENT_MODE=authenticated` and `PAPERCLIP_BIND=lan` by default. That keeps authentication on while allowing Docker port publishing through `0.0.0.0`.
 
 > `PAPERCLIP_ALLOWED_HOSTNAMES` lets Paperclip accept listed LAN/private hostnames or IPs. Use comma-separated hostname/IP values only, without `http://`, `https://`, or ports. Restart the container after changing it. The hostname guard and Paperclip authentication stay enabled.
@@ -598,7 +600,7 @@ environment:
   - PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
 ```
 
-Paperclip state lives under `/home/opencode/.paperclip`. HolyCode bootstraps it in `authenticated` mode with the `lan` bind preset so Docker port publishing works cleanly. Open the dashboard, set up your company, and hire OpenCode-backed employees from there.
+Paperclip state lives under `/home/opencode/.paperclip`. HolyCode bootstraps it in `authenticated` mode with the `lan` bind preset so Docker port publishing works cleanly. Paperclip also runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so OpenCode-backed employees see the same persisted config as the OpenCode web UI. Open the dashboard, set up your company, and hire OpenCode-backed employees from there.
 
 When opening Paperclip from another machine, set `PAPERCLIP_ALLOWED_HOSTNAMES` to the hostname or IP from the browser URL, without `http://`, `https://`, or `:3100`. Use commas for multiple values and restart the container after changes. This only allowlists those private hostnames; it does not make Paperclip public or disable authentication.
 

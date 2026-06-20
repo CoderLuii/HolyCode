@@ -4,6 +4,18 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.11] - 06/20/2026
+
+### Changed
+
+- Refresh Paperclip to 2026.618.0
+- Document Paperclip's OpenCode home/config paths and the supported Docker update path across the README, Docker Hub description, Podman guide, examples, security notes, and translations
+
+### Fixed
+
+- Start Paperclip with the same `/home/opencode` HOME and XDG paths used by OpenCode so the OpenCode adapter no longer falls back to `/root/.config/opencode`
+- Add pull-request validation that starts Paperclip and checks its runtime HOME/XDG environment
+
 ## [1.0.10] - 06/18/2026
 
 ### Changed

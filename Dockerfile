@@ -158,7 +158,7 @@ RUN npm i -g \
 RUN pip install --no-cache-dir --break-system-packages \
     "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}"
 
-RUN npm i -g paperclipai@2026.609.0
+RUN npm i -g paperclipai@2026.618.0
 RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
       -path '*/native/lib' -type d -exec sh -c '\
         for lib_dir do \

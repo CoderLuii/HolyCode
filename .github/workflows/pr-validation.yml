@@ -22,3 +22,42 @@ jobs:
 
       - name: Smoke test OpenCode binary
         run: docker run --rm holycode-pr-test opencode --version
+
+      - name: Smoke test Paperclip runtime environment
+        run: |
+          set -eu
+
+          docker run -d --name holycode-paperclip-test \
+            -e ENABLE_PAPERCLIP=true \
+            holycode-pr-test
+
+          cleanup() {
+            docker logs holycode-paperclip-test || true
+            docker rm -f holycode-paperclip-test || true
+          }
+          trap cleanup EXIT
+
+          for _ in $(seq 1 90); do
+            if docker exec holycode-paperclip-test sh -lc 'curl -fsS http://localhost:3100/ >/dev/null' 2>/dev/null; then
+              break
+            fi
+            if docker logs holycode-paperclip-test 2>&1 | grep -Eq '/root/.config/opencode|EACCES: permission denied'; then
+              exit 1
+            fi
+            sleep 2
+          done
+
+          docker exec holycode-paperclip-test sh -lc '
+            pid="$(pgrep -u opencode -f "/usr/local/bin/paperclipai" | head -n 1)"
+            test -n "$pid"
+            tr "\0" "\n" < "/proc/$pid/environ" > /tmp/paperclip-env
+            grep -Fx "HOME=/home/opencode" /tmp/paperclip-env
+            grep -Fx "XDG_CONFIG_HOME=/home/opencode/.config" /tmp/paperclip-env
+            grep -Fx "XDG_CACHE_HOME=/home/opencode/.cache" /tmp/paperclip-env
+            grep -Fx "XDG_DATA_HOME=/home/opencode/.local/share" /tmp/paperclip-env
+            grep -Fx "XDG_STATE_HOME=/home/opencode/.local/state" /tmp/paperclip-env
+          '
+
+          docker logs holycode-paperclip-test > /tmp/holycode-paperclip.log 2>&1 || true
+          ! grep -F "/root/.config/opencode" /tmp/holycode-paperclip.log
+          ! grep -F "EACCES: permission denied" /tmp/holycode-paperclip.log

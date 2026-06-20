@@ -523,7 +523,7 @@ environment:
   - PAPERCLIP_PORT=3100
 ```
 
-El estado de Paperclip vive en `/home/opencode/.paperclip`. Abre el panel de control, configura tu empresa y contrata empleados respaldados por OpenCode desde allí.
+El estado de Paperclip vive en `/home/opencode/.paperclip`. Paperclip también se ejecuta con `/home/opencode` como home y mantiene la configuración, caché y estado de OpenCode bajo ese mismo directorio, así que los agentes ven la misma configuración persistente que la UI web de OpenCode. Abre el panel de control, configura tu empresa y contrata empleados respaldados por OpenCode desde allí.
 
 <p align="right">
   <a href="#top">volver arriba</a>

@@ -86,6 +86,7 @@ services:
       # - PAPERCLIP_PORT=3100
       # - PAPERCLIP_INSTANCE_ID=default
       # - PAPERCLIP_DEPLOYMENT_MODE=authenticated
+      # - PAPERCLIP_BIND=lan
       # - PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
 
       # Hermes starts an OpenAI-compatible API + messaging-capable meta-agent

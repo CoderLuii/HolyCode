@@ -523,7 +523,7 @@ environment:
   - PAPERCLIP_PORT=3100
 ```
 
-Paperclip 状态存储在 `/home/opencode/.paperclip`。打开仪表板，设置你的公司，然后从那里雇用 OpenCode 支持的员工。
+Paperclip 状态存储在 `/home/opencode/.paperclip`。Paperclip 也以 `/home/opencode` 作为 home 运行，并把 OpenCode 的配置、缓存和状态路径保持在同一目录下，所以代理会读取与 OpenCode Web UI 相同的持久化配置。打开仪表板，设置你的公司，然后从那里雇用 OpenCode 支持的员工。
 
 <p align="right">
   <a href="#top">返回顶部</a>

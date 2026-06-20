@@ -8,9 +8,21 @@ paperclip_bind="${PAPERCLIP_BIND:-lan}"
 paperclip_port="${PAPERCLIP_PORT:-3100}"
 paperclip_mode="${PAPERCLIP_DEPLOYMENT_MODE:-authenticated}"
 paperclip_allowed_hostnames="${PAPERCLIP_ALLOWED_HOSTNAMES:-}"
+opencode_home="/home/opencode"
+opencode_config_home="${opencode_home}/.config"
+opencode_cache_home="${opencode_home}/.cache"
+opencode_data_home="${opencode_home}/.local/share"
+opencode_state_home="${opencode_home}/.local/state"
 
 if [ ! -f "$config_path" ]; then
   exec s6-setuidgid opencode env \
+    HOME="$opencode_home" \
+    USER="opencode" \
+    LOGNAME="opencode" \
+    XDG_CONFIG_HOME="$opencode_config_home" \
+    XDG_CACHE_HOME="$opencode_cache_home" \
+    XDG_DATA_HOME="$opencode_data_home" \
+    XDG_STATE_HOME="$opencode_state_home" \
     HOST="$paperclip_host" \
     PORT="$paperclip_port" \
     PAPERCLIP_DEPLOYMENT_MODE="$paperclip_mode" \
@@ -21,6 +33,13 @@ if [ ! -f "$config_path" ]; then
 fi
 
 s6-setuidgid opencode env \
+  HOME="$opencode_home" \
+  USER="opencode" \
+  LOGNAME="opencode" \
+  XDG_CONFIG_HOME="$opencode_config_home" \
+  XDG_CACHE_HOME="$opencode_cache_home" \
+  XDG_DATA_HOME="$opencode_data_home" \
+  XDG_STATE_HOME="$opencode_state_home" \
   PAPERCLIP_CONFIG_PATH="$config_path" \
   PAPERCLIP_EFFECTIVE_HOST="$paperclip_host" \
   PAPERCLIP_EFFECTIVE_BIND="$paperclip_bind" \
@@ -73,6 +92,13 @@ with open(config_path, "w", encoding="utf-8") as f:
 PY
 
 exec s6-setuidgid opencode env \
+  HOME="$opencode_home" \
+  USER="opencode" \
+  LOGNAME="opencode" \
+  XDG_CONFIG_HOME="$opencode_config_home" \
+  XDG_CACHE_HOME="$opencode_cache_home" \
+  XDG_DATA_HOME="$opencode_data_home" \
+  XDG_STATE_HOME="$opencode_state_home" \
   HOST="$paperclip_host" \
   PORT="$paperclip_port" \
   PAPERCLIP_DEPLOYMENT_MODE="$paperclip_mode" \

@@ -523,7 +523,7 @@ environment:
   - PAPERCLIP_PORT=3100
 ```
 
-Paperclip 상태는 `/home/opencode/.paperclip`에 저장됩니다. 대시보드를 열고, 회사를 설정하고, 거기서 OpenCode 기반 직원을 고용하세요.
+Paperclip 상태는 `/home/opencode/.paperclip`에 저장됩니다. Paperclip도 `/home/opencode`를 홈으로 실행하고 OpenCode config/cache/state 경로를 같은 디렉터리 아래에 유지하므로, 에이전트는 OpenCode 웹 UI와 같은 영구 설정을 봅니다. 대시보드를 열고, 회사를 설정하고, 거기서 OpenCode 기반 직원을 고용하세요.
 
 <p align="right">
   <a href="#top">맨 위로</a>
