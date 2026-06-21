@@ -600,7 +600,7 @@ environment:
   - PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
 ```
 
-Paperclip state lives under `/home/opencode/.paperclip`. HolyCode bootstraps it in `authenticated` mode with the `lan` bind preset so Docker port publishing works cleanly. Paperclip also runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so OpenCode-backed employees see the same persisted config as the OpenCode web UI. Open the dashboard, set up your company, and hire OpenCode-backed employees from there.
+Paperclip state lives under `/home/opencode/.paperclip`. HolyCode bootstraps it in `authenticated` mode with the `lan` bind preset so Docker port publishing works cleanly. Paperclip also runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so OpenCode-backed employees see the same persisted config as the OpenCode web UI. HolyCode includes Paperclip's published Skills catalog at the path stable Paperclip expects, so the Skills page loads instead of failing on `GET /api/skills/catalog`. Open the dashboard, set up your company, and hire OpenCode-backed employees from there.
 
 When opening Paperclip from another machine, set `PAPERCLIP_ALLOWED_HOSTNAMES` to the hostname or IP from the browser URL, without `http://`, `https://`, or `:3100`. Use commas for multiple values and restart the container after changes. This only allowlists those private hostnames; it does not make Paperclip public or disable authentication.
 

@@ -23,6 +23,23 @@ jobs:
       - name: Smoke test OpenCode binary
         run: docker run --rm holycode-pr-test opencode --version
 
+      - name: Smoke test Paperclip skills catalog
+        run: |
+          set -eu
+
+          docker run --rm --entrypoint sh holycode-pr-test -lc "
+            set -eu
+            test -f /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages/skills-catalog/generated/catalog.json
+            node --input-type=module -e '
+              import { listCatalogSkills } from \"/usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/server/dist/services/skills-catalog.js\";
+              const skills = listCatalogSkills();
+              if (Array.isArray(skills) === false || skills.length < 1) {
+                throw new Error(\"Skills catalog is empty\");
+              }
+              console.log(\"skills=\" + skills.length);
+            '
+          "
+
       - name: Smoke test Paperclip runtime environment
         run: |
           set -eu
@@ -61,3 +78,4 @@ jobs:
           docker logs holycode-paperclip-test > /tmp/holycode-paperclip.log 2>&1 || true
           ! grep -F "/root/.config/opencode" /tmp/holycode-paperclip.log
           ! grep -F "EACCES: permission denied" /tmp/holycode-paperclip.log
+          ! grep -F "Skills catalog manifest not found" /tmp/holycode-paperclip.log

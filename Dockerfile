@@ -159,6 +159,18 @@ RUN pip install --no-cache-dir --break-system-packages \
     "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}"
 
 RUN npm i -g paperclipai@2026.618.0
+# Remove this shim when stable Paperclip includes paperclipai/paperclip#8327.
+RUN npm pack @paperclipai/skills-catalog@0.3.1 --pack-destination /tmp && \
+    mkdir -p \
+      /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/skills-catalog \
+      /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages && \
+    tar -xzf /tmp/paperclipai-skills-catalog-0.3.1.tgz \
+      -C /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/skills-catalog \
+      --strip-components=1 && \
+    ln -sfn ../skills-catalog \
+      /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages/skills-catalog && \
+    test -f /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages/skills-catalog/generated/catalog.json && \
+    rm -f /tmp/paperclipai-skills-catalog-0.3.1.tgz
 RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
       -path '*/native/lib' -type d -exec sh -c '\
         for lib_dir do \

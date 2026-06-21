@@ -523,7 +523,7 @@ environment:
   - PAPERCLIP_PORT=3100
 ```
 
-Paperclip の状態は `/home/opencode/.paperclip` に保存されます。Paperclip も `/home/opencode` をホームとして実行され、OpenCode の config/cache/state パスを同じディレクトリ配下に保つため、エージェントは OpenCode Web UI と同じ永続化済み設定を参照します。ダッシュボードを開き、会社を設定し、そこから OpenCode バックの従業員を雇用してください。
+Paperclip の状態は `/home/opencode/.paperclip` に保存されます。Paperclip も `/home/opencode` をホームとして実行され、OpenCode の config/cache/state パスを同じディレクトリ配下に保つため、エージェントは OpenCode Web UI と同じ永続化済み設定を参照します。HolyCode は stable 版 Paperclip が期待するパスにも公開済み Skills catalog を置くため、Skills ページは `GET /api/skills/catalog` で失敗せずにカタログを読み込めます。ダッシュボードを開き、会社を設定し、そこから OpenCode バックの従業員を雇用してください。
 
 <p align="right">
   <a href="#top">トップへ戻る</a>

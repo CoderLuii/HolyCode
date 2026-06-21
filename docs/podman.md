@@ -127,7 +127,7 @@ If you enable them, publish the ports you need:
 -p 8642:8642
 ```
 
-Paperclip listens on `3100` when enabled. `PAPERCLIP_BIND=lan` lets the service bind inside the container so the Podman port publish can reach it. Paperclip runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so keep the `/home/opencode` bind mount in place when enabling it. Hermes exposes an API service on `8642`; set `API_SERVER_KEY` to a real bearer token before enabling it. A `404` at `/` is normal as long as the process stays healthy.
+Paperclip listens on `3100` when enabled. `PAPERCLIP_BIND=lan` lets the service bind inside the container so the Podman port publish can reach it. Paperclip runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so keep the `/home/opencode` bind mount in place when enabling it. HolyCode also includes Paperclip's published Skills catalog at the path stable Paperclip expects, so the Skills page can load the bundled catalog while the upstream fix reaches stable. Hermes exposes an API service on `8642`; set `API_SERVER_KEY` to a real bearer token before enabling it. A `404` at `/` is normal as long as the process stays healthy.
 
 CLIProxyAPI is different. In HolyCode it is documented as a full Compose sidecar profile, not as part of the one-container Podman command. Use `docker-compose.full.yaml` when you need the supported CLIProxyAPI sidecar workflow.
 

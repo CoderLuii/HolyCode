@@ -4,6 +4,18 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.12] - 06/21/2026
+
+### Changed
+
+- Include Paperclip's published Skills catalog package in the Docker image until stable Paperclip carries the upstream package-layout fix
+- Document the temporary Paperclip Skills catalog compatibility shim across the README, Docker Hub description, Podman guide, translations, and third-party notices
+
+### Fixed
+
+- Stop Paperclip's Skills page from failing on `GET /api/skills/catalog` by providing the catalog manifest at the path stable Paperclip expects
+- Add pull-request validation that checks the Paperclip Skills catalog manifest and verifies a non-empty catalog can load from the built image
+
 ## [1.0.11] - 06/20/2026
 
 ### Changed

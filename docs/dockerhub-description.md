@@ -90,6 +90,8 @@ Paperclip defaults to `authenticated` mode with the `lan` bind preset inside Hol
 
 Paperclip runs with `HOME=/home/opencode` and XDG paths under `/home/opencode`, matching the OpenCode web service. Keep your main state mount at `/home/opencode` so Paperclip's OpenCode workers read the same config as the web UI.
 
+HolyCode also includes Paperclip's published Skills catalog at the path stable Paperclip expects while the upstream package-layout fix moves from merged PR to stable npm release.
+
 Set `PAPERCLIP_ALLOWED_HOSTNAMES` only for trusted LAN/private hostnames or IPs. Restart after changing it; hostname guard and authentication remain enabled.
 
 Hermes exposes an API service. Set `API_SERVER_KEY` to a real bearer token before enabling it; Hermes refuses to bind without one. A `404` from `/` is normal as long as the process is healthy and port `8642` is listening.

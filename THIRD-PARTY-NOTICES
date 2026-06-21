@@ -98,8 +98,12 @@ ENABLE_HERMES=true.
 
 - Source: https://github.com/paperclipai/paperclip
 - npm: https://www.npmjs.com/package/paperclipai
+- Catalog npm: https://www.npmjs.com/package/@paperclipai/skills-catalog
 
-Installed via npm as a global package. Used only when ENABLE_PAPERCLIP=true.
+Installed via npm as a global package. The image also includes
+@paperclipai/skills-catalog as a temporary compatibility package for the
+Paperclip Skills page until the upstream package-layout fix reaches a stable
+Paperclip release. Used only when ENABLE_PAPERCLIP=true.
 
 ## GitHub CLI (gh)
 

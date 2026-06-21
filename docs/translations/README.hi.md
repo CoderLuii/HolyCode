@@ -523,7 +523,7 @@ environment:
   - PAPERCLIP_PORT=3100
 ```
 
-Paperclip स्टेट `/home/opencode/.paperclip` में रहती है। Paperclip भी `/home/opencode` को home के रूप में चलाता है और OpenCode config/cache/state paths उसी डायरेक्टरी के अंदर रखता है, इसलिए एजेंट वही persisted config देखते हैं जो OpenCode web UI देखती है। डैशबोर्ड खोलें, अपनी कंपनी सेटअप करें, और वहाँ से OpenCode-बैक्ड एम्प्लॉई हायर करें।
+Paperclip स्टेट `/home/opencode/.paperclip` में रहती है। Paperclip भी `/home/opencode` को home के रूप में चलाता है और OpenCode config/cache/state paths उसी डायरेक्टरी के अंदर रखता है, इसलिए एजेंट वही persisted config देखते हैं जो OpenCode web UI देखती है। HolyCode Paperclip के published Skills catalog को stable version की expected path पर भी रखता है, इसलिए Skills page `GET /api/skills/catalog` पर fail होने के बजाय catalog load कर पाता है। डैशबोर्ड खोलें, अपनी कंपनी सेटअप करें, और वहाँ से OpenCode-बैक्ड एम्प्लॉई हायर करें।
 
 <p align="right">
   <a href="#top">ऊपर जाएं</a>
