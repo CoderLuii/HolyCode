@@ -3,16 +3,16 @@
 # https://github.com/coderluii/holycode
 # ==============================================================================
 
-FROM node:22.23.0-bookworm-slim
+FROM node:22.23.1-bookworm-slim
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode
 
 # ---------- Build args ----------
 ARG S6_OVERLAY_VERSION=3.2.3.0
-ARG LAZYGIT_VERSION=0.62.2
+ARG LAZYGIT_VERSION=0.63.0
 ARG DELTA_VERSION=0.19.2
 ARG EZA_VERSION=0.23.4
-ARG HERMES_AGENT_REF=v2026.6.5
+ARG HERMES_AGENT_REF=v2026.7.1
 ARG TARGETARCH
 
 # ---------- Environment ----------
@@ -120,21 +120,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- Playwright (Python, uses system Chromium via env vars) ----------
-RUN pip install --no-cache-dir --break-system-packages playwright==1.60.0
+RUN pip install --no-cache-dir --break-system-packages playwright==1.61.0
 
 RUN pip install --no-cache-dir --break-system-packages \
     requests==2.34.2 httpx==0.28.1 beautifulsoup4==4.15.0 lxml==6.1.1 \
-    Pillow==12.2.0 openpyxl==3.1.5 python-docx==1.2.0 \
+    Pillow==12.3.0 openpyxl==3.1.5 python-docx==1.2.0 \
     pandas==3.0.3 numpy==2.4.6 matplotlib==3.11.0 seaborn==0.13.2 \
-    rich==15.0.0 click==8.4.1 tqdm==4.68.3 apprise==1.11.0 \
+    rich==15.0.0 click==8.4.2 tqdm==4.68.3 apprise==1.12.0 \
     jinja2==3.1.6 pyyaml==6.0.3 python-dotenv==1.2.2 markdown==3.10.2 \
-    fastapi==0.137.2 uvicorn==0.49.0
+    fastapi==0.139.0 uvicorn==0.50.2
 
 RUN rm -f /usr/local/bin/dotenv
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
-RUN npm i -g opencode-ai@1.17.8
+RUN npm i -g opencode-ai@1.17.14
 
 WORKDIR /workspace
 USER opencode
@@ -143,14 +143,14 @@ USER root
 ENV PATH="/home/opencode/.local/bin:${PATH}"
 
 RUN npm i -g \
-    typescript@6.0.3 tsx@4.22.4 \
-    pnpm@11.8.0 \
-    vite@8.0.16 esbuild@0.28.1 \
-    eslint@10.5.0 prettier@3.8.4 \
+    typescript@6.0.3 tsx@4.23.0 \
+    pnpm@11.10.0 \
+    vite@8.1.3 esbuild@0.28.1 \
+    eslint@10.6.0 prettier@3.9.4 \
     serve@14.2.6 nodemon@3.1.14 concurrently@10.0.3 \
     dotenv-cli@11.0.0 \
-    wrangler@4.102.0 vercel@54.14.2 netlify-cli@26.1.0 \
-    pm2@7.0.1 \
+    wrangler@4.107.0 vercel@54.21.0 netlify-cli@26.1.0 \
+    pm2@7.0.3 \
     prisma@7.8.0 drizzle-kit@0.31.10 \
     lighthouse@13.4.0 @lhci/cli@0.15.1 \
     sharp-cli@5.2.0 json-server@0.17.4 http-server@14.1.1
@@ -158,19 +158,7 @@ RUN npm i -g \
 RUN pip install --no-cache-dir --break-system-packages \
     "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}"
 
-RUN npm i -g paperclipai@2026.618.0
-# Remove this shim when stable Paperclip includes paperclipai/paperclip#8327.
-RUN npm pack @paperclipai/skills-catalog@0.3.1 --pack-destination /tmp && \
-    mkdir -p \
-      /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/skills-catalog \
-      /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages && \
-    tar -xzf /tmp/paperclipai-skills-catalog-0.3.1.tgz \
-      -C /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/skills-catalog \
-      --strip-components=1 && \
-    ln -sfn ../skills-catalog \
-      /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages/skills-catalog && \
-    test -f /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages/skills-catalog/generated/catalog.json && \
-    rm -f /tmp/paperclipai-skills-catalog-0.3.1.tgz
+RUN npm i -g paperclipai@2026.626.0
 RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
       -path '*/native/lib' -type d -exec sh -c '\
         for lib_dir do \

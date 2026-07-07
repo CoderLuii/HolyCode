@@ -29,7 +29,7 @@ jobs:
 
           docker run --rm --entrypoint sh holycode-pr-test -lc "
             set -eu
-            test -f /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/packages/skills-catalog/generated/catalog.json
+            test -f /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/skills-catalog/generated/catalog.json
             node --input-type=module -e '
               import { listCatalogSkills } from \"/usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/server/dist/services/skills-catalog.js\";
               const skills = listCatalogSkills();

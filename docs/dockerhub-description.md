@@ -51,7 +51,7 @@ That's it. Open your browser and start building.
 
 🌐 **Headless Browser** — Chromium + Xvfb + Playwright, pre-configured for screenshots, scraping, and browser automation.
 
-🛠️ **50+ Dev Tools** — Node.js 22.23.0 LTS with npm 10.9.8, Python 3, git, ripgrep, fzf, bat, eza, lazygit, delta, gh CLI, pnpm, TypeScript, Prisma, and more.
+🛠️ **50+ Dev Tools** — Node.js 22.23.1 LTS with npm 10.9.8, Python 3, git, ripgrep, fzf, bat, eza, lazygit, delta, gh CLI, pnpm, TypeScript, Prisma, and more.
 
 🧩 **Bundled Services** — Optional Hermes Agent on port 8642, Paperclip on port 3100, and CLIProxyAPI sidecar support in the full Compose profile. Flip an env var, restart, and they come up beside OpenCode.
 
@@ -90,7 +90,7 @@ Paperclip defaults to `authenticated` mode with the `lan` bind preset inside Hol
 
 Paperclip runs with `HOME=/home/opencode` and XDG paths under `/home/opencode`, matching the OpenCode web service. Keep your main state mount at `/home/opencode` so Paperclip's OpenCode workers read the same config as the web UI.
 
-HolyCode also includes Paperclip's published Skills catalog at the path stable Paperclip expects while the upstream package-layout fix moves from merged PR to stable npm release.
+Paperclip now ships its Skills catalog through the package set HolyCode installs, so the Skills page loads without a HolyCode compatibility shim.
 
 Set `PAPERCLIP_ALLOWED_HOSTNAMES` only for trusted LAN/private hostnames or IPs. Restart after changing it; hostname guard and authentication remain enabled.
 

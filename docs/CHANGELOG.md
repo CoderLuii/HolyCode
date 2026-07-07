@@ -4,6 +4,19 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.13] - 07/07/2026
+
+### Changed
+
+- Refresh the Docker runtime to Node.js 22.23.1 LTS while keeping npm 10.9.8
+- Refresh pinned OpenCode, Paperclip, npm CLI, PyPI utility, GitHub-release, git-tag, and GitHub Actions versions in the Docker image and workflows
+- Move Paperclip to its published Skills catalog package path and remove HolyCode's temporary catalog compatibility shim
+- Update README, Docker Hub, Podman, translation, and third-party notice text for the current Paperclip catalog packaging
+
+### Fixed
+
+- Keep pull-request validation pointed at Paperclip's current Skills catalog manifest path
+
 ## [1.0.12] - 06/21/2026
 
 ### Changed

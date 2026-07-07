@@ -420,8 +420,8 @@ services:
 
 | Runtime | Versione |
 |---------|---------|
-| Node.js | 22.23.0 (LTS) |
-| npm | Incluso con Node.js 22.23.0 |
+| Node.js | 22.23.1 (LTS) |
+| npm | Incluso con Node.js 22.23.1 |
 | Python | 3 (sistema) |
 | pip | Incluso con Python 3 |
 
@@ -523,7 +523,7 @@ environment:
   - PAPERCLIP_PORT=3100
 ```
 
-Lo stato di Paperclip vive in `/home/opencode/.paperclip`. Paperclip usa anche `/home/opencode` come home e mantiene config, cache e stato di OpenCode sotto quella stessa directory, quindi gli agenti vedono la stessa configurazione persistente della UI web di OpenCode. HolyCode include anche il catalogo Skills pubblicato da Paperclip nel percorso che la versione stabile si aspetta, così la pagina Skills carica il catalogo invece di fallire su `GET /api/skills/catalog`. Apri il dashboard, configura la tua azienda e assumi dipendenti OpenCode da lì.
+Lo stato di Paperclip vive in `/home/opencode/.paperclip`. Paperclip usa anche `/home/opencode` come home e mantiene config, cache e stato di OpenCode sotto quella stessa directory, quindi gli agenti vedono la stessa configurazione persistente della UI web di OpenCode. Paperclip ora distribuisce il catalogo Skills tramite il set di pacchetti installato da HolyCode, così la pagina Skills carica il catalogo invece di fallire su `GET /api/skills/catalog`. Apri il dashboard, configura la tua azienda e assumi dipendenti OpenCode da lì.
 
 <p align="right">
   <a href="#top">torna su</a>

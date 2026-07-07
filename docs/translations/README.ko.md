@@ -420,8 +420,8 @@ services:
 
 | 런타임 | 버전 |
 |---------|---------|
-| Node.js | 22.23.0 (LTS) |
-| npm | Node.js 22.23.0에 번들됨 |
+| Node.js | 22.23.1 (LTS) |
+| npm | Node.js 22.23.1에 번들됨 |
 | Python | 3 (시스템) |
 | pip | Python 3에 번들됨 |
 
@@ -523,7 +523,7 @@ environment:
   - PAPERCLIP_PORT=3100
 ```
 
-Paperclip 상태는 `/home/opencode/.paperclip`에 저장됩니다. Paperclip도 `/home/opencode`를 홈으로 실행하고 OpenCode config/cache/state 경로를 같은 디렉터리 아래에 유지하므로, 에이전트는 OpenCode 웹 UI와 같은 영구 설정을 봅니다. HolyCode는 stable Paperclip이 기대하는 경로에도 게시된 Skills catalog를 포함하므로, Skills 페이지가 `GET /api/skills/catalog`에서 실패하지 않고 카탈로그를 로드합니다. 대시보드를 열고, 회사를 설정하고, 거기서 OpenCode 기반 직원을 고용하세요.
+Paperclip 상태는 `/home/opencode/.paperclip`에 저장됩니다. Paperclip도 `/home/opencode`를 홈으로 실행하고 OpenCode config/cache/state 경로를 같은 디렉터리 아래에 유지하므로, 에이전트는 OpenCode 웹 UI와 같은 영구 설정을 봅니다. Paperclip은 이제 HolyCode가 설치하는 패키지 세트를 통해 Skills catalog를 제공하므로, Skills 페이지가 `GET /api/skills/catalog`에서 실패하지 않고 카탈로그를 로드합니다. 대시보드를 열고, 회사를 설정하고, 거기서 OpenCode 기반 직원을 고용하세요.
 
 <p align="right">
   <a href="#top">맨 위로</a>
