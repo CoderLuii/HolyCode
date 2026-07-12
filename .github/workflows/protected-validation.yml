@@ -1,0 +1,257 @@
+name: HolyCode - Protected Validation
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      previous_version:
+        required: false
+        default: ''
+        type: string
+      release_title:
+        required: true
+        type: string
+      allow_legacy_bridge:
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag, for example v1.1.0
+        required: true
+        type: string
+      previous_version:
+        description: Previous release tag
+        required: true
+        type: string
+      release_title:
+        description: GitHub release title
+        required: true
+        type: string
+      allow_legacy_bridge:
+        description: Allow the one-time v1.0.13 to v1.1.0 bridge
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: protected-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  protected-validation:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.version }}
+
+      - name: Validate release metadata
+        env:
+          ALLOW_LEGACY_BRIDGE: ${{ inputs.allow_legacy_bridge }}
+          PREVIOUS_VERSION: ${{ inputs.previous_version }}
+          RELEASE_TITLE: ${{ inputs.release_title }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          legacy_args=()
+          if [ -z "$PREVIOUS_VERSION" ]; then
+            PREVIOUS_VERSION="$(git tag --list 'v*' --sort=-v:refname | grep -Fxv "$RELEASE_VERSION" | head -n 1 || true)"
+          fi
+          if [ "$ALLOW_LEGACY_BRIDGE" = "true" ]; then
+            legacy_args=(--allow-legacy-v1-0-13-to-v1-1-0)
+          fi
+
+          git rev-parse -q --verify "refs/tags/$RELEASE_VERSION" >/dev/null
+          commit_title="$(git log -1 --format=%s "$RELEASE_VERSION")"
+
+          python scripts/validate_version.py \
+            --version "$RELEASE_VERSION" \
+            --previous-version "$PREVIOUS_VERSION" \
+            --tag-name "$RELEASE_VERSION" \
+            --commit-title "$commit_title" \
+            --release-title "$RELEASE_TITLE" \
+            "${legacy_args[@]}"
+
+          git merge-base --is-ancestor "$PREVIOUS_VERSION" "$RELEASE_VERSION"
+          commit_count="$(git rev-list --count "$PREVIOUS_VERSION..$RELEASE_VERSION")"
+          if [ "$commit_count" -ne 1 ]; then
+            echo "Release range $PREVIOUS_VERSION..$RELEASE_VERSION contains $commit_count commits; expected exactly 1" >&2
+            exit 1
+          fi
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build local ${{ matrix.platform }} scan image
+        run: |
+          docker buildx build \
+            --platform "${{ matrix.platform }}" \
+            --load \
+            --tag "holycode-protected-validation:${{ matrix.suffix }}" \
+            .
+
+      - name: Validate CLIProxyAPI sidecar
+        env:
+          CLIPROXY_IMAGE: eceasy/cli-proxy-api:v7.2.71@sha256:5f94c3ef20b55c00a8ca6608038d22d9371c656fde039538f09788aab68a87fe
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+
+          docker run --rm --platform "$PLATFORM" "$CLIPROXY_IMAGE" \
+            ./CLIProxyAPI --help 2>&1 | grep -F 'CLIProxyAPI Version: v7.2.71'
+
+          docker run -d --platform "$PLATFORM" --name holycode-cliproxy-validation \
+            -p 127.0.0.1:18317:8317 \
+            -v "$PWD/tests/fixtures/cliproxy-test-config.yaml:/CLIProxyAPI/config.yaml:ro" \
+            "$CLIPROXY_IMAGE" \
+            ./CLIProxyAPI -config /CLIProxyAPI/config.yaml -local-model
+
+          cleanup() {
+            docker logs holycode-cliproxy-validation || true
+            docker rm -f holycode-cliproxy-validation || true
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for _ in $(seq 1 60); do
+            status="$(curl -sS --max-time 5 -o /tmp/cliproxy-models.json -w '%{http_code}' \
+              -H 'Authorization: Bearer holycode-release-validation-key' \
+              http://127.0.0.1:18317/v1/models || true)"
+            if [ "$status" = "200" ]; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          [ "$ready" = true ]
+          jq -e '.object == "list" and (.data | type == "array")' /tmp/cliproxy-models.json >/dev/null
+          [ "$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:18317/v1/models)" = "401" ]
+
+      - name: Validate upgrade, persistence, and rollback
+        env:
+          CURRENT_IMAGE: holycode-protected-validation:${{ matrix.suffix }}
+          PLATFORM: ${{ matrix.platform }}
+          PREVIOUS_IMAGE: coderluii/holycode:1.0.13@sha256:45e352d74dbe227c344c2b1973e2532a9284a98e0d58f34efcd991972da6f70c
+        run: bash scripts/test_upgrade_rollback.sh "$CURRENT_IMAGE" "$PREVIOUS_IMAGE" "$PLATFORM"
+
+      - name: Reclaim scanner workspace
+        env:
+          CLIPROXY_IMAGE: eceasy/cli-proxy-api:v7.2.71@sha256:5f94c3ef20b55c00a8ca6608038d22d9371c656fde039538f09788aab68a87fe
+          PREVIOUS_IMAGE: coderluii/holycode:1.0.13@sha256:45e352d74dbe227c344c2b1973e2532a9284a98e0d58f34efcd991972da6f70c
+        run: |
+          docker image rm "$PREVIOUS_IMAGE" "$CLIPROXY_IMAGE" || true
+          docker container prune --force
+          docker buildx prune --all --force
+          docker image prune --force
+          docker system df
+          df -h /
+
+      # Scout copies local images while indexing them. Feed it an SPDX SBOM so
+      # the large runtime image stays within GitHub-hosted runner disk limits.
+      - name: Generate SPDX SBOM for Docker Scout
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.72.0
+          image-ref: holycode-protected-validation:${{ matrix.suffix }}
+          format: spdx-json
+          output: holycode-${{ matrix.suffix }}.spdx.json
+
+      - name: Install Docker Scout CLI
+        env:
+          SCOUT_SHA256: 0f778f9d833f28bc6cccff95e33039849c0afcecafa38d9f46fe74bfd0915714
+          SCOUT_VERSION: 1.23.1
+        run: |
+          set -euo pipefail
+
+          archive="$RUNNER_TEMP/docker-scout_${SCOUT_VERSION}_linux_amd64.tar.gz"
+          bin_dir="$RUNNER_TEMP/docker-scout-bin"
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location \
+            --output "$archive" \
+            "https://github.com/docker/scout-cli/releases/download/v${SCOUT_VERSION}/docker-scout_${SCOUT_VERSION}_linux_amd64.tar.gz"
+          printf '%s  %s\n' "$SCOUT_SHA256" "$archive" | sha256sum --check --strict
+          mkdir -p "$bin_dir"
+          tar -xzf "$archive" -C "$bin_dir" docker-scout
+          chmod 0755 "$bin_dir/docker-scout"
+          echo "$bin_dir" >> "$GITHUB_PATH"
+          "$bin_dir/docker-scout" version
+
+      - name: Login to Docker Hub for Docker Scout
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker Scout vulnerability report
+        env:
+          SCOUT_REPORT: holycode-${{ matrix.suffix }}.scout.sarif
+          SCOUT_SBOM: holycode-${{ matrix.suffix }}.spdx.json
+        run: |
+          set -euo pipefail
+
+          docker-scout cves "sbom://$SCOUT_SBOM" \
+            --only-severity critical,high \
+            --format sarif \
+            --output "$SCOUT_REPORT"
+
+      - name: Summarize Docker Scout vulnerability report
+        env:
+          SCOUT_REPORT: holycode-${{ matrix.suffix }}.scout.sarif
+        run: |
+          set -euo pipefail
+
+          jq -e '.runs | type == "array" and length > 0' "$SCOUT_REPORT" >/dev/null
+          findings="$(jq '[.runs[].results[]?] | length' "$SCOUT_REPORT")"
+          rules="$(jq '[.runs[].tool.driver.rules[]?] | length' "$SCOUT_REPORT")"
+
+          {
+            echo "### Docker Scout (${{ matrix.platform }})"
+            echo
+            echo "- SARIF results: $findings"
+            echo "- Vulnerability rules: $rules"
+            echo "- Input: SPDX SBOM generated from the tested image"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "Docker Scout recorded $findings SARIF results across $rules vulnerability rules."
+
+      - name: Trivy vulnerability report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.72.0
+          image-ref: holycode-protected-validation:${{ matrix.suffix }}
+          format: table
+          scanners: vuln,secret
+          severity: CRITICAL,HIGH
+          exit-code: 0
+
+      - name: Trivy fixable critical gate
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.72.0
+          image-ref: holycode-protected-validation:${{ matrix.suffix }}
+          format: table
+          scanners: vuln,secret
+          severity: CRITICAL
+          exit-code: 1
+          ignore-unfixed: true
+          trivyignores: .trivyignore.yaml

@@ -76,8 +76,8 @@ services:
       # - ENABLE_OH_MY_OPENAGENT=true
 
       # --- Plugin Updates ---
-      # manual: install enabled plugins only if missing (default)
-      # auto: install if missing AND update enabled plugins on boot
+      # manual: install enabled plugins only if missing and keep user versions (default)
+      # auto: install if missing and sync declared pins on boot
       # - HOLYCODE_PLUGIN_UPDATE=manual
 
       # --- Bundled services ---
@@ -102,7 +102,7 @@ services:
       # - CLIPROXYAPI_SMALL_MODEL=${CLIPROXYAPI_SMALL_MODEL:-}
 
   cliproxyapi:
-    image: eceasy/cli-proxy-api:v7.1.23
+    image: eceasy/cli-proxy-api:v7.2.71@sha256:5f94c3ef20b55c00a8ca6608038d22d9371c656fde039538f09788aab68a87fe
     profiles:
       - cliproxyapi
     restart: unless-stopped

@@ -10,6 +10,10 @@ set -e
 OC_USER="opencode"
 OC_HOME="/home/opencode"
 WORKSPACE_DIR="/workspace"
+CLAUDE_AUTH_PLUGIN_NAME="opencode-claude-auth"
+CLAUDE_AUTH_PLUGIN_VERSION="2.0.0"
+OH_MY_OPENAGENT_PLUGIN_NAME="oh-my-openagent"
+OH_MY_OPENAGENT_PLUGIN_VERSION="4.17.0"
 
 sync_shipped_skills() {
     local source_skills_dir="/usr/local/share/holycode/skills"
@@ -59,29 +63,163 @@ sync_shipped_skills() {
     done
 }
 
+plugin_config_spec() {
+    local config_file="$1"
+    local plugin_name="$2"
+
+    [ -f "$config_file" ] || return 1
+    python3 - "$config_file" "$plugin_name" 2>/dev/null <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+plugin_name = sys.argv[2]
+plugins = config.get('plugin', []) if isinstance(config, dict) else []
+for plugin in plugins:
+    if isinstance(plugin, str) and (plugin == plugin_name or plugin.startswith(f'{plugin_name}@')):
+        print(plugin)
+        sys.exit(0)
+sys.exit(1)
+PY
+}
+
+remove_plugin_config() {
+    local config_file="$1"
+    local plugin_name="$2"
+
+    [ -f "$config_file" ] || return 1
+    runuser -u "$OC_USER" -- python3 - "$config_file" "$plugin_name" 2>/dev/null <<'PY'
+import json
+import sys
+
+config_file = sys.argv[1]
+plugin_name = sys.argv[2]
+
+with open(config_file, 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+plugins = config.get('plugin', []) if isinstance(config, dict) else []
+if not isinstance(plugins, list):
+    sys.exit(1)
+
+filtered = [
+    plugin
+    for plugin in plugins
+    if not (
+        isinstance(plugin, str)
+        and (plugin == plugin_name or plugin.startswith(f'{plugin_name}@'))
+    )
+]
+if filtered == plugins:
+    sys.exit(1)
+
+if filtered:
+    config['plugin'] = filtered
+else:
+    config.pop('plugin', None)
+
+with open(config_file, 'w', encoding='utf-8') as f:
+    json.dump(config, f, indent=2)
+    f.write('\n')
+PY
+}
+
+plugin_installed_version() {
+    local plugin_name="$1"
+    local plugin_spec="${2:-}"
+    local package_json
+
+    if [ -z "$plugin_spec" ]; then
+        plugin_spec=$(plugin_config_spec "$CONFIG_FILE" "$plugin_name" || true)
+    fi
+    [ -n "$plugin_spec" ] || return 1
+
+    if [ "$plugin_spec" = "$plugin_name" ]; then
+        plugin_spec="${plugin_name}@latest"
+    fi
+    package_json="$OC_HOME/.cache/opencode/packages/$plugin_spec/node_modules/$plugin_name/package.json"
+
+    [ -f "$package_json" ] || return 1
+    python3 - "$package_json" 2>/dev/null <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    package = json.load(f)
+
+version = package.get('version')
+if not version:
+    sys.exit(1)
+print(version)
+PY
+}
+
+install_plugin_spec() {
+    local plugin_spec="$1"
+
+    runuser -u "$OC_USER" -- env \
+        HOME="$OC_HOME" \
+        USER="$OC_USER" \
+        LOGNAME="$OC_USER" \
+        XDG_CONFIG_HOME="$OC_HOME/.config" \
+        XDG_CACHE_HOME="$OC_HOME/.cache" \
+        XDG_DATA_HOME="$OC_HOME/.local/share" \
+        XDG_STATE_HOME="$OC_HOME/.local/state" \
+        opencode plugin "$plugin_spec" -g -f
+}
+
+log_plugin_installed_version() {
+    local plugin_name="$1"
+    local plugin_spec installed_version
+
+    plugin_spec=$(plugin_config_spec "$CONFIG_FILE" "$plugin_name" || true)
+    if installed_version=$(plugin_installed_version "$plugin_name" "$plugin_spec"); then
+        echo "[entrypoint] Plugin '$plugin_name' configured as '$plugin_spec'; installed version $installed_version"
+    else
+        echo "[entrypoint] Plugin '$plugin_name' configured as '${plugin_spec:-missing}'; installed version unavailable"
+    fi
+}
+
 ensure_plugin_installed() {
     local plugin_name="$1"
-    local plugin_dir="$OC_HOME/.cache/opencode/node_modules/$plugin_name"
+    local plugin_version="$2"
+    local desired_spec="${plugin_name}@${plugin_version}"
+    local configured_spec installed_version target_spec target_version
     local update_mode="${HOLYCODE_PLUGIN_UPDATE:-manual}"
 
     if [ "$update_mode" != "auto" ]; then
         update_mode="manual"
     fi
 
-    if [ -f "$plugin_dir/package.json" ]; then
-        if [ "$update_mode" = "auto" ]; then
-            echo "[entrypoint] Plugin '$plugin_name' updating (auto mode)"
-            if ! runuser -u "$OC_USER" -- opencode plugin "$plugin_name" -g; then
-                echo "[entrypoint] WARNING: Failed to update plugin '$plugin_name'"
-            fi
-        fi
-        return 0
+    configured_spec=$(plugin_config_spec "$CONFIG_FILE" "$plugin_name" || true)
+    if [ "$update_mode" = "auto" ] || [ -z "$configured_spec" ] || [ "$configured_spec" = "$plugin_name" ]; then
+        target_spec="$desired_spec"
+    else
+        target_spec="$configured_spec"
     fi
 
-    echo "[entrypoint] Plugin '$plugin_name' missing, installing"
-    if ! runuser -u "$OC_USER" -- opencode plugin "$plugin_name" -g; then
-        echo "[entrypoint] WARNING: Failed to install plugin '$plugin_name'"
+    installed_version=$(plugin_installed_version "$plugin_name" "$target_spec" || true)
+    target_version=""
+    if [ "$target_spec" != "$plugin_name" ]; then
+        target_version="${target_spec#"$plugin_name"@}"
     fi
+
+    if [ "$configured_spec" != "$target_spec" ] || \
+       [ -z "$installed_version" ] || \
+       { [ -n "$target_version" ] && [ "$target_version" != "latest" ] && [ "$installed_version" != "$target_version" ]; }; then
+        if [ "$update_mode" = "auto" ] && [ -n "$configured_spec" ]; then
+            echo "[entrypoint] Plugin '$plugin_name' syncing to $plugin_version (auto mode)"
+        else
+            echo "[entrypoint] Plugin '$plugin_name' installing $target_spec"
+        fi
+        if ! install_plugin_spec "$target_spec"; then
+            echo "[entrypoint] WARNING: Failed to install plugin '$target_spec'"
+        fi
+    fi
+
+    log_plugin_installed_version "$plugin_name"
 }
 
 # ---------- UID/GID remapping ----------
@@ -200,88 +338,22 @@ CONFIG_FILE="$OC_HOME/.config/opencode/opencode.json"
 if [ -f "$CONFIG_FILE" ]; then
     # Claude Auth plugin
     if [ "${ENABLE_CLAUDE_AUTH}" = "true" ]; then
-        if ! grep -q "opencode-claude-auth" "$CONFIG_FILE" 2>/dev/null; then
-            runuser -u "$OC_USER" -- python3 - "$CONFIG_FILE" "opencode-claude-auth" 2>/dev/null <<'PY' && echo "[entrypoint] Claude Auth plugin enabled"
-import json
-import sys
-
-config_file = sys.argv[1]
-plugin_name = sys.argv[2]
-
-with open(config_file, 'r', encoding='utf-8') as f:
-    config = json.load(f)
-
-config.setdefault('plugin', [])
-if plugin_name not in config['plugin']:
-    config['plugin'].append(plugin_name)
-
-with open(config_file, 'w', encoding='utf-8') as f:
-    json.dump(config, f, indent=2)
-PY
-        fi
-        ensure_plugin_installed "opencode-claude-auth"
+        ensure_plugin_installed "$CLAUDE_AUTH_PLUGIN_NAME" "$CLAUDE_AUTH_PLUGIN_VERSION"
     else
-        if grep -q "opencode-claude-auth" "$CONFIG_FILE" 2>/dev/null; then
-            runuser -u "$OC_USER" -- python3 - "$CONFIG_FILE" "opencode-claude-auth" 2>/dev/null <<'PY' && echo "[entrypoint] Claude Auth plugin disabled"
-import json
-import sys
-
-config_file = sys.argv[1]
-plugin_name = sys.argv[2]
-
-with open(config_file, 'r', encoding='utf-8') as f:
-    config = json.load(f)
-
-if 'plugin' in config and plugin_name in config['plugin']:
-    config['plugin'].remove(plugin_name)
-
-with open(config_file, 'w', encoding='utf-8') as f:
-    json.dump(config, f, indent=2)
-PY
+        if remove_plugin_config "$CONFIG_FILE" "$CLAUDE_AUTH_PLUGIN_NAME"; then
+            echo "[entrypoint] Claude Auth plugin disabled"
         fi
+        remove_plugin_config "$OC_HOME/.config/opencode/tui.json" "$CLAUDE_AUTH_PLUGIN_NAME" || true
     fi
 
     # oh-my-openagent plugin
     if [ "${ENABLE_OH_MY_OPENAGENT}" = "true" ]; then
-        if ! grep -q "oh-my-openagent" "$CONFIG_FILE" 2>/dev/null; then
-            runuser -u "$OC_USER" -- python3 - "$CONFIG_FILE" "oh-my-openagent" 2>/dev/null <<'PY' && echo "[entrypoint] oh-my-openagent plugin enabled"
-import json
-import sys
-
-config_file = sys.argv[1]
-plugin_name = sys.argv[2]
-
-with open(config_file, 'r', encoding='utf-8') as f:
-    config = json.load(f)
-
-config.setdefault('plugin', [])
-if plugin_name not in config['plugin']:
-    config['plugin'].append(plugin_name)
-
-with open(config_file, 'w', encoding='utf-8') as f:
-    json.dump(config, f, indent=2)
-PY
-        fi
-        ensure_plugin_installed "oh-my-openagent"
+        ensure_plugin_installed "$OH_MY_OPENAGENT_PLUGIN_NAME" "$OH_MY_OPENAGENT_PLUGIN_VERSION"
     else
-        if grep -q "oh-my-openagent" "$CONFIG_FILE" 2>/dev/null; then
-            runuser -u "$OC_USER" -- python3 - "$CONFIG_FILE" "oh-my-openagent" 2>/dev/null <<'PY' && echo "[entrypoint] oh-my-openagent plugin disabled"
-import json
-import sys
-
-config_file = sys.argv[1]
-plugin_name = sys.argv[2]
-
-with open(config_file, 'r', encoding='utf-8') as f:
-    config = json.load(f)
-
-if 'plugin' in config and plugin_name in config['plugin']:
-    config['plugin'].remove(plugin_name)
-
-with open(config_file, 'w', encoding='utf-8') as f:
-    json.dump(config, f, indent=2)
-PY
+        if remove_plugin_config "$CONFIG_FILE" "$OH_MY_OPENAGENT_PLUGIN_NAME"; then
+            echo "[entrypoint] oh-my-openagent plugin disabled"
         fi
+        remove_plugin_config "$OC_HOME/.config/opencode/tui.json" "$OH_MY_OPENAGENT_PLUGIN_NAME" || true
     fi
 
     # CLIProxyAPI provider

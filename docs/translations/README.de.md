@@ -367,12 +367,12 @@ services:
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
 | `ENABLE_HERMES` | (keiner) | Auf `true` setzen, um Hermes als integrierten Meta-Agenten-API zu starten |
 | `HERMES_PORT` | `8642` | Überschreibt den Container-Port für Hermes |
-| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token |
-| `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin-Aktualisierungsmodus: `manual` (installiert wenn fehlend) oder `auto` (installiert und aktualisiert beim Start) |
+| `API_SERVER_KEY` | (keiner) | Vor dem Aktivieren von Hermes setzen; verwende ein echtes Bearer-Token |
+| `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin-Aktualisierungsmodus: `manual` (installiert nur fehlende Plugins und lässt Benutzer-Versionen unverändert) oder `auto` (synchronisiert deklarierte Pins beim Start) |
 
 > Plugin-Umschalter (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) werden beim Neustart des Containers wirksam. Umgebungsvariable setzen und `docker compose down && up -d` ausführen.
 
-> `HOLYCODE_PLUGIN_UPDATE` steuert Plugin-Paketaktualisierungen. `manual` (Standard) installiert aktivierte Plugins nur wenn sie fehlen. `auto` installiert fehlende Plugins und aktualisiert aktivierte Plugins bei jedem Start. Dies ist unabhängig von `OPENCODE_DISABLE_AUTOUPDATE`, das nur OpenCode betrifft.
+> `HOLYCODE_PLUGIN_UPDATE` steuert Plugin-Paketaktualisierungen. `manual` (Standard) installiert aktivierte Plugins nur wenn sie fehlen und behält vom Benutzer installierte Versionen bei. `auto` installiert fehlende Plugins und synchronisiert die deklarierten Pins beim Start. Dies ist unabhängig von `OPENCODE_DISABLE_AUTOUPDATE`, das nur OpenCode betrifft.
 
 > `ENABLE_OH_MY_OPENAGENT=true` aktiviert das Plugin und stellt die integrierte Skill `/oh-my-openagent-setup` bereit. Die Skill erscheint nur wenn das Plugin aktiviert ist. Verwende sie, um die plugin-spezifische Konfigurationsdatei unter `~/.config/opencode/oh-my-openagent.jsonc` zu erstellen oder zu aktualisieren.
 
@@ -420,10 +420,14 @@ services:
 
 | Laufzeit | Version |
 |---------|---------|
-| Node.js | 22.23.1 (LTS) |
-| npm | Mit Node.js 22.23.1 gebündelt |
+| Node.js | 24.18.0 (LTS) |
+| npm | 11.16.0, mit Node.js 24.18.0 gebündelt |
 | Python | 3 (System) |
 | pip | Mit Python 3 gebündelt |
+
+> Release-Tags verwenden exakt `vX.Y.Z`. Docker-Image-Tags lassen das `v` weg. Nach `v1.0.9` folgt `v1.1.0`, nach `v1.1.9` folgt `v1.2.0` und nach `v1.9.9` folgt `v2.0.0`. `v1.0.10` bis `v1.0.13` bleiben unveränderlich.
+
+> Für diese Version bleibt TypeScript bei 6.0.3, bis die von den enthaltenen Toolchains benötigten stabilen APIs in 7.x verfügbar sind. NumPy bleibt auf der neuesten mit Bookworm Python 3.11 kompatiblen Linie, json-server auf der stabilen Version 0.17.4 und Vercel auf 54.21.0, bis das Scope- und Teamverhalten geprüft ist.
 
 </details>
 
@@ -507,7 +511,7 @@ environment:
   - API_SERVER_KEY=replace-with-a-real-secret
 ```
 
-Set `API_SERVER_KEY` to a real bearer token; Hermes does not start the API server without it.
+Setze `API_SERVER_KEY`, bevor du Hermes aktivierst.
 
 Der Hermes-Zustand liegt unter `/home/opencode/.hermes` und folgt derselben Persistenzgeschichte wie der Rest von HolyCode.
 

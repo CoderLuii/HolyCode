@@ -4,6 +4,25 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 07/12/2026
+
+### Changed
+
+- Refresh the Docker runtime to Node.js 24.18.0 LTS with npm 11.16.0 after the full service matrix passed on Node 24
+- Refresh OpenCode to 1.17.18, Paperclip to 2026.707.0, Hermes to v2026.7.7.2, CLIProxyAPI to v7.2.71, and the bundled release pins for eza, fzf, pnpm, Vite, ESLint, Prettier, Wrangler, Netlify CLI, tqdm, uvicorn, and Claude Code
+- Retain Vercel 54.21.0 until authenticated scope/team behavior is proven, TypeScript 6.0.3 for stable toolchain APIs, NumPy 2.4.6 for Bookworm Python 3.11, and stable json-server 0.17.4 instead of its 1.0 beta
+- Pin the default plugin packages to `opencode-claude-auth` 2.0.0 and `oh-my-openagent` 4.17.0, with `auto` syncing declared pins and `manual` preserving user versions
+- Enforce one-digit release segments: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`; published `v1.0.10` through `v1.0.13` remain immutable history
+- Document Docker tags without the `v` prefix, digest/checksum/action-SHA hardening, per-platform SBOM and provenance attestations, and per-platform vulnerability scans without claiming byte-for-byte reproducibility, zero vulnerabilities, or universal freshness
+- Clarify rollback guidance for copied bind mounts when a migration is not backward compatible, including the `1.0.13` Docker image (`v1.0.13` release) as the rollback target
+
+### Fixed
+
+- Run Hermes with the `opencode` user home and XDG paths instead of inheriting `/root`, preventing future dependency-level permission failures
+- Keep OpenCode plugin installs on their exact declared versions across fresh, automatic, manual, and disabled startup modes
+- Remove root npm download caches from build layers so package examples that resemble credentials are not shipped or scanned as runtime secrets
+- Remove unsupported Hermes key-enforcement and reproducibility claims from the public docs
+
 ## [1.0.13] - 07/07/2026
 
 ### Changed

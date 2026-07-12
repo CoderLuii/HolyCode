@@ -367,12 +367,12 @@ services:
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
 | `ENABLE_HERMES` | （なし） | Hermes をバンドルされたメタエージェント API として起動するには `true` に設定 |
 | `HERMES_PORT` | `8642` | Hermes が使用するコンテナポートを上書き |
-| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token |
-| `HOLYCODE_PLUGIN_UPDATE` | `manual` | プラグイン更新モード：`manual`（不足時にインストール）または `auto`（起動時にインストールと更新） |
+| `API_SERVER_KEY` | (なし) | Hermes を有効にする前に設定してください。実際の Bearer トークンを使ってください |
+| `HOLYCODE_PLUGIN_UPDATE` | `manual` | プラグイン更新モード：`manual`（不足分だけをインストールし、ユーザーのバージョンは保持）または `auto`（起動時に宣言済みの pin を同期） |
 
 > プラグインのトグル（`ENABLE_CLAUDE_AUTH`、`ENABLE_OH_MY_OPENAGENT`）はコンテナの再起動時に有効になります。env var を設定して `docker compose down && up -d` を実行してください。
 
-> `HOLYCODE_PLUGIN_UPDATE` はプラグインパッケージの更新を制御します。`manual`（デフォルト）は有効なプラグインが不足している場合のみインストールします。`auto` は不足しているプラグインをインストールし、起動のたびに有効なプラグインを更新します。これは OpenCode 自体にのみ影響する `OPENCODE_DISABLE_AUTOUPDATE` とは別です。
+> `HOLYCODE_PLUGIN_UPDATE` はプラグインパッケージの更新を制御します。`manual`（デフォルト）は有効なプラグインが不足している場合のみインストールし、ユーザーが入れたバージョンを保持します。`auto` は不足しているプラグインをインストールし、起動時に宣言済みの pin を同期します。これは OpenCode 自体にのみ影響する `OPENCODE_DISABLE_AUTOUPDATE` とは別です。
 
 > `ENABLE_OH_MY_OPENAGENT=true` はプラグインを有効にし、組み込みの `/oh-my-openagent-setup` スキルを公開します。スキルはプラグインが有効な場合のみ表示されます。`~/.config/opencode/oh-my-openagent.jsonc` のプラグイン専用設定ファイルを作成または更新するために使用してください。
 
@@ -420,10 +420,14 @@ services:
 
 | ランタイム | バージョン |
 |---------|---------|
-| Node.js | 22.23.1 (LTS) |
-| npm | Node.js 22.23.1 にバンドル |
+| Node.js | 24.18.0 (LTS) |
+| npm | 11.16.0、Node.js 24.18.0 にバンドル |
 | Python | 3（システム） |
 | pip | Python 3 にバンドル |
+
+> リリースタグは正確に `vX.Y.Z` を使います。Docker イメージタグでは `v` を付けません。`v1.0.9` の次は `v1.1.0`、`v1.1.9` の次は `v1.2.0`、`v1.9.9` の次は `v2.0.0` です。`v1.0.10` から `v1.0.13` までは不変です。
+
+> このリリースでは、同梱ツールチェーンが必要とする安定 API を 7.x が提供するまで TypeScript 6.0.3 を維持します。NumPy は Bookworm の Python 3.11 に対応する最新系列、json-server は安定版 0.17.4、Vercel はスコープとチームの動作を確認するまで 54.21.0 を維持します。
 
 </details>
 
@@ -507,7 +511,7 @@ environment:
   - API_SERVER_KEY=replace-with-a-real-secret
 ```
 
-Set `API_SERVER_KEY` to a real bearer token; Hermes does not start the API server without it.
+Hermes を有効にする前に `API_SERVER_KEY` を設定してください。
 
 Hermes の状態は `/home/opencode/.hermes` に保存され、HolyCode の他の部分と同じ永続化の仕組みに従います。
 

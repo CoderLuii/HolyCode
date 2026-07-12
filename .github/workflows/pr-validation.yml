@@ -8,20 +8,61 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-smoke-test:
+  static-validation:
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Python version policy tests
+        run: python -m unittest discover -s tests
+
+      - name: Static action pin checks
+        run: python scripts/validate_workflow_pins.py
+
+      - name: JSON syntax
+        run: python -m json.tool renovate.json >/tmp/renovate.json
+
+      - name: Workflow YAML syntax
+        run: ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
+
+      - name: Compose config
+        run: |
+          set -eu
+          docker compose -f docker-compose.yaml config --no-interpolate >/tmp/docker-compose.yaml
+          docker compose -f docker-compose.full.yaml config --no-interpolate >/tmp/docker-compose.full.yaml
+
+  build-and-smoke-test:
+    needs: static-validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Build image
         run: docker build -t holycode-pr-test .
 
-      - name: Smoke test OpenCode binary
-        run: docker run --rm holycode-pr-test opencode --version
+      - name: Smoke test image tools and secret hygiene
+        run: bash scripts/smoke_image.sh holycode-pr-test
+
+      - name: Validate Drizzle esbuild remediation
+        run: |
+          docker run --rm --entrypoint sh holycode-pr-test -lc '
+            set -eu
+            test ! -e /usr/local/lib/node_modules/drizzle-kit/node_modules/@esbuild-kit
+            jq -e ".version == \"0.28.1\"" /usr/local/lib/node_modules/drizzle-kit/node_modules/esbuild/package.json >/dev/null
+            drizzle-kit --version
+            drizzle-kit --help >/dev/null
+          '
+
+      - name: Validate plugin pin modes
+        run: bash scripts/test_plugin_modes.sh holycode-pr-test
 
       - name: Smoke test Paperclip skills catalog
         run: |
@@ -54,8 +95,10 @@ jobs:
           }
           trap cleanup EXIT
 
+          ready=false
           for _ in $(seq 1 90); do
             if docker exec holycode-paperclip-test sh -lc 'curl -fsS http://localhost:3100/ >/dev/null' 2>/dev/null; then
+              ready=true
               break
             fi
             if docker logs holycode-paperclip-test 2>&1 | grep -Eq '/root/.config/opencode|EACCES: permission denied'; then
@@ -63,6 +106,7 @@ jobs:
             fi
             sleep 2
           done
+          [ "$ready" = true ]
 
           docker exec holycode-paperclip-test sh -lc '
             pid="$(pgrep -u opencode -f "/usr/local/bin/paperclipai" | head -n 1)"
@@ -76,6 +120,56 @@ jobs:
           '
 
           docker logs holycode-paperclip-test > /tmp/holycode-paperclip.log 2>&1 || true
-          ! grep -F "/root/.config/opencode" /tmp/holycode-paperclip.log
-          ! grep -F "EACCES: permission denied" /tmp/holycode-paperclip.log
-          ! grep -F "Skills catalog manifest not found" /tmp/holycode-paperclip.log
+          if grep -F "/root/.config/opencode" /tmp/holycode-paperclip.log; then
+            exit 1
+          fi
+          if grep -F "EACCES: permission denied" /tmp/holycode-paperclip.log; then
+            exit 1
+          fi
+          if grep -F "Skills catalog manifest not found" /tmp/holycode-paperclip.log; then
+            exit 1
+          fi
+
+      - name: Smoke test Hermes runtime environment
+        run: |
+          set -eu
+
+          docker run -d --name holycode-hermes-test \
+            -e ENABLE_HERMES=true \
+            -e API_SERVER_KEY=holycode-ci-smoke-key \
+            holycode-pr-test
+
+          cleanup() {
+            docker logs holycode-hermes-test || true
+            docker rm -f holycode-hermes-test || true
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for _ in $(seq 1 90); do
+            if docker exec holycode-hermes-test curl -fsS \
+              -H 'Authorization: Bearer holycode-ci-smoke-key' \
+              http://localhost:8642/v1/models >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          [ "$ready" = true ]
+
+          docker exec -u opencode holycode-hermes-test sh -lc '
+            pid="$(pgrep -u opencode -f "hermes gateway" | head -n 1)"
+            test -n "$pid"
+            tr "\0" "\n" < "/proc/$pid/environ" > /tmp/hermes-env
+            grep -Fx "HOME=/home/opencode" /tmp/hermes-env
+            grep -Fx "XDG_CONFIG_HOME=/home/opencode/.config" /tmp/hermes-env
+            grep -Fx "XDG_CACHE_HOME=/home/opencode/.cache" /tmp/hermes-env
+            grep -Fx "XDG_DATA_HOME=/home/opencode/.local/share" /tmp/hermes-env
+            grep -Fx "XDG_STATE_HOME=/home/opencode/.local/state" /tmp/hermes-env
+            test -w /home/opencode/.hermes
+          '
+
+          docker logs holycode-hermes-test > /tmp/holycode-hermes.log 2>&1 || true
+          if grep -E '/root/\.(config|cache|local)|EACCES.*(/root|/home/opencode)' /tmp/holycode-hermes.log; then
+            exit 1
+          fi

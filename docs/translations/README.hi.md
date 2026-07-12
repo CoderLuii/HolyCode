@@ -367,12 +367,12 @@ services:
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
 | `ENABLE_HERMES` | (कोई नहीं) | Hermes को बंडल्ड मेटा-एजेंट API के रूप में शुरू करने के लिए `true` सेट करें |
 | `HERMES_PORT` | `8642` | Hermes के लिए कंटेनर पोर्ट ओवरराइड करें |
-| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token |
-| `HOLYCODE_PLUGIN_UPDATE` | `manual` | प्लगइन अपडेट मोड: `manual` (गायब होने पर इंस्टॉल करें) या `auto` (बूट पर इंस्टॉल और अपडेट करें) |
+| `API_SERVER_KEY` | (कोई नहीं) | Hermes को सक्रिय करने से पहले इसे सेट करें; एक वास्तविक Bearer token का उपयोग करें |
+| `HOLYCODE_PLUGIN_UPDATE` | `manual` | प्लगइन अपडेट मोड: `manual` (सिर्फ़ जो गायब हों उन्हें इंस्टॉल करता है और उपयोगकर्ता संस्करणों को बनाए रखता है) या `auto` (स्टार्टअप पर घोषित pins को sync करता है) |
 
 > प्लगइन टॉगल (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) कंटेनर रीस्टार्ट पर प्रभावी होते हैं। env var सेट करें और `docker compose down && up -d` चलाएं।
 
-> `HOLYCODE_PLUGIN_UPDATE` प्लगइन पैकेज अपडेट को कंट्रोल करता है। `manual` (डिफ़ॉल्ट) इनेबल्ड प्लगइन केवल तभी इंस्टॉल करता है जब वे गायब हों। `auto` गायब प्लगइन इंस्टॉल करता है और हर बूट पर इनेबल्ड प्लगइन अपडेट करता है। यह `OPENCODE_DISABLE_AUTOUPDATE` से अलग है, जो केवल OpenCode को प्रभावित करता है।
+> `HOLYCODE_PLUGIN_UPDATE` प्लगइन पैकेज अपडेट को कंट्रोल करता है। `manual` (डिफ़ॉल्ट) इनेबल्ड प्लगइन केवल तभी इंस्टॉल करता है जब वे गायब हों और उपयोगकर्ता-इंस्टॉल्ड संस्करणों को बनाए रखता है। `auto` गायब प्लगइन इंस्टॉल करता है और स्टार्टअप पर घोषित pins को sync करता है। यह `OPENCODE_DISABLE_AUTOUPDATE` से अलग है, जो केवल OpenCode को प्रभावित करता है।
 
 > `ENABLE_OH_MY_OPENAGENT=true` प्लगइन इनेबल करता है और बिल्ट-इन `/oh-my-openagent-setup` स्किल एक्सपोज़ करता है। स्किल केवल तभी दिखती है जब प्लगइन इनेबल हो। इसे `~/.config/opencode/oh-my-openagent.jsonc` पर प्लगइन-स्पेसिफिक कॉन्फ़िग फ़ाइल बनाने या अपडेट करने के लिए उपयोग करें।
 
@@ -420,10 +420,14 @@ services:
 
 | रनटाइम | वर्शन |
 |---------|---------|
-| Node.js | 22.23.1 (LTS) |
-| npm | Node.js 22.23.1 के साथ बंडल्ड |
+| Node.js | 24.18.0 (LTS) |
+| npm | 11.16.0, Node.js 24.18.0 के साथ बंडल्ड |
 | Python | 3 (सिस्टम) |
 | pip | Python 3 के साथ बंडल्ड |
+
+> Release tags ठीक `vX.Y.Z` का उपयोग करते हैं. Docker image tags से `v` हटा रहता है. `v1.0.9` के बाद `v1.1.0`, `v1.1.9` के बाद `v1.2.0`, और `v1.9.9` के बाद `v2.0.0` आता है. `v1.0.10` से `v1.0.13` तक अपरिवर्तनीय हैं.
+
+> इस रिलीज़ में TypeScript 6.0.3 पर रहेगा, जब तक 7.x में शामिल टूलचेन के लिए आवश्यक स्थिर API उपलब्ध नहीं हो जाते. NumPy, Bookworm Python 3.11 के साथ संगत नवीनतम लाइन पर रहेगा, json-server स्थिर 0.17.4 पर रहेगा, और scope तथा team व्यवहार सत्यापित होने तक Vercel 54.21.0 पर रहेगा.
 
 </details>
 
@@ -507,7 +511,7 @@ environment:
   - API_SERVER_KEY=replace-with-a-real-secret
 ```
 
-Set `API_SERVER_KEY` to a real bearer token; Hermes does not start the API server without it.
+Hermes को सक्रिय करने से पहले `API_SERVER_KEY` सेट करें।
 
 Hermes स्टेट `/home/opencode/.hermes` में रहती है, HolyCode के बाकी हिस्से जैसी ही परसिस्टेंस स्टोरी के साथ।
 

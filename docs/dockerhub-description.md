@@ -4,6 +4,8 @@
 
 OpenCode AI coding agent with built-in web UI, Claude subscription support, 50+ dev tools, headless browser, bundled Hermes + Paperclip integrations, and optional CLIProxyAPI sidecar support. Use your existing Claude Max/Pro plan. No separate API key needed.
 
+v1.1.0 refreshes the runtime to Node.js 24.18.0 LTS with npm 11.16.0, plus OpenCode 1.17.18, Paperclip 2026.707.0, Hermes v2026.7.7.2, CLIProxyAPI v7.2.71, and the rest of the pinned toolchain. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Every version segment is one digit: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`.
+
 [![Docker Pulls](https://img.shields.io/docker/pulls/coderluii/holycode?style=flat-square&logo=docker)](https://hub.docker.com/r/coderluii/holycode)
 [![GitHub Stars](https://img.shields.io/github/stars/coderluii/holycode?style=flat-square&logo=github)](https://github.com/CoderLuii/HolyCode)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://github.com/CoderLuii/HolyCode/blob/main/LICENSE)
@@ -51,7 +53,9 @@ That's it. Open your browser and start building.
 
 🌐 **Headless Browser** — Chromium + Xvfb + Playwright, pre-configured for screenshots, scraping, and browser automation.
 
-🛠️ **50+ Dev Tools** — Node.js 22.23.1 LTS with npm 10.9.8, Python 3, git, ripgrep, fzf, bat, eza, lazygit, delta, gh CLI, pnpm, TypeScript, Prisma, and more.
+🛠️ **50+ Dev Tools:** Node.js 24.18.0 LTS with npm 11.16.0, Python 3.11 on Bookworm, OpenCode 1.17.18, Paperclip 2026.707.0, Hermes v2026.7.7.2, CLIProxyAPI v7.2.71, eza 0.23.5, fzf 0.74.0, pnpm 11.12.0, Vite 8.1.4, ESLint 10.7.0, Prettier 3.9.5, Wrangler 4.110.0, Netlify CLI 26.2.0, tqdm 4.68.4, uvicorn 0.51.0, Claude stable 2.1.207, TypeScript 6.0.3, NumPy 2.4.6, json-server 0.17.4, git, ripgrep, bat, lazygit, delta, gh CLI, Prisma, and more.
+
+TypeScript stays on 6.0.3 until the 7.x programmatic API is ready for the bundled toolchains. NumPy stays on the newest line compatible with Bookworm Python 3.11, json-server stays on its stable 0.17.4 release, and Vercel stays on 54.21.0 until scope/team behavior is proven.
 
 🧩 **Bundled Services** — Optional Hermes Agent on port 8642, Paperclip on port 3100, and CLIProxyAPI sidecar support in the full Compose profile. Flip an env var, restart, and they come up beside OpenCode.
 
@@ -94,7 +98,7 @@ Paperclip now ships its Skills catalog through the package set HolyCode installs
 
 Set `PAPERCLIP_ALLOWED_HOSTNAMES` only for trusted LAN/private hostnames or IPs. Restart after changing it; hostname guard and authentication remain enabled.
 
-Hermes exposes an API service. Set `API_SERVER_KEY` to a real bearer token before enabling it; Hermes refuses to bind without one. A `404` from `/` is normal as long as the process is healthy and port `8642` is listening.
+Hermes exposes an API service. Set `API_SERVER_KEY` before enabling it. A `404` from `/` is normal as long as the process is healthy and port `8642` is listening.
 
 CLIProxyAPI support is disabled by default and lives in the full Compose profile. It adds a separate `cliproxyapi` provider without changing `ENABLE_CLAUDE_AUTH`, `opencode-claude-auth`, or `/home/opencode/.claude`.
 
@@ -107,7 +111,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Tagged images pin the Dockerfile-installed npm, PyPI, and GitHub-release tools. Hermes keeps its own Python dependency pins so its package set stays internally consistent. The Claude installer still comes from Claude's upstream installer, and optional OpenCode plugins are installed by OpenCode when you enable them. Some current third-party CLIs still report transitive npm advisories at their latest stable versions, so release notes call that out instead of claiming a clean audit.
+Tagged images pin direct npm, PyPI, and GitHub-release versions. Binary assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is pinned to `@anthropic-ai/claude-code@2.1.207`. Debian packages resolve from current Bookworm repositories at build time, and boot-installed OpenCode plugins are live registry installs outside the image SBOM. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without claiming byte-for-byte reproducibility, zero vulnerabilities, or universal freshness.
 
 ## Links
 

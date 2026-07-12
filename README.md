@@ -28,6 +28,8 @@
 
 OpenCode running in a container with everything already installed. 50+ dev tools, 10+ AI providers, headless browser, persistent state, and two serious upgrades on top: Hermes Agent and Paperclip. Drop it on any machine and pick up exactly where you left off.
 
+Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each version segment is one digit, so `v1.0.9` rolls to `v1.1.0`, `v1.1.9` rolls to `v1.2.0`, and `v1.9.9` rolls to `v2.0.0`. The commit subject, Git tag, and GitHub release title must match. Published `v1.0.10` through `v1.0.13` stay immutable as historical releases.
+
 **Hermes Agent turns HolyCode into a meta-agent runtime.** You get a smarter planning layer on top of OpenCode, an API surface on port `8642`, MCP support, messaging adapters, and a clean way to let a "brain" delegate code work into the local container instead of bolting that together yourself.
 
 **Paperclip turns HolyCode into an agent board.** You get a dashboard on port `3100` where you create a company, hire OpenCode-backed workers, wake them on heartbeat, and manage agent work from a real UI instead of hand-rolling scripts around `opencode run`.
@@ -407,11 +409,11 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | `CLIPROXYAPI_API_KEY` | (none) | Optional API key for CLIProxyAPI, stored only as an OpenCode env reference when set |
 | `CLIPROXYAPI_MODEL` | (none) | Optional primary model key exposed as `cliproxyapi/<model>` |
 | `CLIPROXYAPI_SMALL_MODEL` | (none) | Optional smaller/faster model key exposed as `cliproxyapi/<model>` |
-| `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin update mode: `manual` (install if missing) or `auto` (install and update on boot) |
+| `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin update mode: `manual` (install if missing and keep user versions) or `auto` (sync declared pins on boot) |
 
 > Plugin toggles (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) take effect on container restart. Set the env var and run `docker compose down && up -d`.
 
-> `HOLYCODE_PLUGIN_UPDATE` controls plugin package updates. `manual` (default) installs enabled plugins only if they are missing. `auto` installs missing plugins and updates enabled plugins on every boot. This is separate from `OPENCODE_DISABLE_AUTOUPDATE`, which only affects OpenCode itself.
+> `HOLYCODE_PLUGIN_UPDATE` controls plugin package updates. `manual` (default) installs enabled plugins only if they are missing and keeps user-installed versions. `auto` installs missing plugins and syncs declared pins on boot. This is separate from `OPENCODE_DISABLE_AUTOUPDATE`, which only affects OpenCode itself.
 
 > `ENABLE_OH_MY_OPENAGENT=true` enables the plugin through the main OpenCode config at `/home/opencode/.config/opencode/opencode.json`. On the host, that file appears under whatever host path you bind to `/home/opencode`. On boot, HolyCode also checks whether the plugin package is missing and installs it if needed.
 
@@ -425,7 +427,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 > `PAPERCLIP_ALLOWED_HOSTNAMES` lets Paperclip accept listed LAN/private hostnames or IPs. Use comma-separated hostname/IP values only, without `http://`, `https://`, or ports. Restart the container after changing it. The hostname guard and Paperclip authentication stay enabled.
 
-> `ENABLE_HERMES=true` starts Hermes on port `8642` inside the container. Hermes persists under `~/.hermes`, uses the already-installed `opencode` binary, and can expose an OpenAI-compatible API while delegating code work back into HolyCode. Set `API_SERVER_KEY` to a real bearer token before enabling the API server; Hermes refuses to bind without it.
+> `ENABLE_HERMES=true` starts Hermes on port `8642` inside the container. Hermes runs with `/home/opencode` as its home, persists under `/home/opencode/.hermes`, uses the already-installed `opencode` binary, and can expose an OpenAI-compatible API while delegating code work back into HolyCode. Set `API_SERVER_KEY` before enabling the API server.
 
 > Hermes is an API service, not a landing page. A `404` at `http://localhost:8642/` is expected. The important signal is that the port is listening and the process stays healthy.
 
@@ -471,10 +473,43 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 | Runtime | Version |
 |---------|---------|
-| Node.js | 22.23.1 (LTS) |
-| npm | 10.9.8, bundled with Node.js 22.23.1 |
-| Python | 3 (system) |
-| pip | Bundled with Python 3 |
+| Node.js | 24.18.0 (LTS) |
+| npm | 11.16.0, bundled with Node.js 24.18.0 |
+| Python | 3.11 (Bookworm) |
+| pip | Bundled with Python 3.11 |
+
+</details>
+
+<details>
+<summary><strong>v1.1.0 release pins</strong></summary>
+
+| Component | Version |
+|-----------|---------|
+| OpenCode | 1.17.18 |
+| Paperclip | 2026.707.0 |
+| Hermes | v2026.7.7.2 |
+| CLIProxyAPI | v7.2.71 |
+| eza | 0.23.5 |
+| fzf | 0.74.0 |
+| pnpm | 11.12.0 |
+| Vite | 8.1.4 |
+| ESLint | 10.7.0 |
+| Prettier | 3.9.5 |
+| Wrangler | 4.110.0 |
+| Netlify CLI | 26.2.0 |
+| Vercel | 54.21.0, held because scope/team behavior is unproven |
+| tqdm | 4.68.4 |
+| uvicorn | 0.51.0 |
+| Claude stable | 2.1.207 |
+| TypeScript | 6.0.3, held until TypeScript 7 exposes the stable toolchain APIs this image needs |
+| NumPy | 2.4.6, the newest line compatible with Bookworm Python 3.11 |
+| json-server | 0.17.4, held on the stable release instead of the 1.0 beta |
+| opencode-claude-auth default | 2.0.0 |
+| oh-my-openagent default | 4.17.0 |
+
+Release assets use digests, checksums, and action SHAs for hardening. HolyCode also publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim zero vulnerabilities or universal freshness.
+
+The dated adoption, hold, and scanner decisions are in the [v1.1.0 dependency audit](docs/dependency-audit-v1.1.0.md).
 
 </details>
 
@@ -787,7 +822,7 @@ Plugin cache is mounted separately at `./local-cache/opencode` by default so you
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 
-The image pins the Dockerfile-installed npm, PyPI, and GitHub-release tools so a tagged image can be rebuilt and audited. Hermes keeps its own Python dependency pins so its package set stays internally consistent. The Claude installer is still fetched from Claude's upstream installer, and optional OpenCode plugins are installed by OpenCode's plugin system when you enable them. A clean `npm audit` is not promised: some current third-party CLI packages still carry transitive advisories at their latest stable versions, so HolyCode documents those instead of hiding them.
+The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.207`. Debian packages still resolve from the current Bookworm repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. Optional OpenCode plugins are live registry installs trusted at boot and sit outside the image SBOM. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising zero vulnerabilities or universal freshness.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
 
@@ -834,14 +869,18 @@ If you skip this, files in your workspace may be owned by root and you'll need s
 
 ## ⬆️ Upgrading
 
-Pull the latest image and recreate the container. Your data stays untouched.
+Stop the stack and copy `./data`, `./local-cache`, and `./workspace` before upgrading. Migrations can change persisted data, so keep those pre-upgrade copies until the new image has passed your normal workflows.
 
 ```bash
+docker compose stop
+# Copy ./data, ./local-cache, and ./workspace with your host backup tool.
 docker compose pull
 docker compose up -d
 ```
 
-That's it. One command. Your sessions, settings, and configs are in the bind mount so nothing is lost.
+If you need to roll back, stop the stack, change the Compose image to `coderluii/holycode:1.0.13`, restore the pre-upgrade copies, and start the stack again. Do not point `v1.0.13` at data already migrated by `v1.1.0` unless the migration is known to be backward compatible.
+
+After the checks pass, remove the backup on your own schedule.
 
 <p align="right">
   <a href="#top">back to top</a>

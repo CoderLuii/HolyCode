@@ -1,9 +1,20 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabledManagers": ["github-actions", "dockerfile", "custom.regex"],
+  "enabledManagers": [
+    "github-actions",
+    "dockerfile",
+    "docker-compose",
+    "npm",
+    "pip_requirements",
+    "custom.regex"
+  ],
   "automerge": false,
   "dependencyDashboard": true,
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 1,
   "customManagers": [
     {
       "customType": "regex",
@@ -12,6 +23,17 @@
         "ARG S6_OVERLAY_VERSION=(?<currentValue>[^\\s]+)"
       ],
       "depNameTemplate": "just-containers/s6-overlay",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^Dockerfile$/"],
+      "matchStrings": [
+        "ARG FZF_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "junegunn/fzf",
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "semver",
       "extractVersionTemplate": "^v?(?<version>.+)$"
@@ -53,7 +75,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
-        "ARG HERMES_AGENT_REF=(?<currentValue>[^\\s]+)"
+        "ARG HERMES_AGENT_VERSION=(?<currentValue>[^\\s]+)"
       ],
       "depNameTemplate": "NousResearch/hermes-agent",
       "datasourceTemplate": "github-tags",
@@ -77,12 +99,87 @@
       ],
       "datasourceTemplate": "pypi",
       "versioningTemplate": "pep440"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^scripts\\/entrypoint\\.sh$/"],
+      "matchStrings": [
+        "CLAUDE_AUTH_PLUGIN_VERSION=\"(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)\""
+      ],
+      "depNameTemplate": "opencode-claude-auth",
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^scripts\\/entrypoint\\.sh$/"],
+      "matchStrings": [
+        "OH_MY_OPENAGENT_PLUGIN_VERSION=\"(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)\""
+      ],
+      "depNameTemplate": "oh-my-openagent",
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github\\/workflows\\/protected-validation\\.yml$/"],
+      "matchStrings": [
+        "SCOUT_VERSION: (?<currentValue>\\d+(?:\\.\\d+){2})"
+      ],
+      "depNameTemplate": "docker/scout-cli",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
     }
   ],
   "packageRules": [
     {
+      "description": "Pin Docker image digests in Dockerfile and Compose updates",
+      "matchCategories": ["docker"],
+      "pinDigests": true
+    },
+    {
       "matchManagers": ["github-actions", "dockerfile", "custom.regex"],
       "automerge": false
+    },
+    {
+      "description": "Require manual review for major updates",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Require manual review for runtime, service, TypeScript, Vercel, and plugin pins",
+      "matchPackageNames": [
+        "@anthropic-ai/claude-code",
+        "coderluii/holycode",
+        "eceasy/cli-proxy-api",
+        "dandavison/delta",
+        "docker/scout-cli",
+        "eza-community/eza",
+        "hermes-agent",
+        "jesseduffield/lazygit",
+        "junegunn/fzf",
+        "just-containers/s6-overlay",
+        "node",
+        "NousResearch/hermes-agent",
+        "oh-my-openagent",
+        "opencode-ai",
+        "opencode-claude-auth",
+        "paperclipai",
+        "typescript",
+        "vercel"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Require manual review for Python packages",
+      "matchDatasources": ["pypi"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep prerelease updates out of immediate PR flow",
+      "matchNewValue": "/-/",
+      "dependencyDashboardApproval": true
     }
   ]
 }

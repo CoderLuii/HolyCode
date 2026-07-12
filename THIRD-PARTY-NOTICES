@@ -1,17 +1,8 @@
 # Third-Party Licenses
 
 HolyCode includes third-party software distributed within the Docker image.
-Each component retains its original license. HolyCode's own source code is
-licensed under MIT (see LICENSE).
-
-Pinned Dockerfile tools are refreshed through tagged HolyCode image releases.
-The Claude Code CLI installer is fetched from Claude's upstream installer at
-build time, and optional OpenCode plugins are installed by OpenCode's plugin
-system at container startup when enabled. Hermes keeps its own Python
-dependency pins so its package set stays internally consistent. Some bundled
-third-party CLI packages can still report transitive npm advisories at their
-latest stable versions. HolyCode keeps those CLIs available and records the
-audit result in release notes instead of claiming a clean dependency tree.
+Each component below keeps its original license and source information.
+HolyCode's own source code is licensed under MIT (see LICENSE).
 
 ## OpenCode (opencode-ai)
 
@@ -42,10 +33,10 @@ Terms of Service.
 
 ## oh-my-openagent (optional plugin)
 
-- License: MIT
+- License: SUL-1.0
 - Copyright: Yeongyu Kim
 - Source: https://github.com/code-yeongyu/oh-my-openagent
-- npm: oh-my-opencode
+- npm: https://www.npmjs.com/package/oh-my-openagent
 
 Optional OpenCode plugin for multi-agent orchestration. Not installed by
 default. Enabled via ENABLE_OH_MY_OPENAGENT=true environment variable.
@@ -81,28 +72,41 @@ bundled browsers.
 
 ## Claude Code CLI
 
-- Source: https://claude.ai
+- License: SEE LICENSE IN README.md
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code
+- Version: 2.1.207
 
-Installed through Claude's upstream install script during the Docker build.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.207`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
 ## Hermes Agent
 
+- License: MIT
 - Source: https://github.com/NousResearch/hermes-agent
+- Pin: v2026.7.7.2@b7751df34688835a108e0d630f3495fc11f3df79
 
-Installed from the pinned git tag in the Dockerfile. Used only when
-ENABLE_HERMES=true.
+Installed from the pinned release `v2026.7.7.2` and commit
+`b7751df34688835a108e0d630f3495fc11f3df79`. Used only when ENABLE_HERMES=true.
 
 ## Paperclip
 
+- License: MIT
 - Source: https://github.com/paperclipai/paperclip
 - npm: https://www.npmjs.com/package/paperclipai
 - Catalog npm: https://www.npmjs.com/package/@paperclipai/skills-catalog
 
-Installed via npm as a global package. Paperclip includes
+Installed via npm as the global package `paperclipai@2026.707.0`. Paperclip includes
 @paperclipai/skills-catalog through its published package set, which HolyCode
 uses for the Skills page. Used only when ENABLE_PAPERCLIP=true.
+
+## CLIProxyAPI (optional sidecar)
+
+- License: MIT
+- Source: https://github.com/router-for-me/CLIProxyAPI
+
+Optional OpenCode sidecar image used in the full Compose profile. HolyCode
+does not modify this component.
 
 ## GitHub CLI (gh)
 

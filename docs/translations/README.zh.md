@@ -367,12 +367,12 @@ services:
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
 | `ENABLE_HERMES` | （无） | 设置为 `true` 以将 Hermes 作为捆绑的元代理 API 启动 |
 | `HERMES_PORT` | `8642` | 覆盖 Hermes 使用的容器端口 |
-| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token |
-| `HOLYCODE_PLUGIN_UPDATE` | `manual` | 插件更新模式：`manual`（缺失时安装）或 `auto`（启动时安装并更新） |
+| `API_SERVER_KEY` | （无） | 在启用 Hermes 之前设置它；请使用真实的 Bearer token |
+| `HOLYCODE_PLUGIN_UPDATE` | `manual` | 插件更新模式：`manual`（只安装缺失项并保留用户版本）或 `auto`（启动时同步已声明的 pin） |
 
 > 插件开关（`ENABLE_CLAUDE_AUTH`、`ENABLE_OH_MY_OPENAGENT`）在容器重启时生效。设置环境变量并运行 `docker compose down && up -d`。
 
-> `HOLYCODE_PLUGIN_UPDATE` 控制插件包更新。`manual`（默认）仅在插件缺失时安装已启用的插件。`auto` 安装缺失的插件并在每次启动时更新已启用的插件。这与 `OPENCODE_DISABLE_AUTOUPDATE` 不同，后者只影响 OpenCode 本身。
+> `HOLYCODE_PLUGIN_UPDATE` 控制插件包更新。`manual`（默认）仅在插件缺失时安装已启用的插件并保留用户版本。`auto` 安装缺失的插件并在每次启动时同步已声明的 pin。这与 `OPENCODE_DISABLE_AUTOUPDATE` 不同，后者只影响 OpenCode 本身。
 
 > `ENABLE_OH_MY_OPENAGENT=true` 启用插件并公开内置的 `/oh-my-openagent-setup` 技能。该技能仅在插件启用时出现。使用它在 `~/.config/opencode/oh-my-openagent.jsonc` 创建或更新插件专用配置文件。
 
@@ -420,10 +420,14 @@ services:
 
 | 运行时 | 版本 |
 |---------|---------|
-| Node.js | 22.23.1 (LTS) |
-| npm | 随 Node.js 22.23.1 捆绑 |
+| Node.js | 24.18.0 (LTS) |
+| npm | 11.16.0，随 Node.js 24.18.0 捆绑 |
 | Python | 3（系统版） |
 | pip | 随 Python 3 捆绑 |
+
+> 发布标签严格使用 `vX.Y.Z`。Docker 镜像标签会去掉 `v`。`v1.0.9` 之后使用 `v1.1.0`，`v1.1.9` 之后使用 `v1.2.0`，`v1.9.9` 之后使用 `v2.0.0`。`v1.0.10` 到 `v1.0.13` 保持不可变。
+
+> 本次发布将 TypeScript 保持在 6.0.3，直到 7.x 提供内置工具链所需的稳定 API。NumPy 保持在兼容 Bookworm Python 3.11 的最新系列，json-server 保持在稳定版 0.17.4，Vercel 保持在 54.21.0，直到范围和团队行为通过验证。
 
 </details>
 
@@ -507,7 +511,7 @@ environment:
   - API_SERVER_KEY=replace-with-a-real-secret
 ```
 
-Set `API_SERVER_KEY` to a real bearer token; Hermes does not start the API server without it.
+在启用 Hermes 之前设置 `API_SERVER_KEY`。
 
 Hermes 状态存储在 `/home/opencode/.hermes`，与 HolyCode 其余部分遵循相同的持久化方式。
 
