@@ -118,6 +118,16 @@ jobs:
             --tag "holycode-protected-validation:${{ matrix.suffix }}" \
             .
 
+      # The loaded image is retained by Docker. Remove BuildKit's duplicate
+      # cache before pulling the previous release for upgrade/rollback tests.
+      - name: Reclaim build cache before upgrade validation
+        run: |
+          docker buildx prune --all --force
+          docker container prune --force
+          docker image prune --force
+          docker system df
+          df -h /
+
       - name: Validate upgrade, persistence, and rollback
         env:
           CURRENT_IMAGE: holycode-protected-validation:${{ matrix.suffix }}

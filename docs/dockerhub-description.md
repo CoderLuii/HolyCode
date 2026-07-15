@@ -4,7 +4,7 @@
 
 OpenCode AI coding agent with built-in web UI, Claude subscription support, 50+ dev tools, headless browser, bundled Hermes + Paperclip integrations, and external CLIProxyAPI endpoint support. Use your existing Claude Max/Pro plan. No separate API key needed.
 
-v1.1.1 keeps Node.js 24.18.0 LTS and npm 11.16.0, refreshes OpenCode to 1.18.1, Claude Code to 2.1.210, s6-overlay to 3.2.3.1, pnpm to 11.13.0, tsx to 4.23.1, and `oh-my-openagent` to 4.18.1. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Every version segment is one digit: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`.
+v1.1.2 migrates the image to Debian Trixie with Python 3.13, npm 12.0.1, and NumPy 2.5.1. It also refreshes OpenCode to 1.18.2, Wrangler to 4.111.0, and lazygit to 0.63.1. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Every version segment is one digit: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`.
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/coderluii/holycode?style=flat-square&logo=docker)](https://hub.docker.com/r/coderluii/holycode)
 [![GitHub Stars](https://img.shields.io/github/stars/coderluii/holycode?style=flat-square&logo=github)](https://github.com/CoderLuii/HolyCode)
@@ -53,9 +53,9 @@ That's it. Open your browser and start building.
 
 🌐 **Headless Browser** — Chromium + Xvfb + Playwright, pre-configured for screenshots, scraping, and browser automation.
 
-🛠️ **50+ Dev Tools:** Node.js 24.18.0 LTS with npm 11.16.0, Python 3.11 on Bookworm, OpenCode 1.18.1, Paperclip 2026.707.0, Hermes v2026.7.7.2, eza 0.23.5, fzf 0.74.0, pnpm 11.13.0, tsx 4.23.1, Vite 8.1.4, ESLint 10.7.0, Prettier 3.9.5, Wrangler 4.110.0, Netlify CLI 26.2.0, tqdm 4.68.4, uvicorn 0.51.0, Claude stable 2.1.210, TypeScript 6.0.3, NumPy 2.4.6, json-server 0.17.4, git, ripgrep, bat, lazygit, delta, gh CLI, Prisma, and more.
+🛠️ **50+ Dev Tools:** Node.js 24.18.0 LTS with npm 12.0.1, Python 3.13 on Trixie, OpenCode 1.18.2, Paperclip 2026.707.0, Hermes v2026.7.7.2, eza 0.23.5, fzf 0.74.0, lazygit 0.63.1, pnpm 11.13.0, tsx 4.23.1, Vite 8.1.4, ESLint 10.7.0, Prettier 3.9.5, Wrangler 4.111.0, Netlify CLI 26.2.0, tqdm 4.68.4, uvicorn 0.51.0, Claude stable 2.1.210, TypeScript 6.0.3, NumPy 2.5.1, json-server 0.17.4, git, ripgrep, bat, delta, gh CLI, Prisma, and more.
 
-TypeScript stays on 6.0.3 until the 7.x programmatic API is ready for the bundled toolchains. NumPy stays on the newest line compatible with Bookworm Python 3.11, json-server stays on its stable 0.17.4 release, and Vercel stays on 54.21.0 until scope/team behavior is proven.
+TypeScript stays on 6.0.3 until the 7.x programmatic API is ready for the bundled toolchains. json-server stays on its stable 0.17.4 release, and Vercel stays on 54.21.0 until authenticated personal and team/scope behavior is proven. Wrangler's removed `legacy_env` mode is not supported.
 
 🧩 **Bundled Services** — Optional Hermes Agent on port 8642 and Paperclip on port 3100. CLIProxyAPI integration remains available for an externally managed endpoint.
 
@@ -111,7 +111,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Tagged images pin direct npm, PyPI, and GitHub-release versions. Binary assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is pinned to `@anthropic-ai/claude-code@2.1.210`. Debian packages resolve from current Bookworm repositories at build time, and boot-installed OpenCode plugins are live registry installs outside the image SBOM. Netlify CLI is limited to remote build/deploy commands; its local functions binaries are removed. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without claiming byte-for-byte reproducibility, zero vulnerabilities, or universal freshness.
+Tagged images pin direct npm, PyPI, and GitHub-release versions. Binary assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is pinned to `@anthropic-ai/claude-code@2.1.210`. npm lifecycle scripts are denied by default and checked against a reviewed version-and-script policy. Debian packages resolve from current Trixie repositories at build time, and boot-installed OpenCode plugins are live registry installs outside the image SBOM. Netlify CLI is limited to remote build/deploy commands; its local functions binaries are removed. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without claiming byte-for-byte reproducibility, zero vulnerabilities, or universal freshness.
 
 ## Links
 

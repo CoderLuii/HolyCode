@@ -421,13 +421,13 @@ services:
 | 런타임 | 버전 |
 |---------|---------|
 | Node.js | 24.18.0 (LTS) |
-| npm | 11.16.0, Node.js 24.18.0에 번들됨 |
-| Python | 3 (시스템) |
-| pip | Python 3에 번들됨 |
+| npm | 12.0.1 |
+| Python | 3.13 (Trixie) |
+| pip | Python 3.13에 번들됨 |
 
 > 릴리스 태그는 정확히 `vX.Y.Z`를 사용합니다. Docker 이미지 태그에서는 `v`를 뺍니다. `v1.0.9` 다음은 `v1.1.0`, `v1.1.9` 다음은 `v1.2.0`, `v1.9.9` 다음은 `v2.0.0`입니다. `v1.0.10`부터 `v1.0.13`까지는 변경되지 않습니다.
 
-> v1.1.1에서는 OpenCode를 1.18.1, Claude Code를 2.1.210, s6-overlay를 3.2.3.1, pnpm을 11.13.0, tsx를 4.23.1, oh-my-openagent를 4.18.1로 업데이트합니다. TypeScript는 6.0.3, NumPy는 2.4.6, Vercel은 54.21.0을 유지합니다. Netlify는 원격 빌드와 배포만 지원합니다. 번들 CLIProxyAPI 사이드카는 제거되었으며 외부에서 관리하는 엔드포인트는 계속 지원됩니다.
+> v1.1.2에서는 Debian Trixie, Python 3.13, npm 12.0.1, NumPy 2.5.1로 전환합니다. OpenCode는 1.18.2, Wrangler는 4.111.0, lazygit은 0.63.1로 업데이트합니다. TypeScript는 6.0.3, Vercel은 54.21.0을 유지합니다. Netlify는 원격 빌드와 배포만 지원합니다. 번들 CLIProxyAPI 사이드카는 제거된 상태이며 외부에서 관리하는 엔드포인트는 계속 지원됩니다.
 
 </details>
 

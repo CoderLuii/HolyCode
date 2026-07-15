@@ -53,6 +53,18 @@ enabled. HolyCode does not modify this plugin.
 - License: MIT
 - Source: https://github.com/nodejs/node
 
+## npm CLI
+
+- License: Artistic-2.0
+- Source: https://github.com/npm/cli
+- Version: 12.0.1
+
+## Debian GNU/Linux
+
+- License: Multiple free-software licenses by package
+- Source: https://www.debian.org/distrib/packages
+- Base: Trixie 13
+
 ## Chromium
 
 - License: BSD-3-Clause
@@ -98,7 +110,9 @@ Installed from the pinned release `v2026.7.7.2` and commit
 
 Installed via npm as the global package `paperclipai@2026.707.0`. Paperclip includes
 @paperclipai/skills-catalog through its published package set, which HolyCode
-uses for the Skills page. Used only when ENABLE_PAPERCLIP=true.
+uses for the Skills page. HolyCode permits the exact architecture-specific embedded
+PostgreSQL postinstall script needed to hydrate its packaged library symlinks before
+Paperclip runs as an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 
 ## GitHub CLI (gh)
 
@@ -111,6 +125,25 @@ uses for the Skills page. Used only when ENABLE_PAPERCLIP=true.
 - License: MIT
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
+- Version: 0.63.1
+
+## NumPy
+
+- License: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+- Source: https://github.com/numpy/numpy
+- Version: 2.5.1
+
+## Packaging
+
+- License: Apache-2.0 OR BSD-2-Clause
+- Source: https://github.com/pypa/packaging
+- Version: 26.0
+
+## Wrangler
+
+- License: Apache-2.0 OR MIT
+- Source: https://github.com/cloudflare/workers-sdk
+- Version: 4.111.0
 
 ## delta
 

@@ -23,7 +23,7 @@ Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each seg
 
 HolyCode ships many third-party CLIs inside one Docker image. Tagged releases refresh the pinned Dockerfile tools, but optional OpenCode plugins are live registry installs trusted at container startup when you enable them. Those boot-installed plugins are outside the image SBOM. Renovate configuration covers images, Actions, npm, PyPI, GitHub releases, and plugin pins; release audits still record scanner findings and compatibility holds before publication.
 
-Trivy's release gate keeps its full critical/high report visible and blocks fixable critical findings. The dated versions, holds, removals, and scanner disposition are recorded in [`docs/dependency-audit-v1.1.1.md`](../docs/dependency-audit-v1.1.1.md).
+Trivy's release gate keeps its full critical/high report visible and blocks fixable critical findings. npm 12 lifecycle scripts are denied by default and checked against exact package versions, script bodies, and architecture rules. The dated versions, holds, removals, and scanner disposition are recorded in [`docs/dependency-audit-v1.1.2.md`](../docs/dependency-audit-v1.1.2.md).
 
 When `ENABLE_PAPERCLIP=true`, HolyCode exposes an authenticated local agent board on the configured Paperclip port. Keep that port on trusted LAN/private networks or behind a VPN, and do not publish it directly to the public internet.
 

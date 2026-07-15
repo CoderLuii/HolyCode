@@ -421,13 +421,13 @@ services:
 | Laufzeit | Version |
 |---------|---------|
 | Node.js | 24.18.0 (LTS) |
-| npm | 11.16.0, mit Node.js 24.18.0 gebündelt |
-| Python | 3 (System) |
-| pip | Mit Python 3 gebündelt |
+| npm | 12.0.1 |
+| Python | 3.13 (Trixie) |
+| pip | Mit Python 3.13 gebündelt |
 
 > Release-Tags verwenden exakt `vX.Y.Z`. Docker-Image-Tags lassen das `v` weg. Nach `v1.0.9` folgt `v1.1.0`, nach `v1.1.9` folgt `v1.2.0` und nach `v1.9.9` folgt `v2.0.0`. `v1.0.10` bis `v1.0.13` bleiben unveränderlich.
 
-> v1.1.1 aktualisiert OpenCode auf 1.18.1, Claude Code auf 2.1.210, s6-overlay auf 3.2.3.1, pnpm auf 11.13.0, tsx auf 4.23.1 und oh-my-openagent auf 4.18.1. TypeScript bleibt bei 6.0.3, NumPy bei 2.4.6 und Vercel bei 54.21.0. Netlify unterstützt nur Remote-Builds und -Deployments. Der gebündelte CLIProxyAPI-Sidecar wurde entfernt; extern verwaltete Endpunkte werden weiterhin unterstützt.
+> v1.1.2 wechselt zu Debian Trixie mit Python 3.13, npm 12.0.1 und NumPy 2.5.1. OpenCode wird auf 1.18.2, Wrangler auf 4.111.0 und lazygit auf 0.63.1 aktualisiert. TypeScript bleibt bei 6.0.3 und Vercel bei 54.21.0. Netlify unterstützt nur Remote-Builds und -Deployments. Der gebündelte CLIProxyAPI-Sidecar bleibt entfernt; extern verwaltete Endpunkte werden weiterhin unterstützt.
 
 </details>
 

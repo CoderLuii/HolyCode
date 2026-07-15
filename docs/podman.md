@@ -150,7 +150,9 @@ podman rm holycode
 
 Run the `podman run` command again. Your data stays in `./data/opencode`, `./local-cache/opencode`, and `./workspace`.
 
-If you need to roll back, stop and remove the container, restore the pre-upgrade copies, then recreate it with `docker.io/coderluii/holycode:1.1.0`. Do not reuse data already migrated by `v1.1.1` unless the migration is known to be backward compatible.
+`v1.1.2` moves the image from Debian Bookworm/Python 3.11 to Debian Trixie/Python 3.13. Keep the untouched pre-upgrade copies until Paperclip, Hermes, OpenCode, and your normal provider workflow have all passed.
+
+If you need to roll back, stop and remove the container, restore the pre-`v1.1.2` copies, then recreate it with `docker.io/coderluii/holycode:1.1.1`. Do not reuse data already migrated by `v1.1.2` unless the migration is known to be backward compatible.
 
 Do not use `podman start holycode` as an update path. It restarts the existing container with the old image, environment variables, ports, and mount settings.
 

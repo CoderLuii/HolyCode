@@ -4,6 +4,30 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.2] - 07/15/2026
+
+### Added
+
+- Add a deny-by-default npm 12 lifecycle policy that validates each installed package's exact version, script body, architecture, and allow/block decision
+
+### Changed
+
+- Migrate the image to the digest-pinned Node.js 24.18.0 Trixie base with Debian 13.6, Python 3.13.5, npm 12.0.1, and NumPy 2.5.1
+- Refresh OpenCode to 1.18.2, Wrangler to 4.111.0, and lazygit to 0.63.1 while retaining Claude Code 2.1.210, Paperclip 2026.707.0, Hermes v2026.7.7.2, TypeScript 6.0.3, and Vercel 54.21.0
+- Document that Wrangler's removed `legacy_env` mode is unsupported and that Netlify remains limited to remote build/deploy commands
+- Move protected upgrade and rollback validation from `v1.1.0` to the published `v1.1.1` image and immutable manifest digest
+
+### Fixed
+
+- Run Paperclip's architecture-specific embedded PostgreSQL hydration script during the image build so its packaged library symlinks are ready before the service drops privileges
+- Install Hermes' exact Packaging 26.0 requirement in `/usr/local` without trying to remove Trixie's dpkg-owned package
+- Reclaim BuildKit's duplicate build cache before protected validation pulls the previous release image, preventing GitHub-hosted runners from exhausting disk space during upgrade and rollback checks
+
+### Security
+
+- Verify both architectures with Trivy 0.72.0 and Docker Scout 1.23.1: no fixable critical finding and no detected secret; record all residual high and unfixed critical findings in the release audit
+- Confirm the Trixie image does not contain the fixable ImageMagick issue `CVE-2026-56367`; the newer unfixed `CVE-2026-56372` remains recorded in the audit
+
 ## [1.1.1] - 07/15/2026
 
 ### Changed

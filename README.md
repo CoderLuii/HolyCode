@@ -466,29 +466,30 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | Runtime | Version |
 |---------|---------|
 | Node.js | 24.18.0 (LTS) |
-| npm | 11.16.0, bundled with Node.js 24.18.0 |
-| Python | 3.11 (Bookworm) |
-| pip | Bundled with Python 3.11 |
+| npm | 12.0.1 |
+| Python | 3.13 (Trixie) |
+| pip | Bundled with Python 3.13 |
 
 </details>
 
 <details>
-<summary><strong>v1.1.1 release pins</strong></summary>
+<summary><strong>v1.1.2 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
-| OpenCode | 1.18.1 |
+| OpenCode | 1.18.2 |
 | Paperclip | 2026.707.0 |
 | Hermes | v2026.7.7.2 |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
 | s6-overlay | 3.2.3.1 |
 | eza | 0.23.5 |
 | fzf | 0.74.0 |
+| lazygit | 0.63.1 |
 | pnpm | 11.13.0 |
 | Vite | 8.1.4 |
 | ESLint | 10.7.0 |
 | Prettier | 3.9.5 |
-| Wrangler | 4.110.0 |
+| Wrangler | 4.111.0; legacy service environments are not supported |
 | Netlify CLI | 26.2.0, remote build/deploy only; local functions binaries removed |
 | Vercel | 54.21.0, held because scope/team behavior is unproven |
 | tqdm | 4.68.4 |
@@ -496,14 +497,14 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | Claude stable | 2.1.210 |
 | tsx | 4.23.1 |
 | TypeScript | 6.0.3, held until TypeScript 7 exposes the stable toolchain APIs this image needs |
-| NumPy | 2.4.6, the newest line compatible with Bookworm Python 3.11 |
+| NumPy | 2.5.1 on Python 3.13 |
 | json-server | 0.17.4, held on the stable release instead of the 1.0 beta |
 | opencode-claude-auth default | 2.0.0 |
 | oh-my-openagent default | 4.18.1 |
 
-Release assets use digests, checksums, and action SHAs for hardening. HolyCode also publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim zero vulnerabilities or universal freshness.
+Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are denied by default and checked against a reviewed version-and-script policy. HolyCode also publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim zero vulnerabilities or universal freshness.
 
-The dated adoption, hold, removal, and scanner decisions are in the [v1.1.1 dependency audit](docs/dependency-audit-v1.1.1.md).
+The dated adoption, hold, removal, and scanner decisions are in the [v1.1.2 dependency audit](docs/dependency-audit-v1.1.2.md).
 
 </details>
 
@@ -810,7 +811,7 @@ Plugin cache is mounted separately at `./local-cache/opencode` by default so you
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 
-The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.210`. Debian packages still resolve from the current Bookworm repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. Optional OpenCode plugins are live registry installs trusted at boot and sit outside the image SBOM. Netlify CLI supports remote build/deploy commands only; `netlify dev` and local functions are intentionally unavailable. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising zero vulnerabilities or universal freshness.
+The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.210`. npm 12 lifecycle scripts are denied by default and limited to the exact reviewed scripts required by OpenCode, Claude Code, and Paperclip's architecture-specific embedded PostgreSQL package. Debian packages still resolve from the current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. Optional OpenCode plugins are live registry installs trusted at boot and sit outside the image SBOM. Netlify CLI supports remote build/deploy commands only; `netlify dev` and local functions are intentionally unavailable. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising zero vulnerabilities or universal freshness.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
 
@@ -866,7 +867,7 @@ docker compose pull
 docker compose up -d
 ```
 
-If you need to roll back, stop the stack, change the Compose image to `coderluii/holycode:1.1.0`, restore the untouched pre-upgrade copies, and start the stack again. Do not point `v1.1.0` at data already migrated by `v1.1.1` unless the migration is known to be backward compatible.
+If you need to roll back, stop the stack, change the Compose image to `coderluii/holycode:1.1.1`, restore the untouched pre-`v1.1.2` copies, and start the stack again. Do not point `v1.1.1` at data already migrated by `v1.1.2` unless the migration is known to be backward compatible.
 
 After the checks pass, remove the backup on your own schedule.
 

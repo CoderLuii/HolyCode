@@ -421,13 +421,13 @@ services:
 | ランタイム | バージョン |
 |---------|---------|
 | Node.js | 24.18.0 (LTS) |
-| npm | 11.16.0、Node.js 24.18.0 にバンドル |
-| Python | 3（システム） |
-| pip | Python 3 にバンドル |
+| npm | 12.0.1 |
+| Python | 3.13（Trixie） |
+| pip | Python 3.13 にバンドル |
 
 > リリースタグは正確に `vX.Y.Z` を使います。Docker イメージタグでは `v` を付けません。`v1.0.9` の次は `v1.1.0`、`v1.1.9` の次は `v1.2.0`、`v1.9.9` の次は `v2.0.0` です。`v1.0.10` から `v1.0.13` までは不変です。
 
-> v1.1.1 では OpenCode を 1.18.1、Claude Code を 2.1.210、s6-overlay を 3.2.3.1、pnpm を 11.13.0、tsx を 4.23.1、oh-my-openagent を 4.18.1 に更新します。TypeScript は 6.0.3、NumPy は 2.4.6、Vercel は 54.21.0 を維持します。Netlify はリモートのビルドとデプロイのみをサポートします。同梱の CLIProxyAPI サイドカーは削除されましたが、外部管理のエンドポイントは引き続き利用できます。
+> v1.1.2 では Debian Trixie、Python 3.13、npm 12.0.1、NumPy 2.5.1 に移行します。OpenCode は 1.18.2、Wrangler は 4.111.0、lazygit は 0.63.1 に更新します。TypeScript は 6.0.3、Vercel は 54.21.0 を維持します。Netlify はリモートのビルドとデプロイのみをサポートします。同梱の CLIProxyAPI サイドカーは削除されたままで、外部管理のエンドポイントは引き続き利用できます。
 
 </details>
 

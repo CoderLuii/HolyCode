@@ -421,13 +421,13 @@ services:
 | 运行时 | 版本 |
 |---------|---------|
 | Node.js | 24.18.0 (LTS) |
-| npm | 11.16.0，随 Node.js 24.18.0 捆绑 |
-| Python | 3（系统版） |
-| pip | 随 Python 3 捆绑 |
+| npm | 12.0.1 |
+| Python | 3.13（Trixie） |
+| pip | 随 Python 3.13 捆绑 |
 
 > 发布标签严格使用 `vX.Y.Z`。Docker 镜像标签会去掉 `v`。`v1.0.9` 之后使用 `v1.1.0`，`v1.1.9` 之后使用 `v1.2.0`，`v1.9.9` 之后使用 `v2.0.0`。`v1.0.10` 到 `v1.0.13` 保持不可变。
 
-> v1.1.1 将 OpenCode 更新到 1.18.1、Claude Code 更新到 2.1.210、s6-overlay 更新到 3.2.3.1、pnpm 更新到 11.13.0、tsx 更新到 4.23.1，并将 oh-my-openagent 更新到 4.18.1。TypeScript 保持在 6.0.3，NumPy 保持在 2.4.6，Vercel 保持在 54.21.0。Netlify 仅支持远程构建和部署。内置 CLIProxyAPI sidecar 已移除；外部管理的 endpoint 仍受支持。
+> v1.1.2 迁移到 Debian Trixie、Python 3.13、npm 12.0.1 和 NumPy 2.5.1。OpenCode 更新到 1.18.2，Wrangler 更新到 4.111.0，lazygit 更新到 0.63.1。TypeScript 保持在 6.0.3，Vercel 保持在 54.21.0。Netlify 仅支持远程构建和部署。内置 CLIProxyAPI sidecar 仍保持移除；外部管理的 endpoint 继续受支持。
 
 </details>
 

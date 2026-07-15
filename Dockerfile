@@ -3,42 +3,45 @@
 # https://github.com/coderluii/holycode
 # ==============================================================================
 
-FROM node:24.18.0-bookworm-slim@sha256:6f7b03f7c2c8e2e784dcf9295400527b9b1270fd37b7e9a7285cf83b6951452d
+FROM node:24.18.0-trixie-slim@sha256:ae91dcc111a68c9d2d81ff2a17bda61be126426176fde6fe7d08ab13b7f50573
 
 # ---------- Build args ----------
 ARG S6_OVERLAY_VERSION=3.2.3.1
 ARG FZF_VERSION=0.74.0
-ARG LAZYGIT_VERSION=0.63.0
+ARG LAZYGIT_VERSION=0.63.1
 ARG DELTA_VERSION=0.19.2
 ARG EZA_VERSION=0.23.5
 ARG HERMES_AGENT_VERSION=v2026.7.7.2
 ARG HERMES_AGENT_REF=b7751df34688835a108e0d630f3495fc11f3df79
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.1
+ARG OPENCODE_VERSION=1.18.2
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
 ARG CLAUDE_CODE_VERSION=2.1.210
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.707.0
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
+# renovate: datasource=npm depName=npm
+ARG NPM_VERSION=12.0.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.1
 # renovate: datasource=npm depName=pnpm
 ARG PNPM_VERSION=11.13.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.110.0
+ARG WRANGLER_VERSION=4.111.0
 # renovate: datasource=npm depName=vercel
 ARG VERCEL_VERSION=54.21.0
 # renovate: datasource=npm depName=netlify-cli
 ARG NETLIFY_CLI_VERSION=26.2.0
 # renovate: datasource=pypi depName=numpy
-ARG NUMPY_VERSION=2.4.6
+ARG NUMPY_VERSION=2.5.1
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.opencode=${OPENCODE_VERSION} \
     io.holycode.version.claude-code=${CLAUDE_CODE_VERSION} \
     io.holycode.version.paperclip=${PAPERCLIP_VERSION} \
+    io.holycode.version.npm=${NPM_VERSION} \
     io.holycode.version.typescript=${TYPESCRIPT_VERSION} \
     io.holycode.version.tsx=${TSX_VERSION} \
     io.holycode.version.pnpm=${PNPM_VERSION} \
@@ -149,8 +152,8 @@ RUN curl -fsSL -o /tmp/githubcli-archive-keyring.gpg \
 # ---------- lazygit ----------
 RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
     LAZYGIT_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "aac147abf5ce43afe6ae8bcb14b0d479111975a189302d7a99386deca70d57f7";; \
-      *) echo "cf5cfa3e116d7775f3600a51ec1d9ce7ba554a08b9566c7c2da83cb0023efabf";; \
+      arm64) echo "555dbc9a8efcf2e33bc24e7fbd9463e9fa375e3c5e23cc270763733c38eeae36";; \
+      *) echo "8e033bc78c8e192dee9510e951f6c9e154289b7198d22c924ed1d0a951b0dac1";; \
     esac) && \
     curl -fsSL -o /tmp/lazygit.tar.gz \
       "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_${LAZYGIT_ARCH}.tar.gz" && \
@@ -203,15 +206,24 @@ RUN pip install --no-cache-dir --break-system-packages \
 
 RUN rm -f /usr/local/bin/dotenv
 
+# npm 12 blocks dependency lifecycle scripts unless they are explicitly reviewed.
+# Allow only the exact OpenCode, Claude, and architecture-specific embedded
+# PostgreSQL scripts required at runtime; validate every allowed and blocked pin.
+COPY config/npm-global-script-policy.json /usr/local/share/holycode/npm-global-script-policy.json
+COPY scripts/validate_npm_script_policy.py /usr/local/bin/validate-npm-script-policy
+RUN chmod +x /usr/local/bin/validate-npm-script-policy && \
+    npm install -g --ignore-scripts "npm@${NPM_VERSION}" && \
+    test "$(npm --version)" = "${NPM_VERSION}"
+
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
-RUN npm i -g "opencode-ai@${OPENCODE_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && \
+RUN npm i -g --allow-scripts=opencode-ai,@anthropic-ai/claude-code "opencode-ai@${OPENCODE_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && \
     rm -rf /root/.npm
 ENV PATH="/home/opencode/.local/bin:${PATH}"
 
 # Drizzle Kit's stable release still declares an unused legacy loader and older
 # nested esbuild; remove both in the install layer and use the audited global pin.
-RUN npm i -g \
+RUN npm i -g --ignore-scripts \
     "typescript@${TYPESCRIPT_VERSION}" "tsx@${TSX_VERSION}" \
     "pnpm@${PNPM_VERSION}" \
     vite@8.1.4 esbuild@0.28.1 \
@@ -239,7 +251,7 @@ RUN npm i -g \
 
 # Netlify's optional platform package still contains stale local-functions-proxy
 # binaries. Keep remote build/deploy commands and remove the unsupported local runtime.
-RUN npm i -g --omit=optional "netlify-cli@${NETLIFY_CLI_VERSION}" && \
+RUN npm i -g --ignore-scripts --omit=optional "netlify-cli@${NETLIFY_CLI_VERSION}" && \
     rm -rf /usr/local/lib/node_modules/netlify-cli/node_modules/@netlify/local-functions-proxy-* && \
     rm -f /usr/local/lib/node_modules/netlify-cli/node_modules/.bin/local-functions-proxy && \
     test -z "$(find /usr/local/lib/node_modules/netlify-cli -path '*/@netlify/local-functions-proxy-*/bin/local-functions-proxy' -print -quit)" && \
@@ -247,6 +259,10 @@ RUN npm i -g --omit=optional "netlify-cli@${NETLIFY_CLI_VERSION}" && \
     netlify build --help >/dev/null && \
     netlify deploy --help >/dev/null && \
     rm -rf /root/.npm
+
+# Trixie's python3-packaging is dpkg-owned and has no pip RECORD. Install the
+# exact Hermes pin into /usr/local without attempting to remove the Debian copy.
+RUN pip install --no-cache-dir --break-system-packages --ignore-installed packaging==26.0
 
 RUN HERMES_AGENT_COMMIT=$(git ls-remote --tags https://github.com/NousResearch/hermes-agent.git "refs/tags/${HERMES_AGENT_VERSION}" | awk '{print $1}') && \
     if [ "$HERMES_AGENT_COMMIT" != "$HERMES_AGENT_REF" ]; then \
@@ -257,7 +273,8 @@ RUN HERMES_AGENT_COMMIT=$(git ls-remote --tags https://github.com/NousResearch/h
     "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}" && \
     python3 -m pip check
 
-RUN npm i -g "paperclipai@${PAPERCLIP_VERSION}" && \
+RUN npm i -g --allow-scripts=@embedded-postgres/linux-x64,@embedded-postgres/linux-arm64 \
+    "paperclipai@${PAPERCLIP_VERSION}" && \
     rm -rf /root/.npm
 RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
       -path '*/native/lib' -type d -exec sh -c '\
@@ -265,6 +282,25 @@ RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres
           [ -f "$lib_dir/libcrypto.so.1.1" ] && ln -sf libcrypto.so.1.1 "$lib_dir/libcrypto.so.1"; \
           [ -f "$lib_dir/libssl.so.1.1" ] && ln -sf libssl.so.1.1 "$lib_dir/libssl.so.1"; \
         done' sh {} +
+RUN POSTGRES_PACKAGE=$(find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
+      -mindepth 1 -maxdepth 1 -type d -name 'linux-*' -print -quit) && \
+    test -n "$POSTGRES_PACKAGE" && \
+    node -e 'const fs=require("fs"); const path=require("path"); const root=process.argv[1]; const links=JSON.parse(fs.readFileSync(path.join(root,"native/pg-symlinks.json"),"utf8")); for (const {source,target} of links) { const sourcePath=path.join(root,source); const targetPath=path.join(root,target); if (!fs.lstatSync(targetPath).isSymbolicLink() || fs.realpathSync(targetPath)!==fs.realpathSync(sourcePath)) throw new Error(`invalid PostgreSQL link: ${target}`); }' \
+      "$POSTGRES_PACKAGE"
+
+RUN validate-npm-script-policy \
+      --policy /usr/local/share/holycode/npm-global-script-policy.json \
+      --root /usr/local/lib/node_modules \
+      --target-arch "${TARGETARCH}" && \
+    opencode --version | grep -Fx "${OPENCODE_VERSION}" && \
+    claude --version | grep -F "${CLAUDE_CODE_VERSION}" && \
+    esbuild --version | grep -Fx "0.28.1" && \
+    prisma --version >/dev/null && \
+    wrangler --version | grep -F "${WRANGLER_VERSION}" && \
+    node -e 'const sharp=require("/usr/local/lib/node_modules/sharp-cli/node_modules/sharp"); sharp({create:{width:1,height:1,channels:4,background:{r:0,g:0,b:0,alpha:1}}}).png().toBuffer().then(b=>{if(!b.length)process.exit(1)})' && \
+    WORKERD_BIN=$(find /usr/local/lib/node_modules/wrangler -path '*/workerd/bin/workerd' -type f -print -quit) && \
+    test -n "${WORKERD_BIN}" && "${WORKERD_BIN}" --version >/dev/null && \
+    node -e 'const ssh2=require("/usr/local/lib/node_modules/paperclipai/node_modules/ssh2"); if(typeof ssh2.Client!=="function") process.exit(1)'
 
 RUN mkdir -p /usr/local/share/holycode && \
     dpkg-query -W -f='${binary:Package}\t${Version}\n' | sort > /usr/local/share/holycode/dpkg-inventory.txt
