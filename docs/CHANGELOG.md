@@ -4,6 +4,30 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 07/15/2026
+
+### Changed
+
+- Refresh OpenCode to 1.18.1, Claude Code to 2.1.210, s6-overlay to 3.2.3.1, pnpm to 11.13.0, tsx to 4.23.1, and the default `oh-my-openagent` pin to 4.18.1
+- Refresh the immutable Node 24.18.0 Bookworm image digest and rebuild against current Bookworm repositories, including ImageMagick `deb12u12`
+- Align Requests 2.33.0, Pillow 12.2.0, and Rich 14.3.3 with the exact dependency set required by Hermes v2026.7.7.2, then enforce `pip check` in the image build and smoke test
+- Install Netlify CLI 26.2.0 without its platform-specific local functions binary and support remote build/deploy commands only
+- Replace hard-coded upgrade assertions with release inputs and image metadata so validation compares the actual current and rollback images
+- Validate Renovate configuration in pull requests and keep dependency updates behind maintainer review
+
+### Removed
+
+- Remove the bundled CLIProxyAPI sidecar and Compose profile while `v7.2.77` contains fixable high-severity Go dependencies; externally managed `CLIPROXYAPI_*` endpoints remain supported
+- Remove the Netlify vulnerability exceptions because the affected binaries are no longer shipped
+
+### Security
+
+- Block releases on fixable critical findings and keep per-architecture Trivy, Docker Scout, SBOM, provenance, and secret checks in protected validation
+
+### Fixed
+
+- Register OpenCode, Xvfb, Paperclip, and Hermes through the `user-bundles.d` path required by s6-overlay 3.2.3.1
+
 ## [1.1.0] - 07/12/2026
 
 ### Changed

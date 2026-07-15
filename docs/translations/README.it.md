@@ -427,7 +427,7 @@ services:
 
 > I tag di release usano esattamente `vX.Y.Z`. I tag Docker omettono la `v`. Dopo `v1.0.9` usa `v1.1.0`, dopo `v1.1.9` usa `v1.2.0` e dopo `v1.9.9` usa `v2.0.0`. `v1.0.10` fino a `v1.0.13` restano immutabili.
 
-> In questa versione TypeScript resta alla 6.0.3 finché la linea 7.x non espone le API stabili richieste dagli strumenti inclusi. NumPy resta sulla linea più recente compatibile con Python 3.11 di Bookworm, json-server sulla versione stabile 0.17.4 e Vercel sulla 54.21.0 finché non viene verificato il comportamento di scope e team.
+> v1.1.1 aggiorna OpenCode alla 1.18.1, Claude Code alla 2.1.210, s6-overlay alla 3.2.3.1, pnpm alla 11.13.0, tsx alla 4.23.1 e oh-my-openagent alla 4.18.1. TypeScript resta alla 6.0.3, NumPy alla 2.4.6 e Vercel alla 54.21.0. Netlify supporta solo build e deploy remoti. Il sidecar CLIProxyAPI incluso è stato rimosso; gli endpoint gestiti esternamente restano supportati.
 
 </details>
 

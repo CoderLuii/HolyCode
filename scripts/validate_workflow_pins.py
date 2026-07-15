@@ -84,13 +84,23 @@ def collect_errors() -> list[str]:
         "docker/scout-cli/releases/download/v${SCOUT_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.72.0",
-        "trivyignores: .trivyignore.yaml",
+        "previous_image:",
+        "inputs.previous_image",
         "scripts/test_upgrade_rollback.sh",
     ):
         if required_text not in protected_text:
             errors.append(f"protected-validation.yml must contain {required_text!r}")
     if protected_text.count("scanners: vuln,secret") != 2:
         errors.append("protected-validation.yml must run both Trivy gates with vuln and secret scanners")
+    if "trivyignores:" in protected_text:
+        errors.append("protected-validation.yml must not bypass the fixable-critical gate")
+    if "eceasy/cli-proxy-api" in protected_text:
+        errors.append("protected-validation.yml must not pull the removed CLIProxyAPI sidecar")
+
+    pr_validation = WORKFLOWS / "pr-validation.yml"
+    pr_text = pr_validation.read_text(encoding="utf-8")
+    if "renovate@43.263.9 renovate-config-validator --strict renovate.json" not in pr_text:
+        errors.append("pr-validation.yml must validate renovate.json with the audited Renovate pin")
 
     return errors
 

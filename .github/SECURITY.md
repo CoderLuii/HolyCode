@@ -21,10 +21,12 @@ If you discover a security vulnerability in HolyCode:
 
 Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each segment is one digit: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`. Published `v1.0.10` through `v1.0.13` remain immutable history.
 
-HolyCode ships many third-party CLIs inside one Docker image. Tagged releases refresh the pinned Dockerfile tools, but optional OpenCode plugins are live registry installs trusted at container startup when you enable them. Those boot-installed plugins are outside the image SBOM. Renovate proposes reviewed updates for images, Actions, npm, PyPI, GitHub releases, and plugin pins; release audits still record scanner findings and compatibility holds before publication.
+HolyCode ships many third-party CLIs inside one Docker image. Tagged releases refresh the pinned Dockerfile tools, but optional OpenCode plugins are live registry installs trusted at container startup when you enable them. Those boot-installed plugins are outside the image SBOM. Renovate configuration covers images, Actions, npm, PyPI, GitHub releases, and plugin pins; release audits still record scanner findings and compatibility holds before publication.
 
-Trivy's release gate keeps its full critical/high report visible. The only ignored critical findings are listed in `.trivyignore.yaml` with an exact binary path, reason, and expiration date. An expired exception blocks the next release until the upstream package is fixed, replaced, or reviewed again. The dated versions, holds, and scanner disposition are recorded in [`docs/dependency-audit-v1.1.0.md`](../docs/dependency-audit-v1.1.0.md).
+Trivy's release gate keeps its full critical/high report visible and blocks fixable critical findings. The dated versions, holds, removals, and scanner disposition are recorded in [`docs/dependency-audit-v1.1.1.md`](../docs/dependency-audit-v1.1.1.md).
 
 When `ENABLE_PAPERCLIP=true`, HolyCode exposes an authenticated local agent board on the configured Paperclip port. Keep that port on trusted LAN/private networks or behind a VPN, and do not publish it directly to the public internet.
 
-When `ENABLE_HERMES=true`, set `API_SERVER_KEY` and keep port `8642` on a trusted network. The optional CLIProxyAPI profile stores provider credentials in its mounted auth directory; keep port `8317` private and protect the mounted config and auth files.
+When `ENABLE_HERMES=true`, set `API_SERVER_KEY` and keep port `8642` on a trusted network. If you enable CLIProxyAPI integration, keep the external endpoint private and protect its config, auth files, and API key outside HolyCode.
+
+Netlify CLI is installed without its platform-specific local functions binaries. HolyCode supports remote build/deploy commands only; `netlify dev` and local functions are intentionally unsupported until upstream rebuilds those binaries.

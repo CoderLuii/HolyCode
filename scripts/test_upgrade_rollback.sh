@@ -13,6 +13,9 @@ baseline_workspace="${prefix}-baseline-workspace"
 upgrade_home="${prefix}-upgrade-home"
 upgrade_workspace="${prefix}-upgrade-workspace"
 
+current_node_version="$(docker run --rm --platform "$platform" --entrypoint node "$current_image" --version)"
+previous_node_version="$(docker run --rm --platform "$platform" --entrypoint node "$previous_image" --version)"
+
 # Git for Windows may rewrite Linux paths even when MSYSTEM is not exported.
 export MSYS_NO_PATHCONV=1
 
@@ -107,7 +110,7 @@ clone_volume "$baseline_workspace" "$upgrade_workspace"
 
 start_stack "$upgrade_name" "$current_image" "$upgrade_home" "$upgrade_workspace"
 assert_persisted_state "$upgrade_name"
-docker exec "$upgrade_name" sh -lc 'node --version | grep -Fx v24.18.0'
+docker exec "$upgrade_name" node --version | grep -Fx "$current_node_version"
 docker restart "$upgrade_name" >/dev/null
 wait_for_services "$upgrade_name"
 assert_persisted_state "$upgrade_name"
@@ -115,6 +118,6 @@ docker rm -f "$upgrade_name" >/dev/null
 
 start_stack "$rollback_name" "$previous_image" "$baseline_home" "$baseline_workspace"
 assert_persisted_state "$rollback_name"
-docker exec "$rollback_name" sh -lc 'node --version | grep -Fx v22.23.1'
+docker exec "$rollback_name" node --version | grep -Fx "$previous_node_version"
 
 echo "upgrade and rollback validation passed for $platform"

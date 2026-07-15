@@ -74,9 +74,9 @@ bundled browsers.
 
 - License: SEE LICENSE IN README.md
 - npm: https://www.npmjs.com/package/@anthropic-ai/claude-code
-- Version: 2.1.207
+- Version: 2.1.210
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.207`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.210`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -99,14 +99,6 @@ Installed from the pinned release `v2026.7.7.2` and commit
 Installed via npm as the global package `paperclipai@2026.707.0`. Paperclip includes
 @paperclipai/skills-catalog through its published package set, which HolyCode
 uses for the Skills page. Used only when ENABLE_PAPERCLIP=true.
-
-## CLIProxyAPI (optional sidecar)
-
-- License: MIT
-- Source: https://github.com/router-for-me/CLIProxyAPI
-
-Optional OpenCode sidecar image used in the full Compose profile. HolyCode
-does not modify this component.
 
 ## GitHub CLI (gh)
 

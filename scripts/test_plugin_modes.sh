@@ -67,9 +67,9 @@ assert_plugin() {
 docker volume create "$volume" >/dev/null
 run_with_plugins manual
 assert_plugin opencode-claude-auth 2.0.0
-assert_plugin oh-my-openagent 4.17.0
+assert_plugin oh-my-openagent 4.18.1
 wait_for_log "configured as 'opencode-claude-auth@2.0.0'; installed version 2.0.0"
-wait_for_log "configured as 'oh-my-openagent@4.17.0'; installed version 4.17.0"
+wait_for_log "configured as 'oh-my-openagent@4.18.1'; installed version 4.18.1"
 
 docker exec -u opencode \
   -e HOME=/home/opencode \

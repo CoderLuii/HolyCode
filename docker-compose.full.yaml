@@ -93,26 +93,10 @@ services:
       # - ENABLE_HERMES=true
       # - HERMES_PORT=8642
 
-      # --- CLIProxyAPI (optional sidecar; start with --profile cliproxyapi) ---
+      # --- CLIProxyAPI (externally managed endpoint) ---
       # Adds a separate OpenCode provider named "cliproxyapi". Does not replace Claude Auth.
       # - CLIPROXYAPI_ENABLED=true
-      # - CLIPROXYAPI_BASE_URL=http://cliproxyapi:8317/v1
+      # - CLIPROXYAPI_BASE_URL=http://your-cliproxy-host:8317/v1
       # - CLIPROXYAPI_API_KEY=
       # - CLIPROXYAPI_MODEL=${CLIPROXYAPI_MODEL:-}
       # - CLIPROXYAPI_SMALL_MODEL=${CLIPROXYAPI_SMALL_MODEL:-}
-
-  cliproxyapi:
-    image: eceasy/cli-proxy-api:v7.2.71@sha256:5f94c3ef20b55c00a8ca6608038d22d9371c656fde039538f09788aab68a87fe
-    profiles:
-      - cliproxyapi
-    restart: unless-stopped
-    expose:
-      - "8317"
-    # Optional host access for local setup/admin only. Keep disabled unless needed.
-    # ports:
-    #   - "127.0.0.1:<host-port>:8317"
-    volumes:
-      # Create this config file before enabling the profile.
-      - ./local-cache/cliproxyapi-config/config.yaml:/CLIProxyAPI/config.yaml:ro
-      - ./local-cache/cliproxyapi-auth:/root/.cli-proxy-api
-      - ./local-cache/cliproxyapi-logs:/CLIProxyAPI/logs

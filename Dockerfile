@@ -3,19 +3,49 @@
 # https://github.com/coderluii/holycode
 # ==============================================================================
 
-FROM node:24.18.0-bookworm-slim@sha256:cb4e8f7c443347358b7875e717c29e27bf9befc8f5a26cf18af3c3dec80e58c5
-
-LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode
+FROM node:24.18.0-bookworm-slim@sha256:6f7b03f7c2c8e2e784dcf9295400527b9b1270fd37b7e9a7285cf83b6951452d
 
 # ---------- Build args ----------
-ARG S6_OVERLAY_VERSION=3.2.3.0
+ARG S6_OVERLAY_VERSION=3.2.3.1
 ARG FZF_VERSION=0.74.0
 ARG LAZYGIT_VERSION=0.63.0
 ARG DELTA_VERSION=0.19.2
 ARG EZA_VERSION=0.23.5
 ARG HERMES_AGENT_VERSION=v2026.7.7.2
 ARG HERMES_AGENT_REF=b7751df34688835a108e0d630f3495fc11f3df79
+# renovate: datasource=npm depName=opencode-ai
+ARG OPENCODE_VERSION=1.18.1
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
+ARG CLAUDE_CODE_VERSION=2.1.210
+# renovate: datasource=npm depName=paperclipai
+ARG PAPERCLIP_VERSION=2026.707.0
+# renovate: datasource=npm depName=typescript
+ARG TYPESCRIPT_VERSION=6.0.3
+# renovate: datasource=npm depName=tsx
+ARG TSX_VERSION=4.23.1
+# renovate: datasource=npm depName=pnpm
+ARG PNPM_VERSION=11.13.0
+# renovate: datasource=npm depName=wrangler
+ARG WRANGLER_VERSION=4.110.0
+# renovate: datasource=npm depName=vercel
+ARG VERCEL_VERSION=54.21.0
+# renovate: datasource=npm depName=netlify-cli
+ARG NETLIFY_CLI_VERSION=26.2.0
+# renovate: datasource=pypi depName=numpy
+ARG NUMPY_VERSION=2.4.6
 ARG TARGETARCH
+
+LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
+    io.holycode.version.opencode=${OPENCODE_VERSION} \
+    io.holycode.version.claude-code=${CLAUDE_CODE_VERSION} \
+    io.holycode.version.paperclip=${PAPERCLIP_VERSION} \
+    io.holycode.version.typescript=${TYPESCRIPT_VERSION} \
+    io.holycode.version.tsx=${TSX_VERSION} \
+    io.holycode.version.pnpm=${PNPM_VERSION} \
+    io.holycode.version.wrangler=${WRANGLER_VERSION} \
+    io.holycode.version.vercel=${VERCEL_VERSION} \
+    io.holycode.version.netlify-cli=${NETLIFY_CLI_VERSION} \
+    io.holycode.version.numpy=${NUMPY_VERSION}
 
 # ---------- Environment ----------
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -35,14 +65,14 @@ RUN apt-get update && apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 RUN S6_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; esac) && \
     S6_ARCH_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "0952056ff913482163cc30e35b2e944b507ba1025d78f5becbb89367bf344581";; \
-      *) echo "a93f02882c6ed46b21e7adb5c0add86154f01236c93cd82c7d682722e8840563";; \
+      arm64) echo "c79b5cc7e5e405f6e1ae1466a8160ac84d29b86614e1e01ff0fb11dc832fee1b";; \
+      *) echo "ed72fdb3abf196472d121b026bed63b46f3443507bd2ce67df6bd187f7d4dc0a";; \
     esac) && \
     curl -fsSL -o /tmp/s6-overlay-noarch.tar.xz \
       "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" && \
     curl -fsSL -o /tmp/s6-overlay-arch.tar.xz \
       "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" && \
-    echo "b720f9d9340efc8bb07528b9743813c836e4b02f8693d90241f047998b4c53cf  /tmp/s6-overlay-noarch.tar.xz" | sha256sum -c - && \
+    echo "43d99d266fefe32cdc1510963aaadeb211cc8450b60af27817b64af450c934be  /tmp/s6-overlay-noarch.tar.xz" | sha256sum -c - && \
     echo "${S6_ARCH_SHA256}  /tmp/s6-overlay-arch.tar.xz" | sha256sum -c - && \
     tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && \
     tar -C / -Jxpf /tmp/s6-overlay-arch.tar.xz && \
@@ -164,10 +194,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir --break-system-packages playwright==1.61.0
 
 RUN pip install --no-cache-dir --break-system-packages \
-    requests==2.34.2 httpx==0.28.1 beautifulsoup4==4.15.0 lxml==6.1.1 \
-    Pillow==12.3.0 openpyxl==3.1.5 python-docx==1.2.0 \
-    pandas==3.0.3 numpy==2.4.6 matplotlib==3.11.0 seaborn==0.13.2 \
-    rich==15.0.0 click==8.4.2 tqdm==4.68.4 apprise==1.12.0 \
+    requests==2.33.0 httpx==0.28.1 beautifulsoup4==4.15.0 lxml==6.1.1 \
+    Pillow==12.2.0 openpyxl==3.1.5 python-docx==1.2.0 \
+    pandas==3.0.3 numpy==${NUMPY_VERSION} matplotlib==3.11.0 seaborn==0.13.2 \
+    rich==14.3.3 click==8.4.2 tqdm==4.68.4 apprise==1.12.0 \
     jinja2==3.1.6 pyyaml==6.0.3 python-dotenv==1.2.2 markdown==3.10.2 \
     fastapi==0.139.0 uvicorn==0.51.0
 
@@ -175,20 +205,20 @@ RUN rm -f /usr/local/bin/dotenv
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
-RUN npm i -g opencode-ai@1.17.18 @anthropic-ai/claude-code@2.1.207 && \
+RUN npm i -g "opencode-ai@${OPENCODE_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && \
     rm -rf /root/.npm
 ENV PATH="/home/opencode/.local/bin:${PATH}"
 
 # Drizzle Kit's stable release still declares an unused legacy loader and older
 # nested esbuild; remove both in the install layer and use the audited global pin.
 RUN npm i -g \
-    typescript@6.0.3 tsx@4.23.0 \
-    pnpm@11.12.0 \
+    "typescript@${TYPESCRIPT_VERSION}" "tsx@${TSX_VERSION}" \
+    "pnpm@${PNPM_VERSION}" \
     vite@8.1.4 esbuild@0.28.1 \
     eslint@10.7.0 prettier@3.9.5 \
     serve@14.2.6 nodemon@3.1.14 concurrently@10.0.3 \
     dotenv-cli@11.0.0 \
-    wrangler@4.110.0 vercel@54.21.0 netlify-cli@26.2.0 \
+    "wrangler@${WRANGLER_VERSION}" "vercel@${VERCEL_VERSION}" \
     pm2@7.0.3 \
     prisma@7.8.0 drizzle-kit@0.31.10 \
     lighthouse@13.4.0 @lhci/cli@0.15.1 \
@@ -207,15 +237,27 @@ RUN npm i -g \
     drizzle-kit --help >/dev/null && \
     rm -rf /root/.npm
 
+# Netlify's optional platform package still contains stale local-functions-proxy
+# binaries. Keep remote build/deploy commands and remove the unsupported local runtime.
+RUN npm i -g --omit=optional "netlify-cli@${NETLIFY_CLI_VERSION}" && \
+    rm -rf /usr/local/lib/node_modules/netlify-cli/node_modules/@netlify/local-functions-proxy-* && \
+    rm -f /usr/local/lib/node_modules/netlify-cli/node_modules/.bin/local-functions-proxy && \
+    test -z "$(find /usr/local/lib/node_modules/netlify-cli -path '*/@netlify/local-functions-proxy-*/bin/local-functions-proxy' -print -quit)" && \
+    netlify --version | grep -F "netlify-cli/${NETLIFY_CLI_VERSION}" && \
+    netlify build --help >/dev/null && \
+    netlify deploy --help >/dev/null && \
+    rm -rf /root/.npm
+
 RUN HERMES_AGENT_COMMIT=$(git ls-remote --tags https://github.com/NousResearch/hermes-agent.git "refs/tags/${HERMES_AGENT_VERSION}" | awk '{print $1}') && \
     if [ "$HERMES_AGENT_COMMIT" != "$HERMES_AGENT_REF" ]; then \
       echo "Hermes tag ${HERMES_AGENT_VERSION} resolved to ${HERMES_AGENT_COMMIT:-missing}, expected ${HERMES_AGENT_REF}" >&2; \
       exit 1; \
     fi && \
     pip install --no-cache-dir --break-system-packages \
-    "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}"
+    "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}" && \
+    python3 -m pip check
 
-RUN npm i -g paperclipai@2026.707.0 && \
+RUN npm i -g "paperclipai@${PAPERCLIP_VERSION}" && \
     rm -rf /root/.npm
 RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
       -path '*/native/lib' -type d -exec sh -c '\
@@ -238,13 +280,13 @@ RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/bootstrap.sh
 COPY s6-overlay/s6-rc.d/opencode/type /etc/s6-overlay/s6-rc.d/opencode/type
 COPY s6-overlay/s6-rc.d/opencode/run /etc/s6-overlay/s6-rc.d/opencode/run
 RUN chmod +x /etc/s6-overlay/s6-rc.d/opencode/run && \
-    touch /etc/s6-overlay/s6-rc.d/user/contents.d/opencode
+    touch /etc/s6-overlay/user-bundles.d/user/contents.d/opencode
 
 # ---------- s6-overlay service: xvfb ----------
 COPY s6-overlay/s6-rc.d/xvfb/type /etc/s6-overlay/s6-rc.d/xvfb/type
 COPY s6-overlay/s6-rc.d/xvfb/run /etc/s6-overlay/s6-rc.d/xvfb/run
 RUN chmod +x /etc/s6-overlay/s6-rc.d/xvfb/run && \
-    touch /etc/s6-overlay/s6-rc.d/user/contents.d/xvfb
+    touch /etc/s6-overlay/user-bundles.d/user/contents.d/xvfb
 
 COPY s6-overlay/s6-rc.d/hermes/type /etc/s6-overlay/s6-rc.d/hermes/type
 COPY s6-overlay/s6-rc.d/hermes/run /etc/s6-overlay/s6-rc.d/hermes/run

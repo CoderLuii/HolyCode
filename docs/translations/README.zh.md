@@ -427,7 +427,7 @@ services:
 
 > 发布标签严格使用 `vX.Y.Z`。Docker 镜像标签会去掉 `v`。`v1.0.9` 之后使用 `v1.1.0`，`v1.1.9` 之后使用 `v1.2.0`，`v1.9.9` 之后使用 `v2.0.0`。`v1.0.10` 到 `v1.0.13` 保持不可变。
 
-> 本次发布将 TypeScript 保持在 6.0.3，直到 7.x 提供内置工具链所需的稳定 API。NumPy 保持在兼容 Bookworm Python 3.11 的最新系列，json-server 保持在稳定版 0.17.4，Vercel 保持在 54.21.0，直到范围和团队行为通过验证。
+> v1.1.1 将 OpenCode 更新到 1.18.1、Claude Code 更新到 2.1.210、s6-overlay 更新到 3.2.3.1、pnpm 更新到 11.13.0、tsx 更新到 4.23.1，并将 oh-my-openagent 更新到 4.18.1。TypeScript 保持在 6.0.3，NumPy 保持在 2.4.6，Vercel 保持在 54.21.0。Netlify 仅支持远程构建和部署。内置 CLIProxyAPI sidecar 已移除；外部管理的 endpoint 仍受支持。
 
 </details>
 

@@ -10,6 +10,9 @@ on:
         required: false
         default: ''
         type: string
+      previous_image:
+        required: true
+        type: string
       release_title:
         required: true
         type: string
@@ -20,11 +23,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release tag, for example v1.1.0
+        description: Release tag, for example v1.1.1
         required: true
         type: string
       previous_version:
         description: Previous release tag
+        required: true
+        type: string
+      previous_image:
+        description: Previous Docker image tag and immutable digest
         required: true
         type: string
       release_title:
@@ -111,56 +118,18 @@ jobs:
             --tag "holycode-protected-validation:${{ matrix.suffix }}" \
             .
 
-      - name: Validate CLIProxyAPI sidecar
-        env:
-          CLIPROXY_IMAGE: eceasy/cli-proxy-api:v7.2.71@sha256:5f94c3ef20b55c00a8ca6608038d22d9371c656fde039538f09788aab68a87fe
-          PLATFORM: ${{ matrix.platform }}
-        run: |
-          set -euo pipefail
-
-          docker run --rm --platform "$PLATFORM" "$CLIPROXY_IMAGE" \
-            ./CLIProxyAPI --help 2>&1 | grep -F 'CLIProxyAPI Version: v7.2.71'
-
-          docker run -d --platform "$PLATFORM" --name holycode-cliproxy-validation \
-            -p 127.0.0.1:18317:8317 \
-            -v "$PWD/tests/fixtures/cliproxy-test-config.yaml:/CLIProxyAPI/config.yaml:ro" \
-            "$CLIPROXY_IMAGE" \
-            ./CLIProxyAPI -config /CLIProxyAPI/config.yaml -local-model
-
-          cleanup() {
-            docker logs holycode-cliproxy-validation || true
-            docker rm -f holycode-cliproxy-validation || true
-          }
-          trap cleanup EXIT
-
-          ready=false
-          for _ in $(seq 1 60); do
-            status="$(curl -sS --max-time 5 -o /tmp/cliproxy-models.json -w '%{http_code}' \
-              -H 'Authorization: Bearer holycode-release-validation-key' \
-              http://127.0.0.1:18317/v1/models || true)"
-            if [ "$status" = "200" ]; then
-              ready=true
-              break
-            fi
-            sleep 1
-          done
-          [ "$ready" = true ]
-          jq -e '.object == "list" and (.data | type == "array")' /tmp/cliproxy-models.json >/dev/null
-          [ "$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:18317/v1/models)" = "401" ]
-
       - name: Validate upgrade, persistence, and rollback
         env:
           CURRENT_IMAGE: holycode-protected-validation:${{ matrix.suffix }}
           PLATFORM: ${{ matrix.platform }}
-          PREVIOUS_IMAGE: coderluii/holycode:1.0.13@sha256:45e352d74dbe227c344c2b1973e2532a9284a98e0d58f34efcd991972da6f70c
+          PREVIOUS_IMAGE: ${{ inputs.previous_image }}
         run: bash scripts/test_upgrade_rollback.sh "$CURRENT_IMAGE" "$PREVIOUS_IMAGE" "$PLATFORM"
 
       - name: Reclaim scanner workspace
         env:
-          CLIPROXY_IMAGE: eceasy/cli-proxy-api:v7.2.71@sha256:5f94c3ef20b55c00a8ca6608038d22d9371c656fde039538f09788aab68a87fe
-          PREVIOUS_IMAGE: coderluii/holycode:1.0.13@sha256:45e352d74dbe227c344c2b1973e2532a9284a98e0d58f34efcd991972da6f70c
+          PREVIOUS_IMAGE: ${{ inputs.previous_image }}
         run: |
-          docker image rm "$PREVIOUS_IMAGE" "$CLIPROXY_IMAGE" || true
+          docker image rm "$PREVIOUS_IMAGE" || true
           docker container prune --force
           docker buildx prune --all --force
           docker image prune --force
@@ -254,4 +223,3 @@ jobs:
           severity: CRITICAL
           exit-code: 1
           ignore-unfixed: true
-          trivyignores: .trivyignore.yaml

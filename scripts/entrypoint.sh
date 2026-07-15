@@ -13,7 +13,7 @@ WORKSPACE_DIR="/workspace"
 CLAUDE_AUTH_PLUGIN_NAME="opencode-claude-auth"
 CLAUDE_AUTH_PLUGIN_VERSION="2.0.0"
 OH_MY_OPENAGENT_PLUGIN_NAME="oh-my-openagent"
-OH_MY_OPENAGENT_PLUGIN_VERSION="4.17.0"
+OH_MY_OPENAGENT_PLUGIN_VERSION="4.18.1"
 
 sync_shipped_skills() {
     local source_skills_dir="/usr/local/share/holycode/skills"
@@ -319,18 +319,18 @@ if [ "${ENABLE_HERMES}" = "true" ]; then
     export HERMES_HOME="${HERMES_HOME:-$OC_HOME/.hermes}"
     mkdir -p "$HERMES_HOME"
     chown "$PUID:$PGID" "$HERMES_HOME" 2>/dev/null || true
-    touch /etc/s6-overlay/s6-rc.d/user/contents.d/hermes
+    touch /etc/s6-overlay/user-bundles.d/user/contents.d/hermes
 else
-    rm -f /etc/s6-overlay/s6-rc.d/user/contents.d/hermes
+    rm -f /etc/s6-overlay/user-bundles.d/user/contents.d/hermes
 fi
 
 if [ "${ENABLE_PAPERCLIP}" = "true" ]; then
     export PAPERCLIP_HOME="${PAPERCLIP_HOME:-$OC_HOME/.paperclip}"
     mkdir -p "$PAPERCLIP_HOME"
     chown "$PUID:$PGID" "$PAPERCLIP_HOME" 2>/dev/null || true
-    touch /etc/s6-overlay/s6-rc.d/user/contents.d/paperclip
+    touch /etc/s6-overlay/user-bundles.d/user/contents.d/paperclip
 else
-    rm -f /etc/s6-overlay/s6-rc.d/user/contents.d/paperclip
+    rm -f /etc/s6-overlay/user-bundles.d/user/contents.d/paperclip
 fi
 
 # ---------- Plugin toggles (run every boot for enable/disable) ----------

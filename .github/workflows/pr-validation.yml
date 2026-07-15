@@ -34,6 +34,13 @@ jobs:
           set -eu
           docker compose -f docker-compose.yaml config --no-interpolate >/tmp/docker-compose.yaml
           docker compose -f docker-compose.full.yaml config --no-interpolate >/tmp/docker-compose.full.yaml
+          if docker compose -f docker-compose.full.yaml config --services | grep -Fx cliproxyapi; then
+            echo "bundled CLIProxyAPI service must remain removed until its fixed image is verified" >&2
+            exit 1
+          fi
+
+      - name: Renovate configuration
+        run: npx --yes --package renovate@43.263.9 renovate-config-validator --strict renovate.json
 
   build-and-smoke-test:
     needs: static-validation

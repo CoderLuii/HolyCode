@@ -427,7 +427,7 @@ services:
 
 > 릴리스 태그는 정확히 `vX.Y.Z`를 사용합니다. Docker 이미지 태그에서는 `v`를 뺍니다. `v1.0.9` 다음은 `v1.1.0`, `v1.1.9` 다음은 `v1.2.0`, `v1.9.9` 다음은 `v2.0.0`입니다. `v1.0.10`부터 `v1.0.13`까지는 변경되지 않습니다.
 
-> 이번 릴리스에서는 포함된 도구 체인에 필요한 안정 API가 7.x에 제공될 때까지 TypeScript 6.0.3을 유지합니다. NumPy는 Bookworm Python 3.11과 호환되는 최신 계열, json-server는 안정 버전 0.17.4, Vercel은 scope 및 team 동작을 검증할 때까지 54.21.0을 유지합니다.
+> v1.1.1에서는 OpenCode를 1.18.1, Claude Code를 2.1.210, s6-overlay를 3.2.3.1, pnpm을 11.13.0, tsx를 4.23.1, oh-my-openagent를 4.18.1로 업데이트합니다. TypeScript는 6.0.3, NumPy는 2.4.6, Vercel은 54.21.0을 유지합니다. Netlify는 원격 빌드와 배포만 지원합니다. 번들 CLIProxyAPI 사이드카는 제거되었으며 외부에서 관리하는 엔드포인트는 계속 지원됩니다.
 
 </details>
 

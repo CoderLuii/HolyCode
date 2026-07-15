@@ -1,6 +1,0 @@
-host: "0.0.0.0"
-port: 8317
-auth-dir: "/tmp/cliproxy-auth"
-api-keys:
-  - "holycode-release-validation-key"
-logging-to-file: false

@@ -2,7 +2,7 @@
 
 Podman can run the same HolyCode image as Docker. Use this guide when you prefer a daemonless or rootless container runtime, especially on Fedora, RHEL, CoreOS, Rocky, AlmaLinux, or similar Linux hosts.
 
-This guide mirrors the minimal HolyCode web UI setup. For the full Docker Compose profile and sidecar services, use the main README and `docker-compose.full.yaml`. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each version segment is one digit, so `v1.0.9` rolls to `v1.1.0`.
+This guide mirrors the minimal HolyCode web UI setup. For the full Docker Compose reference, use the main README and `docker-compose.full.yaml`. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each version segment is one digit, so `v1.0.9` rolls to `v1.1.0`.
 
 ## What this guide covers
 
@@ -11,7 +11,7 @@ This guide mirrors the minimal HolyCode web UI setup. For the full Docker Compos
 - Loading provider keys from `.env` with `--env-file .env`
 - SELinux labels for Fedora/RHEL/CoreOS hosts
 - Rootless Podman permission and user namespace notes
-- Optional service boundaries for Paperclip, Hermes, and CLIProxyAPI
+- Optional service boundaries for Paperclip, Hermes, and external CLIProxyAPI endpoints
 - Safe update and recreate behavior
 
 ## Prerequisites
@@ -129,7 +129,7 @@ If you enable them, publish the ports you need:
 
 Paperclip listens on `3100` when enabled. `PAPERCLIP_BIND=lan` lets the service bind inside the container so the Podman port publish can reach it. Paperclip runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so keep the `/home/opencode` bind mount in place when enabling it. Paperclip now ships its Skills catalog through the package set HolyCode installs, so the Skills page can load the bundled catalog without a HolyCode compatibility shim. Hermes exposes an API service on `8642`; set `API_SERVER_KEY` before enabling it. A `404` at `/` is normal as long as the process stays healthy.
 
-CLIProxyAPI is different. In HolyCode it is documented as a full Compose sidecar profile, not as part of the one-container Podman command. Use `docker-compose.full.yaml` when you need the supported CLIProxyAPI sidecar workflow.
+CLIProxyAPI is different. HolyCode keeps its provider integration, but does not bundle the `v7.2.77` sidecar while that image contains fixable high-severity Go dependencies. Point `CLIPROXYAPI_BASE_URL` at an externally managed endpoint that the Podman container can reach.
 
 ## Updating HolyCode
 
@@ -150,7 +150,7 @@ podman rm holycode
 
 Run the `podman run` command again. Your data stays in `./data/opencode`, `./local-cache/opencode`, and `./workspace`.
 
-If you need to roll back, stop and remove the container, restore the pre-upgrade copies, then recreate it with `docker.io/coderluii/holycode:1.0.13`. Do not reuse data already migrated by `v1.1.0` unless the migration is known to be backward compatible.
+If you need to roll back, stop and remove the container, restore the pre-upgrade copies, then recreate it with `docker.io/coderluii/holycode:1.1.0`. Do not reuse data already migrated by `v1.1.1` unless the migration is known to be backward compatible.
 
 Do not use `podman start holycode` as an update path. It restarts the existing container with the old image, environment variables, ports, and mount settings.
 

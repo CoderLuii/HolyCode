@@ -24,8 +24,10 @@ jobs:
     secrets: inherit
     with:
       version: ${{ github.ref_name }}
+      previous_version: v1.1.0
+      previous_image: coderluii/holycode:1.1.0@sha256:a6df9d85fd40c1e24300e3dccd9a41c30c187f8187c1d533b8096a2a219f05a7
       release_title: ${{ github.ref_name }}
-      allow_legacy_bridge: ${{ github.ref_name == 'v1.1.0' }}
+      allow_legacy_bridge: false
 
   build-and-push:
     needs: protected-validation
