@@ -1,3 +1,4 @@
 *.sh text eol=lf
+*.py text eol=lf
 s6-overlay/**/run text eol=lf
 s6-overlay/**/type text eol=lf

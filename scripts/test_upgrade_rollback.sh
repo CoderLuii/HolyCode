@@ -29,14 +29,16 @@ trap cleanup EXIT
 
 wait_for_services() {
   local name="$1"
+  local expect_hermes="$2"
 
   for _ in $(seq 1 180); do
     if docker exec "$name" curl -fsS --max-time 5 -o /dev/null http://localhost:4096/ 2>/dev/null && \
-       docker exec "$name" curl -fsS --max-time 5 -o /dev/null http://localhost:3100/api/health 2>/dev/null && \
-       docker exec "$name" curl -fsS --max-time 5 -o /dev/null \
+       docker exec "$name" curl -fsS --max-time 5 -o /dev/null http://localhost:3100/api/health 2>/dev/null; then
+      if [ "$expect_hermes" != "true" ] || docker exec "$name" curl -fsS --max-time 5 -o /dev/null \
          -H 'Authorization: Bearer holycode-upgrade-test-key' \
          http://localhost:8642/v1/models 2>/dev/null; then
-      return 0
+        return 0
+      fi
     fi
     if [ "$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null || true)" != "true" ]; then
       docker logs "$name" || true
@@ -53,6 +55,7 @@ start_stack() {
   local image="$2"
   local home_volume="$3"
   local workspace_volume="$4"
+  local enable_hermes="$5"
 
   docker run -d --platform "$platform" --name "$name" \
     -v "$home_volume:/home/opencode" \
@@ -60,13 +63,13 @@ start_stack() {
     -e PUID=2345 \
     -e PGID=2345 \
     -e ENABLE_PAPERCLIP=true \
-    -e ENABLE_HERMES=true \
+    -e ENABLE_HERMES="$enable_hermes" \
     -e API_SERVER_KEY=holycode-upgrade-test-key \
     -e CLIPROXYAPI_ENABLED=true \
     -e CLIPROXYAPI_MODEL=holycode-upgrade-model \
     -e CLIPROXYAPI_API_KEY=holycode-upgrade-provider-key \
     "$image" >/dev/null
-  wait_for_services "$name"
+  wait_for_services "$name" "$enable_hermes"
 }
 
 clone_volume() {
@@ -95,7 +98,7 @@ docker pull --platform "$platform" "$previous_image" >/dev/null
 docker volume create "$baseline_home" >/dev/null
 docker volume create "$baseline_workspace" >/dev/null
 
-start_stack "$baseline_name" "$previous_image" "$baseline_home" "$baseline_workspace"
+start_stack "$baseline_name" "$previous_image" "$baseline_home" "$baseline_workspace" true
 docker exec -u opencode "$baseline_name" sh -lc '
   touch /home/opencode/.claude/holycode-upgrade-auth-marker
   touch /home/opencode/.hermes/holycode-upgrade-marker
@@ -108,15 +111,15 @@ docker rm -f "$baseline_name" >/dev/null
 clone_volume "$baseline_home" "$upgrade_home"
 clone_volume "$baseline_workspace" "$upgrade_workspace"
 
-start_stack "$upgrade_name" "$current_image" "$upgrade_home" "$upgrade_workspace"
+start_stack "$upgrade_name" "$current_image" "$upgrade_home" "$upgrade_workspace" false
 assert_persisted_state "$upgrade_name"
 docker exec "$upgrade_name" node --version | grep -Fx "$current_node_version"
 docker restart "$upgrade_name" >/dev/null
-wait_for_services "$upgrade_name"
+wait_for_services "$upgrade_name" false
 assert_persisted_state "$upgrade_name"
 docker rm -f "$upgrade_name" >/dev/null
 
-start_stack "$rollback_name" "$previous_image" "$baseline_home" "$baseline_workspace"
+start_stack "$rollback_name" "$previous_image" "$baseline_home" "$baseline_workspace" true
 assert_persisted_state "$rollback_name"
 docker exec "$rollback_name" node --version | grep -Fx "$previous_node_version"
 

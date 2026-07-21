@@ -3,22 +3,43 @@
 # https://github.com/coderluii/holycode
 # ==============================================================================
 
+# renovate: datasource=github-releases depName=cli/cli
+ARG GITHUB_CLI_VERSION=2.96.0
+ARG GITHUB_CLI_REF=b300f2ec7ec9dc9addc39b2ad88c54097ded7ca0
+
+# GitHub CLI 2.96.0 was released before Go 1.26.5 fixed CVE-2026-39822.
+# Rebuild the exact upstream tag with the fixed toolchain until GitHub ships it.
+FROM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS github-cli-builder
+ARG GITHUB_CLI_VERSION
+ARG GITHUB_CLI_REF
+RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
+      https://github.com/cli/cli.git /src && \
+    cd /src && \
+    test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}" && \
+    test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
+    SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
+      GH_VERSION="${GITHUB_CLI_VERSION}" go run ./script/build.go bin/gh && \
+    install -D -m 0755 bin/gh /out/gh && \
+    go version -m /out/gh | grep -F "go1.26.5" && \
+    /out/gh --version | grep -F "gh version ${GITHUB_CLI_VERSION}"
+
 FROM node:24.18.0-trixie-slim@sha256:ae91dcc111a68c9d2d81ff2a17bda61be126426176fde6fe7d08ab13b7f50573
 
 # ---------- Build args ----------
-ARG S6_OVERLAY_VERSION=3.2.3.1
-ARG FZF_VERSION=0.74.0
+ARG GITHUB_CLI_VERSION
+ARG S6_OVERLAY_VERSION=3.2.3.2
+ARG FZF_VERSION=0.74.1
 ARG LAZYGIT_VERSION=0.63.1
 ARG DELTA_VERSION=0.19.2
 ARG EZA_VERSION=0.23.5
-ARG HERMES_AGENT_VERSION=v2026.7.7.2
-ARG HERMES_AGENT_REF=b7751df34688835a108e0d630f3495fc11f3df79
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.2
+ARG OPENCODE_VERSION=1.18.4
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.210
+ARG CLAUDE_CODE_VERSION=2.1.216
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.707.0
+# renovate: datasource=npm depName=undici
+ARG PAPERCLIP_UNDICI_VERSION=6.27.0
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
@@ -26,18 +47,28 @@ ARG NPM_VERSION=12.0.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.1
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=11.13.0
+ARG PNPM_VERSION=11.15.1
+# renovate: datasource=npm depName=vite
+ARG VITE_VERSION=8.1.5
+# renovate: datasource=npm depName=prettier
+ARG PRETTIER_VERSION=3.9.6
+# renovate: datasource=npm depName=prisma
+ARG PRISMA_VERSION=7.9.0
+# renovate: datasource=npm depName=lighthouse
+ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.111.0
-# renovate: datasource=npm depName=vercel
-ARG VERCEL_VERSION=54.21.0
+ARG WRANGLER_VERSION=4.112.0
 # renovate: datasource=npm depName=netlify-cli
 ARG NETLIFY_CLI_VERSION=26.2.0
 # renovate: datasource=pypi depName=numpy
 ARG NUMPY_VERSION=2.5.1
+# renovate: datasource=pypi depName=pip
+ARG PIP_VERSION=26.1.2
+ARG RELEASE_APT_REFRESH=2026-07-21
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
+    io.holycode.version.github-cli=${GITHUB_CLI_VERSION} \
     io.holycode.version.opencode=${OPENCODE_VERSION} \
     io.holycode.version.claude-code=${CLAUDE_CODE_VERSION} \
     io.holycode.version.paperclip=${PAPERCLIP_VERSION} \
@@ -45,8 +76,13 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.typescript=${TYPESCRIPT_VERSION} \
     io.holycode.version.tsx=${TSX_VERSION} \
     io.holycode.version.pnpm=${PNPM_VERSION} \
+    io.holycode.version.vite=${VITE_VERSION} \
+    io.holycode.version.prettier=${PRETTIER_VERSION} \
+    io.holycode.version.prisma=${PRISMA_VERSION} \
+    io.holycode.version.lighthouse=${LIGHTHOUSE_VERSION} \
+    io.holycode.version.s6-overlay=${S6_OVERLAY_VERSION} \
+    io.holycode.version.fzf=${FZF_VERSION} \
     io.holycode.version.wrangler=${WRANGLER_VERSION} \
-    io.holycode.version.vercel=${VERCEL_VERSION} \
     io.holycode.version.netlify-cli=${NETLIFY_CLI_VERSION} \
     io.holycode.version.numpy=${NUMPY_VERSION}
 
@@ -58,24 +94,24 @@ ENV DEBIAN_FRONTEND=noninteractive \
     DBUS_SESSION_BUS_ADDRESS=disabled: \
     CHROME_PATH=/usr/bin/chromium \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-dev-shm-usage" \
+    CHROMIUM_FLAGS="--disable-gpu --disable-dev-shm-usage" \
     OPENCODE_DISABLE_AUTOUPDATE=true \
     OPENCODE_DISABLE_TERMINAL_TITLE=true
 
 # ---------- s6-overlay v3 (multi-arch) ----------
-RUN apt-get update && apt-get upgrade -y && \
+RUN test -n "${RELEASE_APT_REFRESH}" && apt-get update && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends xz-utils curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 RUN S6_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; esac) && \
     S6_ARCH_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "c79b5cc7e5e405f6e1ae1466a8160ac84d29b86614e1e01ff0fb11dc832fee1b";; \
-      *) echo "ed72fdb3abf196472d121b026bed63b46f3443507bd2ce67df6bd187f7d4dc0a";; \
+      arm64) echo "b17f17a82e7a515c682a91edaf2ffdabb73f891981b6c1fd712115693a2f8b4c";; \
+      *) echo "e6befcc96a437a3831386ecfc51808c5d3e939dc5fe3c02ae9284599e8aa2408";; \
     esac) && \
     curl -fsSL -o /tmp/s6-overlay-noarch.tar.xz \
       "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" && \
     curl -fsSL -o /tmp/s6-overlay-arch.tar.xz \
       "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" && \
-    echo "43d99d266fefe32cdc1510963aaadeb211cc8450b60af27817b64af450c934be  /tmp/s6-overlay-noarch.tar.xz" | sha256sum -c - && \
+    echo "5379750ed30a84bbd2e2dd74847ba6b5bd29cd0b2e3ea2ec58049b57eb2eda12  /tmp/s6-overlay-noarch.tar.xz" | sha256sum -c - && \
     echo "${S6_ARCH_SHA256}  /tmp/s6-overlay-arch.tar.xz" | sha256sum -c - && \
     tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && \
     tar -C / -Jxpf /tmp/s6-overlay-arch.tar.xz && \
@@ -106,7 +142,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     htop procps iproute2 lsof strace \
     # Build essentials (needed for native npm addons)
     build-essential pkg-config \
-    postgresql-client redis-tools sqlite3 \
+    postgresql-client-17 redis-tools sqlite3 \
     # SSH client (NOT server)
     openssh-client \
     imagemagick \
@@ -121,8 +157,8 @@ RUN ln -sf /usr/bin/batcat /usr/local/bin/bat 2>/dev/null || true
 
 # ---------- fzf ----------
 RUN FZF_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "bd9e6165ebdb702215d42368cbb95b8dd70a4e77ee97925adac8c31660e30ef7";; \
-      *) echo "cf919f05b7581b4c744d764eaa704665d61dd6d3ca785f0df2351281dff60cda";; \
+      arm64) echo "f22204dd1a091d43e102268d062fd53b47133c8d8581671ee5eb225b75e31183";; \
+      *) echo "df53438be5f51e151bb4044d78fda72bdfe209e3ecd2baecae48e8dea370c81b";; \
     esac) && \
     curl -fsSL -o /tmp/fzf.tar.gz \
       "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${TARGETARCH}.tar.gz" && \
@@ -140,14 +176,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- GitHub CLI ----------
-RUN curl -fsSL -o /tmp/githubcli-archive-keyring.gpg \
-      https://cli.github.com/packages/githubcli-archive-keyring.gpg && \
-    echo "6084d5d7bd8e288441e0e94fc6275570895da18e6751f70f057485dc2d1a811b  /tmp/githubcli-archive-keyring.gpg" | sha256sum -c - && \
-    install -m 0644 /tmp/githubcli-archive-keyring.gpg /usr/share/keyrings/githubcli-archive-keyring.gpg && \
-    rm /tmp/githubcli-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-      > /etc/apt/sources.list.d/github-cli.list && \
-    apt-get update && apt-get install -y gh && rm -rf /var/lib/apt/lists/*
+COPY --from=github-cli-builder /out/gh /usr/local/bin/gh
+RUN gh --version | grep -F "gh version ${GITHUB_CLI_VERSION}"
 
 # ---------- lazygit ----------
 RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
@@ -188,21 +218,36 @@ RUN EZA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; 
 
 # ---------- Headless browser (Chromium + Xvfb + fonts) ----------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
+    chromium chromium-sandbox \
     xvfb \
     fonts-liberation2 fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji \
+    && test -u /usr/lib/chromium/chrome-sandbox \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- Playwright (Python, uses system Chromium via env vars) ----------
 RUN pip install --no-cache-dir --break-system-packages playwright==1.61.0
 
+# Trixie's packaging and wheel modules are dpkg-owned and have no pip RECORD.
+# Install the audited releases into /usr/local without removing Debian files.
+RUN pip install --no-cache-dir --break-system-packages --ignore-installed \
+    packaging==26.2 wheel==0.47.0
+
 RUN pip install --no-cache-dir --break-system-packages \
-    requests==2.33.0 httpx==0.28.1 beautifulsoup4==4.15.0 lxml==6.1.1 \
-    Pillow==12.2.0 openpyxl==3.1.5 python-docx==1.2.0 \
-    pandas==3.0.3 numpy==${NUMPY_VERSION} matplotlib==3.11.0 seaborn==0.13.2 \
-    rich==14.3.3 click==8.4.2 tqdm==4.68.4 apprise==1.12.0 \
+    requests==2.34.2 httpx==0.28.1 beautifulsoup4==4.15.0 lxml==6.1.1 \
+    Pillow==12.3.0 openpyxl==3.1.5 python-docx==1.2.0 \
+    pandas==3.0.3 numpy==${NUMPY_VERSION} matplotlib==3.11.1 seaborn==0.13.2 \
+    rich==15.0.0 click==8.4.2 tqdm==4.69.0 apprise==1.12.0 \
     jinja2==3.1.6 pyyaml==6.0.3 python-dotenv==1.2.2 markdown==3.10.2 \
-    fastapi==0.139.0 uvicorn==0.51.0
+    fastapi==0.139.2 uvicorn==0.51.0
+
+# Replace Debian's vulnerable wheel metadata after installing fixed copies in
+# /usr/local. pip remains available from the exact PyPI package.
+RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
+      "pip==${PIP_VERSION}" && \
+    apt-get purge -y python3-pip python3-wheel && \
+    rm -rf /var/lib/apt/lists/* && \
+    python3 -m pip --version | grep -F "pip ${PIP_VERSION}" && \
+    python3 -m pip check
 
 RUN rm -f /usr/local/bin/dotenv
 
@@ -217,7 +262,7 @@ RUN chmod +x /usr/local/bin/validate-npm-script-policy && \
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
-RUN npm i -g --allow-scripts=opencode-ai,@anthropic-ai/claude-code "opencode-ai@${OPENCODE_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && \
+RUN npm i -g --ignore-scripts "opencode-ai@${OPENCODE_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && \
     rm -rf /root/.npm
 ENV PATH="/home/opencode/.local/bin:${PATH}"
 
@@ -226,15 +271,15 @@ ENV PATH="/home/opencode/.local/bin:${PATH}"
 RUN npm i -g --ignore-scripts \
     "typescript@${TYPESCRIPT_VERSION}" "tsx@${TSX_VERSION}" \
     "pnpm@${PNPM_VERSION}" \
-    vite@8.1.4 esbuild@0.28.1 \
-    eslint@10.7.0 prettier@3.9.5 \
-    serve@14.2.6 nodemon@3.1.14 concurrently@10.0.3 \
+    "vite@${VITE_VERSION}" esbuild@0.28.1 \
+    eslint@10.7.0 "prettier@${PRETTIER_VERSION}" \
+    serve@14.2.6 nodemon@3.1.14 \
     dotenv-cli@11.0.0 \
-    "wrangler@${WRANGLER_VERSION}" "vercel@${VERCEL_VERSION}" \
+    "wrangler@${WRANGLER_VERSION}" \
     pm2@7.0.3 \
-    prisma@7.8.0 drizzle-kit@0.31.10 \
-    lighthouse@13.4.0 @lhci/cli@0.15.1 \
-    sharp-cli@5.2.0 json-server@0.17.4 http-server@14.1.1 && \
+    "prisma@${PRISMA_VERSION}" drizzle-kit@0.31.10 \
+    "lighthouse@${LIGHTHOUSE_VERSION}" \
+    json-server@0.17.4 http-server@14.1.1 && \
     DRIZZLE_DIR=/usr/local/lib/node_modules/drizzle-kit && \
     jq '.dependencies |= del(."@esbuild-kit/esm-loader") | .dependencies.esbuild = "0.28.1"' \
       "$DRIZZLE_DIR/package.json" > "$DRIZZLE_DIR/package.json.tmp" && \
@@ -260,44 +305,50 @@ RUN npm i -g --ignore-scripts --omit=optional "netlify-cli@${NETLIFY_CLI_VERSION
     netlify deploy --help >/dev/null && \
     rm -rf /root/.npm
 
-# Trixie's python3-packaging is dpkg-owned and has no pip RECORD. Install the
-# exact Hermes pin into /usr/local without attempting to remove the Debian copy.
-RUN pip install --no-cache-dir --break-system-packages --ignore-installed packaging==26.0
-
-RUN HERMES_AGENT_COMMIT=$(git ls-remote --tags https://github.com/NousResearch/hermes-agent.git "refs/tags/${HERMES_AGENT_VERSION}" | awk '{print $1}') && \
-    if [ "$HERMES_AGENT_COMMIT" != "$HERMES_AGENT_REF" ]; then \
-      echo "Hermes tag ${HERMES_AGENT_VERSION} resolved to ${HERMES_AGENT_COMMIT:-missing}, expected ${HERMES_AGENT_REF}" >&2; \
-      exit 1; \
-    fi && \
-    pip install --no-cache-dir --break-system-packages \
-    "hermes-agent[pty,mcp,messaging] @ git+https://github.com/NousResearch/hermes-agent.git@${HERMES_AGENT_REF}" && \
-    python3 -m pip check
-
-RUN npm i -g --allow-scripts=@embedded-postgres/linux-x64,@embedded-postgres/linux-arm64 \
+RUN npm i -g --ignore-scripts \
     "paperclipai@${PAPERCLIP_VERSION}" && \
     rm -rf /root/.npm
+# Paperclip's Cursor adapter currently resolves Undici 5 through Connect 1.x.
+# Keep Paperclip stable while replacing that HTTP client with the first fixed
+# 6.x release; remove this reviewed compatibility patch when Paperclip updates Connect.
+RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
+      "sha512-YmfV3YnEDzXRC5lZ2jWtWWHKGUm1zIt8AhesR1tens+HTNv+YZlN/dp6G727LOvMJ8xjP9Be7Y2Sdr96LDm+pg==" && \
+    UNDICI_TARBALL=$(npm pack --silent --pack-destination /tmp "undici@${PAPERCLIP_UNDICI_VERSION}") && \
+    UNDICI_DIR=/usr/local/lib/node_modules/paperclipai/node_modules/undici && \
+    CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
+    rm -rf "$UNDICI_DIR" && mkdir "$UNDICI_DIR" && \
+    tar -xzf "/tmp/${UNDICI_TARBALL}" -C "$UNDICI_DIR" --strip-components=1 && \
+    rm "/tmp/${UNDICI_TARBALL}" && \
+    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); pkg.dependencies.undici=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
+      "$CONNECT_NODE_PACKAGE" "^${PAPERCLIP_UNDICI_VERSION}" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/paperclipai/node_modules/undici/package.json").version')" = \
+      "${PAPERCLIP_UNDICI_VERSION}" && \
+    (cd /usr/local/lib/node_modules/paperclipai && npm ls undici --all >/dev/null) && \
+    node --input-type=module -e 'const {testEnvironment}=await import("file:///usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/adapter-cursor-cloud/dist/server/index.js"); const result=await testEnvironment({adapterType:"cursor_cloud",config:{}}); if(result.status!=="fail" || !result.checks.some((check)=>check.code==="cursor_cloud_api_key_missing")) process.exit(1)'
 RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
       -path '*/native/lib' -type d -exec sh -c '\
         for lib_dir do \
           [ -f "$lib_dir/libcrypto.so.1.1" ] && ln -sf libcrypto.so.1.1 "$lib_dir/libcrypto.so.1"; \
           [ -f "$lib_dir/libssl.so.1.1" ] && ln -sf libssl.so.1.1 "$lib_dir/libssl.so.1"; \
         done' sh {} +
-RUN POSTGRES_PACKAGE=$(find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
-      -mindepth 1 -maxdepth 1 -type d -name 'linux-*' -print -quit) && \
-    test -n "$POSTGRES_PACKAGE" && \
-    node -e 'const fs=require("fs"); const path=require("path"); const root=process.argv[1]; const links=JSON.parse(fs.readFileSync(path.join(root,"native/pg-symlinks.json"),"utf8")); for (const {source,target} of links) { const sourcePath=path.join(root,source); const targetPath=path.join(root,target); if (!fs.lstatSync(targetPath).isSymbolicLink() || fs.realpathSync(targetPath)!==fs.realpathSync(sourcePath)) throw new Error(`invalid PostgreSQL link: ${target}`); }' \
-      "$POSTGRES_PACKAGE"
-
-RUN validate-npm-script-policy \
+RUN python3 /usr/local/bin/validate-npm-script-policy \
       --policy /usr/local/share/holycode/npm-global-script-policy.json \
       --root /usr/local/lib/node_modules \
       --target-arch "${TARGETARCH}" && \
+    (cd /usr/local/lib/node_modules/opencode-ai && node ./postinstall.mjs) && \
+    (cd /usr/local/lib/node_modules/@anthropic-ai/claude-code && node install.cjs) && \
+    POSTGRES_PACKAGE=$(find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
+      -mindepth 1 -maxdepth 1 -type d -name 'linux-*' -print -quit) && \
+    test -n "$POSTGRES_PACKAGE" && \
+    (cd "$POSTGRES_PACKAGE" && node scripts/hydrate-symlinks.js) && \
+    node -e 'const fs=require("fs"); const path=require("path"); const root=process.argv[1]; const links=JSON.parse(fs.readFileSync(path.join(root,"native/pg-symlinks.json"),"utf8")); for (const {source,target} of links) { const sourcePath=path.join(root,source); const targetPath=path.join(root,target); if (!fs.lstatSync(targetPath).isSymbolicLink() || fs.realpathSync(targetPath)!==fs.realpathSync(sourcePath)) throw new Error(`invalid PostgreSQL link: ${target}`); }' \
+      "$POSTGRES_PACKAGE" && \
     opencode --version | grep -Fx "${OPENCODE_VERSION}" && \
     claude --version | grep -F "${CLAUDE_CODE_VERSION}" && \
     esbuild --version | grep -Fx "0.28.1" && \
     prisma --version >/dev/null && \
     wrangler --version | grep -F "${WRANGLER_VERSION}" && \
-    node -e 'const sharp=require("/usr/local/lib/node_modules/sharp-cli/node_modules/sharp"); sharp({create:{width:1,height:1,channels:4,background:{r:0,g:0,b:0,alpha:1}}}).png().toBuffer().then(b=>{if(!b.length)process.exit(1)})' && \
+    ! command -v vercel && ! command -v sharp && ! command -v concurrently && ! command -v lhci && \
     WORKERD_BIN=$(find /usr/local/lib/node_modules/wrangler -path '*/workerd/bin/workerd' -type f -print -quit) && \
     test -n "${WORKERD_BIN}" && "${WORKERD_BIN}" --version >/dev/null && \
     node -e 'const ssh2=require("/usr/local/lib/node_modules/paperclipai/node_modules/ssh2"); if(typeof ssh2.Client!=="function") process.exit(1)'
@@ -324,11 +375,9 @@ COPY s6-overlay/s6-rc.d/xvfb/run /etc/s6-overlay/s6-rc.d/xvfb/run
 RUN chmod +x /etc/s6-overlay/s6-rc.d/xvfb/run && \
     touch /etc/s6-overlay/user-bundles.d/user/contents.d/xvfb
 
-COPY s6-overlay/s6-rc.d/hermes/type /etc/s6-overlay/s6-rc.d/hermes/type
-COPY s6-overlay/s6-rc.d/hermes/run /etc/s6-overlay/s6-rc.d/hermes/run
 COPY s6-overlay/s6-rc.d/paperclip/type /etc/s6-overlay/s6-rc.d/paperclip/type
 COPY s6-overlay/s6-rc.d/paperclip/run /etc/s6-overlay/s6-rc.d/paperclip/run
-RUN chmod +x /etc/s6-overlay/s6-rc.d/hermes/run /etc/s6-overlay/s6-rc.d/paperclip/run
+RUN chmod +x /etc/s6-overlay/s6-rc.d/paperclip/run
 
 # ---------- Working directory ----------
 WORKDIR /workspace

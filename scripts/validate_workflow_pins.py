@@ -14,11 +14,11 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 USES_RE = re.compile(r"^\s*uses:\s*([^@\s]+)@([^\s#]+)(?:\s*#\s*(\S+))?\s*$")
 
 REQUIRED_PINS = {
-    "actions/checkout": ("9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0", "v7.0.0"),
+    "actions/checkout": ("3d3c42e5aac5ba805825da76410c181273ba90b1", "v7.0.1"),
+    "actions/upload-artifact": ("043fb46d1a93c77aae656e7c1c64a875d1fc6a0a", "v7.0.1"),
     "docker/setup-qemu-action": ("96fe6ef7f33517b61c61be40b68a1882f3264fb8", "v4.2.0"),
     "docker/setup-buildx-action": ("bb05f3f5519dd87d3ba754cc423b652a5edd6d2c", "v4.2.0"),
     "docker/login-action": ("af1e73f918a031802d376d3c8bbc3fe56130a9b0", "v4.4.0"),
-    "docker/metadata-action": ("dc802804100637a589fabce1cb79ff13a1411302", "v6.2.0"),
     "docker/build-push-action": ("53b7df96c91f9c12dcc8a07bcb9ccacbed38856a", "v7.3.0"),
     "peter-evans/dockerhub-description": ("1b9a80c056b620d92cedb9d9b5a223409c68ddfa", "v5.0.0"),
     "aquasecurity/trivy-action": ("ed142fd0673e97e23eac54620cfb913e5ce36c25", "v0.36.0"),
@@ -61,10 +61,10 @@ def collect_errors() -> list[str]:
         action
         for action in (
             "actions/checkout",
+            "actions/upload-artifact",
             "docker/setup-qemu-action",
             "docker/setup-buildx-action",
             "docker/login-action",
-            "docker/metadata-action",
             "docker/build-push-action",
             "peter-evans/dockerhub-description",
             "aquasecurity/trivy-action",
@@ -79,13 +79,17 @@ def collect_errors() -> list[str]:
     for required_text in (
         "workflow_call:",
         "workflow_dispatch:",
+        "runner: ubuntu-24.04",
+        "runner: ubuntu-24.04-arm",
         "SCOUT_VERSION: 1.23.1",
-        "SCOUT_SHA256: 0f778f9d833f28bc6cccff95e33039849c0afcecafa38d9f46fe74bfd0915714",
+        "scout_sha256: 0f778f9d833f28bc6cccff95e33039849c0afcecafa38d9f46fe74bfd0915714",
+        "scout_sha256: 88eecb7273f19bd18300d70e6f85b2e7d784e9e4f3cbb4a2b400db6b8355a52a",
         "docker/scout-cli/releases/download/v${SCOUT_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.72.0",
-        "previous_image:",
-        "inputs.previous_image",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.1.2@sha256:65740c4d8aa416217391f53de4be984ea9f8dfd5f10553dead94db402645b537",
+        'ref: ${{ github.sha }}',
+        "Pull exact candidate digest",
         "scripts/test_upgrade_rollback.sh",
     ):
         if required_text not in protected_text:
@@ -93,13 +97,13 @@ def collect_errors() -> list[str]:
     if protected_text.count("scanners: vuln,secret") != 2:
         errors.append("protected-validation.yml must run both Trivy gates with vuln and secret scanners")
     if "trivyignores:" in protected_text:
-        errors.append("protected-validation.yml must not bypass the fixable-critical gate")
+        errors.append("protected-validation.yml must not bypass the fixable critical/high gate")
     if "eceasy/cli-proxy-api" in protected_text:
         errors.append("protected-validation.yml must not pull the removed CLIProxyAPI sidecar")
 
     pr_validation = WORKFLOWS / "pr-validation.yml"
     pr_text = pr_validation.read_text(encoding="utf-8")
-    if "renovate@43.263.9 renovate-config-validator --strict renovate.json" not in pr_text:
+    if "renovate@43.274.0 renovate-config-validator --strict renovate.json" not in pr_text:
         errors.append("pr-validation.yml must validate renovate.json with the audited Renovate pin")
 
     return errors

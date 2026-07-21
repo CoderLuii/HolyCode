@@ -8,11 +8,12 @@ services:
     container_name: holycode
     restart: unless-stopped
     shm_size: 2g
+    security_opt:
+      - seccomp=./config/chromium-seccomp.json
 
     ports:
       - "4096:4096" # OpenCode web UI
       # - "3100:3100" # Paperclip dashboard
-      # - "8642:8642" # Hermes API server
 
     volumes:
       # --- Persistent state (all OpenCode data under home dir) ---
@@ -88,10 +89,6 @@ services:
       # - PAPERCLIP_DEPLOYMENT_MODE=authenticated
       # - PAPERCLIP_BIND=lan
       # - PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
-
-      # Hermes starts an OpenAI-compatible API + messaging-capable meta-agent
-      # - ENABLE_HERMES=true
-      # - HERMES_PORT=8642
 
       # --- CLIProxyAPI (externally managed endpoint) ---
       # Adds a separate OpenCode provider named "cliproxyapi". Does not replace Claude Auth.

@@ -92,6 +92,14 @@ docker pull coderluii/holycode:latest
 
 **Passo 2.** Crie um `docker-compose.yaml`.
 
+A configuração do Compose usa o perfil seccomp do Chromium do HolyCode. Se você não estiver executando a partir de um clone do repositório, baixe primeiro a cópia da versão:
+
+```bash
+mkdir -p config
+curl -fsSLo config/chromium-seccomp.json \
+  https://raw.githubusercontent.com/CoderLuii/HolyCode/v1.1.3/config/chromium-seccomp.json
+```
+
 ```yaml
 services:
   holycode:
@@ -99,6 +107,8 @@ services:
     container_name: holycode
     restart: unless-stopped
     shm_size: 2g
+    security_opt:
+      - seccomp=./config/chromium-seccomp.json
     ports:
       - "4096:4096"
     volumes:
@@ -365,9 +375,7 @@ services:
 | `PAPERCLIP_PORT` | `3100` | Substitui a porta do container usada pelo Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Nome da instância local do Paperclip para estado isolado |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
-| `ENABLE_HERMES` | (nenhuma) | Configure como `true` para iniciar o Hermes como API de meta-agente integrada |
-| `HERMES_PORT` | `8642` | Substitui a porta do container usada pelo Hermes |
-| `API_SERVER_KEY` | (nenhuma) | Configure-o antes de ativar o Hermes; use um token Bearer real |
+| `ENABLE_HERMES` | (nenhuma) | Configuração antiga; a v1.1.3 interrompe a inicialização com um aviso de migração enquanto o Hermes não está incluído |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Modo de atualização de plugins: `manual` (instala só o que falta e preserva as versões do usuário) ou `auto` (sincroniza os pins declarados na inicialização) |
 
 > Os toggles de plugins (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) têm efeito ao reiniciar o container. Configure a variável de ambiente e execute `docker compose down && up -d`.
@@ -380,7 +388,7 @@ services:
 
 > `ENABLE_PAPERCLIP=true` inicia o Paperclip na porta `3100` dentro do container. Abra o painel, crie uma empresa e contrate agentes OpenCode de lá. O Paperclip persiste automaticamente em `~/.paperclip`.
 
-> `ENABLE_HERMES=true` inicia o Hermes na porta `8642` dentro do container. O Hermes persiste em `~/.hermes`, usa o binário `opencode` já instalado e pode expor uma API compatível com OpenAI enquanto delega o trabalho de código de volta ao HolyCode.
+> O Hermes não está incluído temporariamente na v1.1.3. Se uma instalação antiga mantiver `ENABLE_HERMES=true`, o HolyCode interrompe a inicialização com um aviso curto de migração. `/home/opencode/.hermes` permanece inalterado para uma futura restauração da integração ou para voltar a um snapshot anterior.
 
 > `GIT_USER_NAME` e `GIT_USER_EMAIL` são aplicados apenas na primeira inicialização. Para reaplicar, exclua o arquivo sentinela e reinicie: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` depois `docker compose restart`.
 
@@ -427,7 +435,7 @@ services:
 
 > As tags de release usam exatamente `vX.Y.Z`. As tags de Docker omitem o `v`. Depois de `v1.0.9` use `v1.1.0`, depois de `v1.1.9` use `v1.2.0` e depois de `v1.9.9` use `v2.0.0`. `v1.0.10` a `v1.0.13` permanecem imutáveis.
 
-> A v1.1.2 migra para Debian Trixie com Python 3.13, npm 12.0.1 e NumPy 2.5.1. O OpenCode é atualizado para 1.18.2, o Wrangler para 4.111.0 e o lazygit para 0.63.1. O TypeScript permanece em 6.0.3 e o Vercel em 54.21.0. O Netlify oferece suporte apenas a builds e deploys remotos. O sidecar CLIProxyAPI incluído continua removido; endpoints gerenciados externamente continuam compatíveis.
+> A v1.1.3 atualiza o OpenCode para 1.18.4, o Claude Code para 2.1.216, o oh-my-openagent para 4.19.0, o s6-overlay para 3.2.3.2, o fzf para 0.74.1, o pnpm para 11.15.1, o Vite para 8.1.5, o Prettier para 3.9.6, o Wrangler para 4.112.0, o Prisma para 7.9.0 e o Lighthouse para 13.4.1. O Paperclip permanece na 2026.707.0. O Hermes não está incluído temporariamente; Vercel, LHCI, sharp-cli e concurrently foram removidos da imagem. O Netlify oferece suporte apenas a builds e deploys remotos. Endpoints CLIProxyAPI gerenciados externamente continuam compatíveis.
 
 </details>
 
@@ -470,7 +478,6 @@ Inclui fontes Liberation, DejaVu, Noto e Noto Color Emoji para renderização co
 
 | Serviço | Propósito |
 |---------|---------|
-| Hermes Agent | Meta-agente auto-aprimorável com MCP, adaptadores de mensagens e delegação ao OpenCode |
 | Paperclip | Quadro de agentes local que contrata trabalhadores OpenCode e os acorda por heartbeat |
 | Claude Code CLI | Instalado para fluxos de autenticação de assinatura Claude via `ENABLE_CLAUDE_AUTH` |
 
@@ -496,24 +503,13 @@ O s6-overlay supervisiona OpenCode e Xvfb. Se um processo travar, ele reinicia a
 
 ## 🧩 Serviços integrados
 
-O HolyCode agora vem com duas camadas opcionais sobre o OpenCode. Você **não precisa delas** para usar o container. Ative a variável de ambiente, reinicie o container e o serviço sobe junto com a interface web normal.
+O Paperclip continua incluído como serviço opcional sobre o OpenCode. A integração CLIProxyAPI continua usando um endpoint gerenciado externamente. O Hermes não está temporariamente presente na imagem.
 
-### Hermes Agent
+### Hermes Agent (temporariamente não incluído)
 
-O Hermes é a opção de "cérebro mais inteligente". Ele roda como um meta-agente integrado, expõe uma API compatível com OpenAI na porta `8642` e delega o trabalho de código chamando o binário `opencode` local que o HolyCode já inclui.
+A v1.1.3 remove temporariamente o serviço de runtime do Hermes porque as dependências atuais ainda não são compatíveis com as correções de segurança exigidas. O HolyCode não inicia processos do Hermes nem publica a porta correspondente.
 
-Ative com:
-
-```yaml
-environment:
-  - ENABLE_HERMES=true
-  - HERMES_PORT=8642
-  - API_SERVER_KEY=replace-with-a-real-secret
-```
-
-Defina `API_SERVER_KEY` antes de ativar o Hermes.
-
-O estado do Hermes vive em `/home/opencode/.hermes`, seguindo a mesma história de persistência do resto do HolyCode.
+Os dados existentes em `/home/opencode/.hermes` não são excluídos nem migrados. Remova `ENABLE_HERMES=true` das configurações antigas para iniciar a v1.1.3 normalmente. Preserve o diretório para uma futura restauração da integração ou para restaurar um snapshot anterior que permaneceu intacto.
 
 ### Paperclip
 
@@ -701,6 +697,8 @@ Se você pular isso, os arquivos no seu workspace podem ser de propriedade do ro
 
 Baixe a imagem mais recente e recrie o container. Seus dados permanecem intactos.
 
+Ao atualizar de uma versão anterior à `v1.1.3`, baixe o perfil seccomp mostrado acima e adicione `security_opt` ao serviço `holycode` antes de recriar o container.
+
 ```bash
 docker compose pull
 docker compose up -d
@@ -790,18 +788,18 @@ O OpenCode leva alguns segundos para inicializar. Aguarde 10-15 segundos após `
 </details>
 
 <details>
-<summary><strong>Por que HolyCode não precisa de SYS_ADMIN ou seccomp=unconfined?</strong></summary>
+<summary><strong>Como o HolyCode usa o sandbox do Chromium?</strong></summary>
 
-O Chromium roda com `--no-sandbox` dentro do container, que é o padrão para configurações de browser containerizadas. Isso elimina a necessidade de capacidades `SYS_ADMIN` ou `seccomp=unconfined` que algumas outras configurações de browser Docker requerem. O próprio container fornece a fronteira de isolamento.
+O Chromium roda como o usuário `opencode` com o sandbox integrado ativado. Os arquivos Compose carregam automaticamente o perfil restrito `config/chromium-seccomp.json`.
 
-Se preferir usar o sandbox integrado do Chromium, adicione o seguinte ao seu arquivo compose e remova `--no-sandbox` da variável de ambiente `CHROMIUM_FLAGS`:
+Se você executar o container diretamente, carregue o mesmo perfil:
 
 ```yaml
-cap_add:
-  - SYS_ADMIN
 security_opt:
-  - seccomp=unconfined
+  - seccomp=./config/chromium-seccomp.json
 ```
+
+Não desative o sandbox nem conceda privilégios adicionais ao container.
 
 </details>
 

@@ -2,71 +2,83 @@
   "npmVersion": "12.0.1",
   "mode": "deny-by-default",
   "allowScripts": {
-    "@anthropic-ai/claude-code@2.1.210": {
+    "@anthropic-ai/claude-code@2.1.216": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-UH4XncIO6ceNZMq2HxphEn9YR7uu5NGVJMcogGSPvu0nXRw8ubEjbu5cD3Dhvx3vXxizwFA82tmk6mVXjhr/dw==",
       "scripts": { "postinstall": "node install.cjs" },
       "reason": "Claude Code uses this script to install its pinned platform-native binary."
     },
-    "opencode-ai@1.18.2": {
+    "opencode-ai@1.18.4": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-B8pFAs1g158ZU+C6eSiJz/5ZhG7Vr2mH7Z7ruYEHLElAlX9tehrRTnzTTgjSxHY2vwZ/5VplwR3odFU+Dai8jg==",
       "scripts": { "postinstall": "node ./postinstall.mjs" },
       "reason": "OpenCode uses this script to hydrate its pinned platform CLI and refuses to start without it."
     },
     "@embedded-postgres/linux-x64@18.1.0-beta.16": {
       "architectures": ["amd64"],
+      "integrity": "sha512-+GIabpHh7QV2AcYBuzyQC41AYczSFphxfHy4ccTPIPrp6OSthZXH+A9fymjQzOiDHg9+1UeYET00Aj7sScjXrg==",
       "scripts": { "postinstall": "node scripts/hydrate-symlinks.js" },
       "reason": "Paperclip requires the packaged PostgreSQL library symlinks before it drops to the unprivileged runtime user."
     },
     "@embedded-postgres/linux-arm64@18.1.0-beta.16": {
       "architectures": ["arm64"],
+      "integrity": "sha512-G0f/reVFc7svqncDQL7blwKulzYIYsz+o/3TEtAJOaGMXYkD8Swzv9RFKfEJOr9+IVRwCmoFFppMeBnUwMoGZg==",
       "scripts": { "postinstall": "node scripts/hydrate-symlinks.js" },
       "reason": "Paperclip requires the packaged PostgreSQL library symlinks before it drops to the unprivileged runtime user."
     }
   },
   "blockedScripts": {
     "esbuild@0.28.1": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "The platform binary is packaged and verified directly."
     },
     "esbuild@0.28.0": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-sNR9MHpXSUV/XB4zmsFKN+QgVG82Cc7+/aaxJ8Adi8hyOac+EXptIp45QBPaVyX3N70664wRbTcLTOemCAnyqw==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "The transitive platform binary is packaged; Netlify local functions remain unsupported."
     },
-    "esbuild@0.27.0": {
-      "scripts": { "postinstall": "node install.js" },
-      "reason": "The transitive platform binary is packaged and does not require an installer."
-    },
-    "prisma@7.8.0": {
+    "prisma@7.9.0": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-isQTJEK4pyOlAVzm6kBUDjzgdsgs0A/snpB38ycTHeOHW34qfepP+ClQltgDXqjZBnXALhEtE4duh9L3tN5fHw==",
       "scripts": { "preinstall": "node scripts/preinstall-entry.js" },
       "reason": "The pinned CLI and packaged engine are verified directly."
     },
-    "@prisma/engines@7.8.0": {
+    "@prisma/engines@7.9.0": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-lDWJp/pgSWCLfYsupmmNo96jfsbQnH1yjia8XVM2Kh8nRZhD0bQU2jCHuy3ZTPMLR3apRD3k145ybENalAYjYw==",
       "scripts": { "postinstall": "node scripts/postinstall.js" },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "sharp@0.34.2": {
-      "scripts": { "install": "node install/check" },
-      "reason": "The packaged native module is not used as HolyCode's supported Sharp CLI."
-    },
     "sharp@0.34.5": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg==",
       "scripts": { "install": "node install/check.js || npm run build" },
       "reason": "The packaged native module is verified with an in-memory image operation."
     },
-    "workerd@1.20260710.1": {
+    "workerd@1.20260714.1": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-oIbQzfdyl9UQUnG6XLegcSq0Mgt/7WKDbFOoqGgOWCS+/fhyGB460uKEgdAQQ9RHCO/ttcNCX/KiMIQzdoeu3Q==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
     },
     "netlify-cli@26.2.0": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-3jQg9WQoa1H74478fHZisj3T8dLM67x4F4Sgi7kROBHzJD9NNCYYw99dKRYWJOtEa1dUNyZu2W4VTdPzA1kjiw==",
       "scripts": { "postinstall": "node ./scripts/postinstall.js" },
       "reason": "Only remote build and deploy commands are supported; local function binaries are removed."
     },
-    "@parcel/watcher@2.5.6": {
-      "scripts": { "install": "node scripts/build-from-source.js" },
-      "reason": "The package includes a platform binary and is not needed by supported remote Netlify commands."
-    },
     "ssh2@1.17.0": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-wPldCk3asibAjQ/kziWQQt1Wh3PgDFpC0XpwclzKcdT1vql6KeYxf5LIt4nlFkUeR8WuphYMKqUA56X4rjbfgQ==",
       "scripts": { "install": "node install.js" },
       "reason": "The JavaScript implementation is functional without optional CPU feature compilation."
     },
     "cpu-features@0.0.10": {
+      "architectures": ["amd64", "arm64"],
+      "integrity": "sha512-9IkYqtX3YHPCzoVg1Py+o9057a3i0fp7S530UWokCSaFVTc7CwXPRiOjRjBQQ18ZCNafx78YfnG+HALxtVmOGA==",
       "scripts": { "install": "node buildcheck.js > buildcheck.gypi && node-gyp rebuild" },
       "reason": "Optional SSH acceleration is not required for Paperclip."
     }
