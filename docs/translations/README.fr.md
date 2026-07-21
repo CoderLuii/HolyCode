@@ -92,6 +92,14 @@ docker pull coderluii/holycode:latest
 
 **Étape 2.** Créez un `docker-compose.yaml`.
 
+La configuration Compose utilise le profil seccomp Chromium de HolyCode. Si vous ne travaillez pas depuis un clone du dépôt, téléchargez d'abord la copie de la version :
+
+```bash
+mkdir -p config
+curl -fsSLo config/chromium-seccomp.json \
+  https://raw.githubusercontent.com/CoderLuii/HolyCode/v1.1.3/config/chromium-seccomp.json
+```
+
 ```yaml
 services:
   holycode:
@@ -99,6 +107,8 @@ services:
     container_name: holycode
     restart: unless-stopped
     shm_size: 2g
+    security_opt:
+      - seccomp=./config/chromium-seccomp.json
     ports:
       - "4096:4096"
     volumes:
@@ -365,9 +375,7 @@ services:
 | `PAPERCLIP_PORT` | `3100` | Remplace le port du conteneur utilisé par Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Nom d'instance Paperclip locale pour un état isolé |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
-| `ENABLE_HERMES` | (aucune) | Définissez sur `true` pour démarrer Hermes comme API de méta-agent intégrée |
-| `HERMES_PORT` | `8642` | Remplace le port du conteneur utilisé par Hermes |
-| `API_SERVER_KEY` | (aucune) | Définissez-le avant d'activer Hermes ; utilisez un vrai jeton Bearer |
+| `ENABLE_HERMES` | (aucune) | Réglage hérité ; v1.1.3 arrête le démarrage avec un message de migration tant que Hermes n'est pas intégré |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Mode de mise à jour des plugins : `manual` (installe seulement ce qui manque et conserve les versions de l'utilisateur) ou `auto` (synchronise les pins déclarés au démarrage) |
 
 > Les bascules de plugins (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) prennent effet au redémarrage du conteneur. Définissez la variable d'environnement et exécutez `docker compose down && up -d`.
@@ -380,7 +388,7 @@ services:
 
 > `ENABLE_PAPERCLIP=true` démarre Paperclip sur le port `3100` dans le conteneur. Ouvrez le tableau de bord, créez une entreprise, puis engagez des agents OpenCode depuis là. Paperclip persiste sous `~/.paperclip` automatiquement.
 
-> `ENABLE_HERMES=true` démarre Hermes sur le port `8642` dans le conteneur. Hermes persiste sous `~/.hermes`, utilise le binaire `opencode` déjà installé et peut exposer une API compatible OpenAI tout en déléguant le travail de code à HolyCode.
+> Hermes n'est temporairement pas intégré à v1.1.3. Si une ancienne installation conserve `ENABLE_HERMES=true`, HolyCode arrête le démarrage avec un court message de migration. `/home/opencode/.hermes` reste intact pour une future restauration de l'intégration ou pour revenir à un instantané antérieur.
 
 > `GIT_USER_NAME` et `GIT_USER_EMAIL` ne sont appliqués qu'au premier démarrage. Pour les réappliquer, supprimez le fichier sentinelle et redémarrez : `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` puis `docker compose restart`.
 
@@ -427,7 +435,7 @@ services:
 
 > Les balises de release utilisent exactement `vX.Y.Z`. Les balises Docker omettent le `v`. Après `v1.0.9`, utilisez `v1.1.0`; après `v1.1.9`, utilisez `v1.2.0`; après `v1.9.9`, utilisez `v2.0.0`. `v1.0.10` à `v1.0.13` restent immuables.
 
-> v1.1.2 migre vers Debian Trixie avec Python 3.13, npm 12.0.1 et NumPy 2.5.1. OpenCode passe à 1.18.2, Wrangler à 4.111.0 et lazygit à 0.63.1. TypeScript reste en 6.0.3 et Vercel en 54.21.0. Netlify prend uniquement en charge les builds et déploiements distants. Le sidecar CLIProxyAPI intégré reste retiré; les endpoints gérés séparément restent pris en charge.
+> v1.1.3 met à jour OpenCode vers 1.18.4, Claude Code vers 2.1.216, oh-my-openagent vers 4.19.0, s6-overlay vers 3.2.3.2, fzf vers 0.74.1, pnpm vers 11.15.1, Vite vers 8.1.5, Prettier vers 3.9.6, Wrangler vers 4.112.0, Prisma vers 7.9.0 et Lighthouse vers 13.4.1. Paperclip reste en 2026.707.0. Hermes n'est temporairement pas intégré ; Vercel, LHCI, sharp-cli et concurrently ont été retirés de l'image. Netlify prend uniquement en charge les builds et déploiements distants. Les endpoints CLIProxyAPI gérés séparément restent pris en charge.
 
 </details>
 
@@ -470,7 +478,6 @@ Inclut les polices Liberation, DejaVu, Noto et Noto Color Emoji pour un rendu co
 
 | Service | Rôle |
 |---------|---------|
-| Hermes Agent | Méta-agent auto-améliorant avec MCP, adaptateurs de messagerie et délégation OpenCode |
 | Paperclip | Tableau d'agents local qui engage des travailleurs OpenCode et les réveille sur battement |
 | Claude Code CLI | Installé pour les flux d'authentification par abonnement Claude via `ENABLE_CLAUDE_AUTH` |
 
@@ -496,24 +503,13 @@ s6-overlay supervise OpenCode et Xvfb. Si un processus plante, il redémarre aut
 
 ## 🧩 Services intégrés
 
-HolyCode est maintenant livré avec deux couches optionnelles au-dessus d'OpenCode. Vous **n'en avez pas besoin** pour utiliser le conteneur. Activez la variable d'environnement, redémarrez le conteneur et le service démarre aux côtés de l'interface web normale.
+Paperclip reste intégré comme service optionnel au-dessus d'OpenCode. L'intégration CLIProxyAPI continue d'utiliser un endpoint géré séparément. Hermes n'est temporairement pas présent dans l'image.
 
-### Hermes Agent
+### Hermes Agent (temporairement non intégré)
 
-Hermes est l'option "cerveau plus intelligent". Il fonctionne comme un méta-agent intégré, expose une API compatible OpenAI sur le port `8642` et délègue le travail de code en appelant le binaire `opencode` local que HolyCode fournit déjà.
+v1.1.3 retire temporairement le service d'exécution Hermes, car ses dépendances actuelles ne sont pas encore compatibles avec les correctifs de sécurité requis. HolyCode ne démarre aucun processus Hermes et ne publie aucun port Hermes.
 
-Activez-le avec :
-
-```yaml
-environment:
-  - ENABLE_HERMES=true
-  - HERMES_PORT=8642
-  - API_SERVER_KEY=replace-with-a-real-secret
-```
-
-Définissez `API_SERVER_KEY` avant d'activer Hermes.
-
-L'état de Hermes vit sous `/home/opencode/.hermes`, suivant la même histoire de persistance que le reste de HolyCode.
+Les données existantes dans `/home/opencode/.hermes` ne sont ni supprimées ni migrées. Retirez `ENABLE_HERMES=true` des anciennes configurations pour que v1.1.3 démarre normalement. Conservez ce répertoire pour une future restauration de l'intégration ou pour restaurer un instantané antérieur intact.
 
 ### Paperclip
 
@@ -701,6 +697,8 @@ Si vous omettez cela, les fichiers dans votre espace de travail peuvent apparten
 
 Téléchargez la dernière image et recréez le conteneur. Vos données restent intactes.
 
+Si vous effectuez une mise à jour depuis une version antérieure à `v1.1.3`, téléchargez le profil seccomp indiqué ci-dessus et ajoutez `security_opt` au service `holycode` avant de recréer le conteneur.
+
 ```bash
 docker compose pull
 docker compose up -d
@@ -790,18 +788,18 @@ OpenCode prend quelques secondes à s'initialiser. Attendez 10-15 secondes aprè
 </details>
 
 <details>
-<summary><strong>Pourquoi HolyCode n'a-t-il pas besoin de SYS_ADMIN ou seccomp=unconfined ?</strong></summary>
+<summary><strong>Comment HolyCode utilise-t-il le bac à sable Chromium ?</strong></summary>
 
-Chromium s'exécute avec `--no-sandbox` à l'intérieur du conteneur, ce qui est standard pour les configurations de navigateurs conteneurisés. Cela élimine le besoin de capacités `SYS_ADMIN` ou de `seccomp=unconfined` que certaines autres configurations de navigateurs Docker nécessitent. Le conteneur lui-même fournit la frontière d'isolation.
+Chromium s'exécute sous l'utilisateur `opencode` avec son bac à sable intégré activé. Les fichiers Compose chargent automatiquement le profil restreint `config/chromium-seccomp.json`.
 
-Si vous préférez utiliser le sandbox intégré de Chromium, ajoutez ce qui suit à votre fichier compose et supprimez `--no-sandbox` de la variable d'environnement `CHROMIUM_FLAGS` :
+Si vous lancez le conteneur vous-même, chargez le même profil :
 
 ```yaml
-cap_add:
-  - SYS_ADMIN
 security_opt:
-  - seccomp=unconfined
+  - seccomp=./config/chromium-seccomp.json
 ```
+
+Ne désactivez pas le bac à sable et n'accordez pas de privilèges supplémentaires au conteneur.
 
 </details>
 

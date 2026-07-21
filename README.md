@@ -26,11 +26,11 @@
 
 ### One container. Every tool. Any provider.
 
-OpenCode running in a container with everything already installed. 50+ dev tools, 10+ AI providers, headless browser, persistent state, and two serious upgrades on top: Hermes Agent and Paperclip. Drop it on any machine and pick up exactly where you left off.
+OpenCode running in a container with everything already installed. 50+ dev tools, 10+ AI providers, a sandboxed headless browser, persistent state, and Paperclip on top. Drop it on any machine and pick up exactly where you left off.
 
 Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each version segment is one digit, so `v1.0.9` rolls to `v1.1.0`, `v1.1.9` rolls to `v1.2.0`, and `v1.9.9` rolls to `v2.0.0`. The commit subject, Git tag, and GitHub release title must match. Published `v1.0.10` through `v1.0.13` stay immutable as historical releases.
 
-**Hermes Agent turns HolyCode into a meta-agent runtime.** You get a smarter planning layer on top of OpenCode, an API surface on port `8642`, MCP support, messaging adapters, and a clean way to let a "brain" delegate code work into the local container instead of bolting that together yourself.
+**Hermes is temporarily unbundled in v1.1.3.** Its current releases pin vulnerable dependencies. HolyCode leaves `/home/opencode/.hermes` untouched so you can restore the service when upstream publishes compatible fixed pins.
 
 **Paperclip turns HolyCode into an agent board.** You get a dashboard on port `3100` where you create a company, hire OpenCode-backed workers, wake them on heartbeat, and manage agent work from a real UI instead of hand-rolling scripts around `opencode run`.
 
@@ -38,7 +38,7 @@ Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each ver
 
 **Multi-agent orchestration built in.** Enable oh-my-openagent and turn OpenCode into a coordinated agent system with parallel execution.
 
-**You were going to spend an hour getting your environment back. Or you could just `docker compose up` and get a coding workstation, a meta-agent, and an agent board in one shot.**
+**You were going to spend an hour getting your environment back. Or you could just `docker compose up` and get a coding workstation and an agent board in one shot.**
 > **Don't want to self-host?** [HolyCode Cloud](https://holycode.coderluii.dev/cloud) is coming. Same tools, zero setup. Early access is free.
 
 ---
@@ -55,7 +55,7 @@ It wraps [OpenCode](https://opencode.ai), an AI coding agent with a built-in web
 
 It's the same idea as [HolyClaude](https://github.com/coderluii/holyclaude) but wrapping OpenCode instead of Claude Code. And here's the thing: OpenCode isn't locked to one provider. Point it at Anthropic, OpenAI, Google Gemini, Groq, AWS Bedrock, or Azure OpenAI. Same container, your choice of model.
 
-50+ dev tools, two language runtimes, a headless browser stack, process supervision, and two bundled orchestration layers. All wired up, all ready on first boot. I've been running this on my own server. Every bug has been hit, diagnosed, and fixed.
+50+ dev tools, two language runtimes, a sandboxed headless browser stack, process supervision, and an optional Paperclip agent board. All wired up, all ready on first boot. I've been running this on my own server. Every bug has been hit, diagnosed, and fixed.
 
 You pull it. You run it. You open your browser. You build.
 
@@ -99,6 +99,14 @@ docker pull coderluii/holycode:latest
 
 **Step 2.** Create a `docker-compose.yaml`.
 
+The Compose file uses HolyCode's Chromium seccomp profile. If you are not running from a clone of this repository, download the release copy first:
+
+```bash
+mkdir -p config
+curl -fsSLo config/chromium-seccomp.json \
+  https://raw.githubusercontent.com/CoderLuii/HolyCode/v1.1.3/config/chromium-seccomp.json
+```
+
 ```yaml
 services:
   holycode:
@@ -106,6 +114,8 @@ services:
     container_name: holycode
     restart: unless-stopped
     shm_size: 2g
+    security_opt:
+      - seccomp=./config/chromium-seccomp.json
     ports:
       - "4096:4096"
     volumes:
@@ -339,7 +349,7 @@ services:
       # - ENABLE_OH_MY_OPENAGENT=true
 ```
 
-CLIProxyAPI remains supported as an external OpenAI-compatible endpoint. HolyCode no longer bundles its Docker sidecar because the `v7.2.77` image still contains fixable high-severity Go dependencies. Set `CLIPROXYAPI_BASE_URL` to an endpoint that the HolyCode container can reach; this does not replace Claude Auth.
+CLIProxyAPI remains supported as an external OpenAI-compatible endpoint. HolyCode does not bundle its Docker sidecar until its release binaries have verifiable compiler provenance and pass `govulncheck`. Set `CLIPROXYAPI_BASE_URL` to an endpoint that the HolyCode container can reach; this does not replace Claude Auth.
 
 <p align="right">
   <a href="#top">back to top</a>
@@ -395,9 +405,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | `PAPERCLIP_DEPLOYMENT_MODE` | `authenticated` | Docker-safe Paperclip startup mode; HolyCode defaults this away from `local_trusted` |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset used on first boot; `lan` binds inside Docker on `0.0.0.0` |
 | `PAPERCLIP_ALLOWED_HOSTNAMES` | (none) | Comma-separated Paperclip remote hostnames/IPs to allow; use hostname/IP only, no scheme or port |
-| `ENABLE_HERMES` | (none) | Set to `true` to start Hermes as a bundled meta-agent API |
-| `HERMES_PORT` | `8642` | Override the container port used by Hermes |
-| `API_SERVER_KEY` | (none) | Required when `ENABLE_HERMES=true`; use a real bearer token, such as `openssl rand -hex 32` |
+| `ENABLE_HERMES` | (none) | Legacy flag; `true` stops v1.1.3 with a migration message while bundled Hermes is unavailable |
 | `CLIPROXYAPI_ENABLED` | (none) | Set to `true` to add the optional OpenCode `cliproxyapi` provider |
 | `CLIPROXYAPI_BASE_URL` | `http://cliproxyapi:8317/v1` | Externally managed CLIProxyAPI base URL reachable from the HolyCode container |
 | `CLIPROXYAPI_API_KEY` | (none) | Optional API key for CLIProxyAPI, stored only as an OpenCode env reference when set |
@@ -421,9 +429,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 > `PAPERCLIP_ALLOWED_HOSTNAMES` lets Paperclip accept listed LAN/private hostnames or IPs. Use comma-separated hostname/IP values only, without `http://`, `https://`, or ports. Restart the container after changing it. The hostname guard and Paperclip authentication stay enabled.
 
-> `ENABLE_HERMES=true` starts Hermes on port `8642` inside the container. Hermes runs with `/home/opencode` as its home, persists under `/home/opencode/.hermes`, uses the already-installed `opencode` binary, and can expose an OpenAI-compatible API while delegating code work back into HolyCode. Set `API_SERVER_KEY` before enabling the API server.
-
-> Hermes is an API service, not a landing page. A `404` at `http://localhost:8642/` is expected. The important signal is that the port is listening and the process stays healthy.
+> Bundled Hermes is temporarily unavailable in v1.1.3 because its current releases require vulnerable dependency pins. If an older deployment still sets `ENABLE_HERMES=true`, startup stops with a migration message instead of silently ignoring the flag. Your `/home/opencode/.hermes` data is not changed.
 
 > `CLIPROXYAPI_ENABLED=true` adds a separate OpenCode provider named `cliproxyapi`. It does not change `ENABLE_CLAUDE_AUTH`, does not touch `/home/opencode/.claude`, and does not set global `ANTHROPIC_*` proxy variables. Set `CLIPROXYAPI_BASE_URL` to your externally managed service and keep its credentials and network exposure outside the HolyCode container.
 
@@ -473,38 +479,40 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 </details>
 
 <details>
-<summary><strong>v1.1.2 release pins</strong></summary>
+<summary><strong>v1.1.3 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
-| OpenCode | 1.18.2 |
+| OpenCode | 1.18.4 |
 | Paperclip | 2026.707.0 |
-| Hermes | v2026.7.7.2 |
+| Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
-| s6-overlay | 3.2.3.1 |
+| s6-overlay | 3.2.3.2 |
 | eza | 0.23.5 |
-| fzf | 0.74.0 |
+| fzf | 0.74.1 |
 | lazygit | 0.63.1 |
-| pnpm | 11.13.0 |
-| Vite | 8.1.4 |
+| pnpm | 11.15.1 |
+| Vite | 8.1.5 |
 | ESLint | 10.7.0 |
-| Prettier | 3.9.5 |
-| Wrangler | 4.111.0; legacy service environments are not supported |
+| Prettier | 3.9.6 |
+| Wrangler | 4.112.0; legacy service environments are not supported |
+| Prisma | 7.9.0 |
+| Lighthouse | 13.4.1 |
 | Netlify CLI | 26.2.0, remote build/deploy only; local functions binaries removed |
-| Vercel | 54.21.0, held because scope/team behavior is unproven |
-| tqdm | 4.68.4 |
+| Vercel, sharp-cli, concurrently, LHCI | Removed because their current dependency trees contain fixable high or critical findings |
+| tqdm | 4.69.0 |
 | uvicorn | 0.51.0 |
-| Claude stable | 2.1.210 |
+| Claude stable | 2.1.216 |
 | tsx | 4.23.1 |
 | TypeScript | 6.0.3, held until TypeScript 7 exposes the stable toolchain APIs this image needs |
 | NumPy | 2.5.1 on Python 3.13 |
 | json-server | 0.17.4, held on the stable release instead of the 1.0 beta |
 | opencode-claude-auth default | 2.0.0 |
-| oh-my-openagent default | 4.18.1 |
+| oh-my-openagent default | 4.19.0 |
 
-Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are denied by default and checked against a reviewed version-and-script policy. HolyCode also publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim zero vulnerabilities or universal freshness.
+Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. HolyCode also publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
 
-The dated adoption, hold, removal, and scanner decisions are in the [v1.1.2 dependency audit](docs/dependency-audit-v1.1.2.md).
+The dated adoption, hold, removal, and scanner decisions are in the [v1.1.3 dependency audit](docs/dependency-audit-v1.1.3.md).
 
 </details>
 
@@ -547,7 +555,6 @@ Includes Liberation, DejaVu, Noto, and Noto Color Emoji fonts for correct page r
 
 | Service | Purpose |
 |---------|---------|
-| Hermes Agent | Self-improving meta-agent with MCP, messaging adapters, and OpenCode delegation |
 | Paperclip | Local agent board that hires OpenCode workers and wakes them on heartbeat |
 | CLIProxyAPI integration | External OpenAI-compatible account/model routing through `CLIPROXYAPI_*` |
 | Claude Code CLI | Installed for Claude subscription auth flows via `ENABLE_CLAUDE_AUTH` |
@@ -574,37 +581,16 @@ s6-overlay supervises OpenCode and Xvfb. If a process crashes, it restarts autom
 
 ## 🧩 Bundled Services
 
-HolyCode ships with two optional bundled layers on top of OpenCode, plus integration for an externally managed CLIProxyAPI endpoint. You do **not** need any of them to use the container.
+HolyCode ships with optional Paperclip on top of OpenCode, plus integration for an externally managed CLIProxyAPI endpoint. You do **not** need either one to use the container.
 
-- **Hermes Agent** is for when you want a smarter coordinator sitting above OpenCode.
 - **Paperclip** is for when you want a board, a workflow, and actual agent management instead of just one-off prompts.
 - **CLIProxyAPI integration** is for when you already manage an OpenAI-compatible endpoint and want OpenCode to use it as a separate provider.
 
-Flip the env var, restart the container, and the service comes up alongside the normal web UI.
-
 ### Hermes Agent
 
-Hermes is the "smarter brain" option. It runs as a bundled meta-agent, exposes an API service on port `8642`, and delegates coding work by calling the local `opencode` binary that HolyCode already ships.
+Hermes is temporarily not bundled in v1.1.3. The current Hermes release line pins vulnerable Pillow and adds unresolved findings through its optional dependency set. HolyCode removes the runtime and service instead of shipping those packages.
 
-Why that matters:
-
-- **Planning above execution.** OpenCode does the hands-on coding. Hermes gives you a layer that can reason, coordinate, and delegate down into that local worker.
-- **API-ready agent runtime.** You can point other tooling at Hermes instead of wiring your own service around OpenCode.
-- **MCP and messaging in the same box.** HolyCode already solves the dev-environment side. Hermes adds the "agent platform" layer on top.
-- **Persistent agent state.** Its data lives under `~/.hermes`, so rebuilds don't wipe the runtime you just configured.
-
-If you want HolyCode to feel less like "a container with a coding tool" and more like "an AI runtime you can build systems on top of," Hermes is the part that changes that.
-
-Turn it on with:
-
-```yaml
-environment:
-  - ENABLE_HERMES=true
-  - HERMES_PORT=8642
-  - API_SERVER_KEY=replace-with-a-real-secret
-```
-
-Hermes state lives under `/home/opencode/.hermes`, so it follows the same persistence story as the rest of HolyCode. Generate `API_SERVER_KEY` with a secret generator such as `openssl rand -hex 32`; do not reuse an AI provider key.
+Existing state under `/home/opencode/.hermes` remains untouched. Remove `ENABLE_HERMES=true` from older Compose deployments before starting v1.1.3. The container stops with a clear migration message when that legacy flag remains set, so the missing service cannot be mistaken for a successful start.
 
 ### Paperclip
 
@@ -617,7 +603,7 @@ Why that matters:
 - **Faster delegation experiments.** Create a company, assign work, and see how an agent workflow feels without building the orchestration stack yourself.
 - **Persistent board state.** Data, config, storage, and embedded Postgres all live under `~/.paperclip`.
 
-If Hermes is the brain, Paperclip is the control room. It's the thing you turn on when you want to manage agent work, not just launch it.
+Paperclip is the control room. Turn it on when you want to manage agent work, not just launch it.
 
 Turn it on with:
 
@@ -642,7 +628,7 @@ Why that matters:
 
 - **One provider surface.** OpenCode can use `cliproxyapi/<model>` while CLIProxyAPI handles the account/model routing behind it.
 - **Isolated from Claude Auth.** This does not replace `ENABLE_CLAUDE_AUTH`, does not touch `/home/opencode/.claude`, and does not set global Anthropic proxy variables.
-- **No bundled vulnerable service.** The `v7.2.77` sidecar image is not included while its fixable high-severity Go findings remain unresolved.
+- **No bundled unverified service.** CLIProxyAPI stays external-only until its published binaries have verifiable compiler provenance and pass `govulncheck`.
 - **Separate ownership.** You manage CLIProxyAPI config, auth, updates, and network exposure outside HolyCode.
 
 Turn it on with:
@@ -676,7 +662,6 @@ graph TD
     F --> G
     G --> H[Xvfb :99]
     G --> I[opencode web :4096]
-    G --> Q[Hermes API :8642]
     G --> R[Paperclip UI :3100]
     V[External CLIProxyAPI endpoint] --> U[cliproxyapi provider]
     I --> J[Web UI]
@@ -686,12 +671,11 @@ graph TD
     M --> N[opencode TUI]
     M --> O[opencode run 'message']
     M --> P[opencode attach localhost:4096]
-    Q --> S[Meta-agent API clients]
     R --> T[Agent board and CEO invite]
     I --> U
 ```
 
-The entrypoint handles user remapping, plugin toggles, optional bundled-service toggles, CLIProxyAPI provider injection, and first-boot setup. s6-overlay supervises Xvfb, the OpenCode web server, and any optional bundled services you enabled inside the HolyCode container. CLIProxyAPI, when configured, is external. Access the web UI at port 4096, Hermes on 8642, or Paperclip on 3100 when those services are enabled.
+The entrypoint handles user remapping, plugin toggles, Paperclip startup, CLIProxyAPI provider injection, and first-boot setup. s6-overlay supervises Xvfb, the OpenCode web server, and Paperclip when enabled. CLIProxyAPI, when configured, is external. Access the OpenCode web UI at port 4096 or Paperclip on 3100.
 
 <p align="right">
   <a href="#top">back to top</a>
@@ -811,7 +795,7 @@ Plugin cache is mounted separately at `./local-cache/opencode` by default so you
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 
-The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.210`. npm 12 lifecycle scripts are denied by default and limited to the exact reviewed scripts required by OpenCode, Claude Code, and Paperclip's architecture-specific embedded PostgreSQL package. Debian packages still resolve from the current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. Optional OpenCode plugins are live registry installs trusted at boot and sit outside the image SBOM. Netlify CLI supports remote build/deploy commands only; `netlify dev` and local functions are intentionally unavailable. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising zero vulnerabilities or universal freshness.
+The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.216`. npm lifecycle scripts are disabled during installation. HolyCode validates each script package's version, integrity, architecture, and script body before running only the approved OpenCode, Claude Code, and Paperclip embedded PostgreSQL steps. Debian packages still resolve from the current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. Optional OpenCode plugins are live registry installs trusted at boot and sit outside the image SBOM. Netlify CLI supports remote build/deploy commands only; `netlify dev` and local functions are intentionally unavailable. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising universal freshness.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
 
@@ -860,6 +844,19 @@ If you skip this, files in your workspace may be owned by root and you'll need s
 
 Stop the stack and copy `./data`, `./local-cache`, and `./workspace` before upgrading. Migrations can change persisted data, so keep those pre-upgrade copies until the new image has passed your normal workflows.
 
+If you are upgrading from a release before `v1.1.3`, download the Chromium seccomp profile and add it to the `holycode` service before recreating the container:
+
+```bash
+mkdir -p config
+curl -fsSLo config/chromium-seccomp.json \
+  https://raw.githubusercontent.com/CoderLuii/HolyCode/v1.1.3/config/chromium-seccomp.json
+```
+
+```yaml
+security_opt:
+  - seccomp=./config/chromium-seccomp.json
+```
+
 ```bash
 docker compose stop
 # Copy ./data, ./local-cache, and ./workspace with your host backup tool.
@@ -867,7 +864,7 @@ docker compose pull
 docker compose up -d
 ```
 
-If you need to roll back, stop the stack, change the Compose image to `coderluii/holycode:1.1.1`, restore the untouched pre-`v1.1.2` copies, and start the stack again. Do not point `v1.1.1` at data already migrated by `v1.1.2` unless the migration is known to be backward compatible.
+If you need to roll back, stop the stack, change the Compose image to `coderluii/holycode:1.1.2`, restore the untouched pre-`v1.1.3` copies, and start the stack again. Rollback means restoring those snapshots. It does not reverse database migrations in place, and you should not point `v1.1.2` at data already changed by `v1.1.3`.
 
 After the checks pass, remove the backup on your own schedule.
 
@@ -953,18 +950,18 @@ OpenCode takes a few seconds to initialize. Give it 10-15 seconds after `docker 
 </details>
 
 <details>
-<summary><strong>Why doesn't HolyCode need SYS_ADMIN or seccomp=unconfined?</strong></summary>
+<summary><strong>How is Chromium sandboxed?</strong></summary>
 
-Chromium runs with `--no-sandbox` inside the container, which is standard for containerized browser setups. This eliminates the need for `SYS_ADMIN` capabilities or `seccomp=unconfined` that some other Docker browser setups require. The container itself provides the isolation boundary.
+HolyCode runs Chromium as the `opencode` user with Chromium's sandbox enabled. The shipped Compose files apply a constrained seccomp profile that permits the namespace syscalls the sandbox needs without granting `SYS_ADMIN` or disabling seccomp.
 
-If you prefer to use Chromium's built-in sandbox instead, add the following to your compose file and remove `--no-sandbox` from the `CHROMIUM_FLAGS` environment variable:
+Keep this setting when writing your own Compose file:
 
 ```yaml
-cap_add:
-  - SYS_ADMIN
 security_opt:
-  - seccomp=unconfined
+  - seccomp=./config/chromium-seccomp.json
 ```
+
+The profile path is relative to your Compose file. Do not add `--no-sandbox`, `SYS_ADMIN`, or `seccomp=unconfined` as a browser workaround.
 
 </details>
 

@@ -11,7 +11,7 @@ This guide mirrors the minimal HolyCode web UI setup. For the full Docker Compos
 - Loading provider keys from `.env` with `--env-file .env`
 - SELinux labels for Fedora/RHEL/CoreOS hosts
 - Rootless Podman permission and user namespace notes
-- Optional service boundaries for Paperclip, Hermes, and external CLIProxyAPI endpoints
+- Optional service boundaries for Paperclip and external CLIProxyAPI endpoints
 - Safe update and recreate behavior
 
 ## Prerequisites
@@ -25,6 +25,14 @@ cp .env.example .env
 ```
 
 Edit `.env` and set the provider you plan to use, for example `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, or another supported provider variable.
+
+Keep HolyCode's Chromium seccomp profile in the project folder. A repository clone already has it. Otherwise, download the release copy:
+
+```bash
+mkdir -p config
+curl -fsSLo config/chromium-seccomp.json \
+  https://raw.githubusercontent.com/CoderLuii/HolyCode/v1.1.3/config/chromium-seccomp.json
+```
 
 Podman treats relative bind mount sources as paths relative to the directory where you run `podman`. Missing bind mount sources fail, so create them first.
 
@@ -43,6 +51,7 @@ podman run -d \
   --name holycode \
   --restart unless-stopped \
   --shm-size=2g \
+  --security-opt seccomp=./config/chromium-seccomp.json \
   -p 4096:4096 \
   -v ./data/opencode:/home/opencode \
   -v ./local-cache/opencode:/home/opencode/.cache/opencode \
@@ -58,6 +67,7 @@ Open http://localhost:4096.
 What the important options do:
 
 - `--shm-size=2g` gives Chromium and browser automation enough shared memory.
+- `--security-opt seccomp=./config/chromium-seccomp.json` keeps Chromium's sandbox enabled with the namespace syscalls it needs.
 - `-p 4096:4096` publishes the OpenCode web UI.
 - `./data/opencode:/home/opencode` persists OpenCode config, sessions, plugins, and service state.
 - `./local-cache/opencode:/home/opencode/.cache/opencode` keeps plugin and package cache on local disk.
@@ -77,6 +87,7 @@ podman run -d \
   --name holycode \
   --restart unless-stopped \
   --shm-size=2g \
+  --security-opt seccomp=./config/chromium-seccomp.json \
   -p 4096:4096 \
   -v ./data/opencode:/home/opencode:Z \
   -v ./local-cache/opencode:/home/opencode/.cache/opencode:Z \
@@ -106,7 +117,7 @@ Some rootless setups use custom user namespace modes such as `--userns=keep-id`.
 
 The command above runs the minimal HolyCode web UI on port `4096`.
 
-Paperclip and Hermes can be enabled with the same environment variables used by the Docker Compose examples:
+Paperclip can be enabled with the same environment variables used by the Docker Compose examples:
 
 ```env
 ENABLE_PAPERCLIP=true
@@ -114,26 +125,26 @@ PAPERCLIP_PORT=3100
 PAPERCLIP_DEPLOYMENT_MODE=authenticated
 PAPERCLIP_BIND=lan
 PAPERCLIP_ALLOWED_HOSTNAMES=192.168.1.50,my-host.local
-ENABLE_HERMES=true
-HERMES_PORT=8642
-API_SERVER_KEY=replace-with-a-real-secret
 ```
 
 If you enable them, publish the ports you need:
 
 ```bash
 -p 4096:4096 \
--p 3100:3100 \
--p 8642:8642
+-p 3100:3100
 ```
 
-Paperclip listens on `3100` when enabled. `PAPERCLIP_BIND=lan` lets the service bind inside the container so the Podman port publish can reach it. Paperclip runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so keep the `/home/opencode` bind mount in place when enabling it. Paperclip now ships its Skills catalog through the package set HolyCode installs, so the Skills page can load the bundled catalog without a HolyCode compatibility shim. Hermes exposes an API service on `8642`; set `API_SERVER_KEY` before enabling it. A `404` at `/` is normal as long as the process stays healthy.
+Paperclip listens on `3100` when enabled. `PAPERCLIP_BIND=lan` lets the service bind inside the container so the Podman port publish can reach it. Paperclip runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so keep the `/home/opencode` bind mount in place when enabling it. Paperclip ships its Skills catalog through the package set HolyCode installs, so the Skills page can load the bundled catalog without a compatibility shim.
 
-CLIProxyAPI is different. HolyCode keeps its provider integration, but does not bundle the `v7.2.77` sidecar while that image contains fixable high-severity Go dependencies. Point `CLIPROXYAPI_BASE_URL` at an externally managed endpoint that the Podman container can reach.
+Bundled Hermes is temporarily unavailable in v1.1.3 because its current releases require vulnerable dependency pins. Remove `ENABLE_HERMES=true` from older Podman deployments before recreating the container. HolyCode leaves `/home/opencode/.hermes` untouched.
+
+CLIProxyAPI is different. HolyCode keeps its provider integration, but does not bundle the sidecar until its release binaries have verifiable compiler provenance and pass `govulncheck`. Point `CLIPROXYAPI_BASE_URL` at an externally managed endpoint that the Podman container can reach.
 
 ## Updating HolyCode
 
 Stop the container and copy `./data`, `./local-cache`, and `./workspace` with your host backup tool before pulling the new image. Keep those copies until the updated container passes your normal workflows.
+
+When upgrading from a release before `v1.1.3`, download `config/chromium-seccomp.json` with the command near the top of this guide. Keep `--security-opt seccomp=./config/chromium-seccomp.json` in the recreated `podman run` command. The new image does not support disabling Chromium's sandbox as a fallback.
 
 Pull the latest image:
 
@@ -150,9 +161,9 @@ podman rm holycode
 
 Run the `podman run` command again. Your data stays in `./data/opencode`, `./local-cache/opencode`, and `./workspace`.
 
-`v1.1.2` moves the image from Debian Bookworm/Python 3.11 to Debian Trixie/Python 3.13. Keep the untouched pre-upgrade copies until Paperclip, Hermes, OpenCode, and your normal provider workflow have all passed.
+`v1.1.3` removes bundled Hermes and vulnerable global CLIs while preserving existing state. Keep the untouched pre-upgrade copies until Paperclip, OpenCode, Chromium, and your normal provider workflow have all passed.
 
-If you need to roll back, stop and remove the container, restore the pre-`v1.1.2` copies, then recreate it with `docker.io/coderluii/holycode:1.1.1`. Do not reuse data already migrated by `v1.1.2` unless the migration is known to be backward compatible.
+If you need to roll back, stop and remove the container, restore the untouched pre-`v1.1.3` copies, then recreate it with `docker.io/coderluii/holycode:1.1.2`. Rollback means restoring those snapshots, not reversing a database migration in place.
 
 Do not use `podman start holycode` as an update path. It restarts the existing container with the old image, environment variables, ports, and mount settings.
 
@@ -199,9 +210,10 @@ Make sure the command includes:
 
 ```bash
 --shm-size=2g
+--security-opt seccomp=./config/chromium-seccomp.json
 ```
 
-Without enough `/dev/shm`, Chromium can crash or produce broken automation results.
+Without enough `/dev/shm`, Chromium can crash or produce broken automation results. Without the shipped seccomp profile, Chromium's sandbox may be unable to create its user namespace. Do not replace the profile with `--no-sandbox`, `SYS_ADMIN`, or `seccomp=unconfined`.
 
 ### Environment variables did not change
 

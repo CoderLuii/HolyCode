@@ -4,6 +4,38 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.3] - 07/21/2026
+
+### Changed
+
+- Refresh OpenCode to 1.18.4, Claude Code to 2.1.216, s6-overlay to 3.2.3.2, fzf to 0.74.1, pnpm to 11.15.1, Vite to 8.1.5, Prettier to 3.9.6, Wrangler to 4.112.0, Prisma to 7.9.0, Lighthouse to 13.4.1, and the default `oh-my-openagent` pin to 4.19.0
+- Refresh pip to 26.1.2, Requests to 2.34.2, Pillow to 12.3.0, matplotlib to 3.11.1, tqdm to 4.69.0, FastAPI to 0.139.2, Packaging to 26.2, wheel to 0.47.0, and Rich to 15.0.0
+- Keep Paperclip at 2026.707.0 while the 2026.720.0 migration chain receives separate persistence testing
+- Run Chromium as `opencode` with its sandbox enabled through the shipped constrained seccomp profile
+- Install the versioned PostgreSQL 17 client directly so vulnerability scanners do not attribute obsolete APT findings to its empty compatibility metapackage
+- Rebuild GitHub CLI 2.96.0 from its exact upstream tag with digest-pinned Go 1.26.5 while the official package still embeds the vulnerable Go 1.26.4 standard library
+
+### Removed
+
+- Temporarily remove bundled Hermes while its release line requires vulnerable dependency pins; preserve existing `/home/opencode/.hermes` data and stop with a migration message when the legacy flag remains enabled
+- Remove Vercel CLI, sharp-cli, concurrently, and LHCI because their current dependency trees contain fixable critical or high findings
+
+### Fixed
+
+- Replace Paperclip's vulnerable nested Undici 5.29.0 with Undici 6.27.0, align the installed Connect dependency declaration, and validate the Cursor adapter until Paperclip updates Connect upstream
+- Install npm packages with lifecycle scripts disabled, then validate exact version, integrity, architecture, and script bodies before approved scripts run
+- Define rollback as restoring untouched pre-upgrade volumes with image `1.1.2` instead of attempting an in-place database downgrade
+- Restore the missing historical v1.0.3 changelog entry
+- Promote the exact multi-architecture image digest built and scanned by protected validation instead of rebuilding mutable APT layers during publication
+
+### Security
+
+- Block protected releases on every fixable critical or high scanner finding
+- Remove duplicate Debian pip/wheel package metadata after installing the fixed Python packages under `/usr/local`
+- Remove the fixable `CVE-2026-39822` path from GitHub CLI and verify its source commit, embedded Go toolchain, and runtime version during the image build
+- Update GitHub Actions pins and the Renovate validation pin, and add Chromium sandbox and nonblank Playwright screenshot gates
+- Read Docker Scout's fixable-finding SARIF directly so scanner terminal-renderer failures cannot mask or manufacture a release-gate result
+
 ## [1.1.2] - 07/15/2026
 
 ### Added
@@ -207,6 +239,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Document the default picker policy so only Sisyphus, Hephaestus, Prometheus, and Atlas are visible by default
 - Clarify that `OPENCODE_DISABLE_AUTOUPDATE` only affects OpenCode itself, not plugins
 - Clarify that `/oh-my-openagent-setup` skill only appears when the plugin is enabled
+
+### Fixed
+
+- Add an explicit rerun + doctor + model-capability refresh path for stale visible default-model behavior after provider changes
+
+## [1.0.3] - 04/04/2026
+
+### Added
+
+- Ship a built-in `/oh-my-openagent-setup` skill for first-time setup and reruns after provider changes
+- Copy HolyCode-managed OpenCode skills into `~/.config/opencode/skills` on boot without overwriting existing user skill folders
+- Ensure enabled plugin packages are installed on boot if they are missing from the OpenCode cache
+
+### Changed
+
+- Document `/oh-my-openagent-setup` as the supported path for writing `oh-my-openagent.jsonc`
+- Document the default picker policy so only Sisyphus, Hephaestus, Prometheus, and Atlas are visible by default
 
 ### Fixed
 

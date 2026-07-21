@@ -92,6 +92,14 @@ docker pull coderluii/holycode:latest
 
 **ステップ 2.** `docker-compose.yaml` を作成します。
 
+Compose 設定では HolyCode の Chromium seccomp プロファイルを使用します。リポジトリのクローンから実行しない場合は、先にリリース版をダウンロードしてください。
+
+```bash
+mkdir -p config
+curl -fsSLo config/chromium-seccomp.json \
+  https://raw.githubusercontent.com/CoderLuii/HolyCode/v1.1.3/config/chromium-seccomp.json
+```
+
 ```yaml
 services:
   holycode:
@@ -99,6 +107,8 @@ services:
     container_name: holycode
     restart: unless-stopped
     shm_size: 2g
+    security_opt:
+      - seccomp=./config/chromium-seccomp.json
     ports:
       - "4096:4096"
     volumes:
@@ -365,9 +375,7 @@ services:
 | `PAPERCLIP_PORT` | `3100` | Paperclip が使用するコンテナポートを上書き |
 | `PAPERCLIP_INSTANCE_ID` | `default` | 分離された状態のためのローカル Paperclip インスタンス名 |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
-| `ENABLE_HERMES` | （なし） | Hermes をバンドルされたメタエージェント API として起動するには `true` に設定 |
-| `HERMES_PORT` | `8642` | Hermes が使用するコンテナポートを上書き |
-| `API_SERVER_KEY` | (なし) | Hermes を有効にする前に設定してください。実際の Bearer トークンを使ってください |
+| `ENABLE_HERMES` | （なし） | 旧設定。Hermes が同梱されていない間、v1.1.3 は移行メッセージを表示して起動を停止します |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | プラグイン更新モード：`manual`（不足分だけをインストールし、ユーザーのバージョンは保持）または `auto`（起動時に宣言済みの pin を同期） |
 
 > プラグインのトグル（`ENABLE_CLAUDE_AUTH`、`ENABLE_OH_MY_OPENAGENT`）はコンテナの再起動時に有効になります。env var を設定して `docker compose down && up -d` を実行してください。
@@ -380,7 +388,7 @@ services:
 
 > `ENABLE_PAPERCLIP=true` はコンテナ内のポート `3100` で Paperclip を起動します。ダッシュボードを開き、会社を作成し、そこから OpenCode バックのエージェントを雇用してください。Paperclip は自動的に `~/.paperclip` に永続化されます。
 
-> `ENABLE_HERMES=true` はコンテナ内のポート `8642` で Hermes を起動します。Hermes は `~/.hermes` に永続化し、すでにインストールされている `opencode` バイナリを使用し、コード作業を HolyCode に委任しながら OpenAI 互換 API を公開できます。
+> v1.1.3 では Hermes を一時的に同梱していません。以前の環境に `ENABLE_HERMES=true` が残っている場合、HolyCode は短い移行メッセージを表示して起動を停止します。将来の統合再開または以前のスナップショットへの復元に備えて、`/home/opencode/.hermes` は変更せず保持されます。
 
 > `GIT_USER_NAME` と `GIT_USER_EMAIL` は初回起動時のみ適用されます。再適用するにはセンチネルファイルを削除して再起動してください：`docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` の後 `docker compose restart`。
 
@@ -427,7 +435,7 @@ services:
 
 > リリースタグは正確に `vX.Y.Z` を使います。Docker イメージタグでは `v` を付けません。`v1.0.9` の次は `v1.1.0`、`v1.1.9` の次は `v1.2.0`、`v1.9.9` の次は `v2.0.0` です。`v1.0.10` から `v1.0.13` までは不変です。
 
-> v1.1.2 では Debian Trixie、Python 3.13、npm 12.0.1、NumPy 2.5.1 に移行します。OpenCode は 1.18.2、Wrangler は 4.111.0、lazygit は 0.63.1 に更新します。TypeScript は 6.0.3、Vercel は 54.21.0 を維持します。Netlify はリモートのビルドとデプロイのみをサポートします。同梱の CLIProxyAPI サイドカーは削除されたままで、外部管理のエンドポイントは引き続き利用できます。
+> v1.1.3 では OpenCode を 1.18.4、Claude Code を 2.1.216、oh-my-openagent を 4.19.0、s6-overlay を 3.2.3.2、fzf を 0.74.1、pnpm を 11.15.1、Vite を 8.1.5、Prettier を 3.9.6、Wrangler を 4.112.0、Prisma を 7.9.0、Lighthouse を 13.4.1 に更新します。Paperclip は 2026.707.0 を維持します。Hermes は一時的に同梱せず、Vercel、LHCI、sharp-cli、concurrently はイメージから削除しました。Netlify はリモートのビルドとデプロイのみをサポートします。外部管理の CLIProxyAPI エンドポイントは引き続き利用できます。
 
 </details>
 
@@ -470,7 +478,6 @@ services:
 
 | サービス | 目的 |
 |---------|---------|
-| Hermes Agent | MCP、メッセージングアダプター、OpenCode 委任を備えた自己改善型メタエージェント |
 | Paperclip | OpenCode ワーカーを雇用してハートビートで起動するローカルエージェントボード |
 | Claude Code CLI | `ENABLE_CLAUDE_AUTH` による Claude サブスクリプション認証フロー用にインストール済み |
 
@@ -496,24 +503,13 @@ s6-overlay が OpenCode と Xvfb を監視します。プロセスがクラッ�
 
 ## 🧩 バンドルサービス
 
-HolyCode は OpenCode の上に2つのオプションレイヤーを同梱するようになりました。コンテナを使用するために**これらは必要ありません**。環境変数を切り替え、コンテナを再起動すると、通常の Web UI と並んでサービスが起動します。
+Paperclip は OpenCode 上のオプションサービスとして引き続き同梱されます。CLIProxyAPI 統合は外部管理のエンドポイントを使用します。Hermes は一時的にイメージに含まれていません。
 
-### Hermes Agent
+### Hermes Agent（一時的に同梱していません）
 
-Hermes は「よりスマートな頭脳」オプションです。バンドルされたメタエージェントとして動作し、ポート `8642` で OpenAI 互換 API を公開し、HolyCode がすでに同梱しているローカルの `opencode` バイナリを呼び出してコーディング作業を委任します。
+v1.1.3 では、現在の依存関係が必要なセキュリティ修正にまだ対応していないため、Hermes ランタイムサービスを一時的に削除しています。HolyCode は Hermes プロセスを起動せず、Hermes のポートも公開しません。
 
-有効にするには：
-
-```yaml
-environment:
-  - ENABLE_HERMES=true
-  - HERMES_PORT=8642
-  - API_SERVER_KEY=replace-with-a-real-secret
-```
-
-Hermes を有効にする前に `API_SERVER_KEY` を設定してください。
-
-Hermes の状態は `/home/opencode/.hermes` に保存され、HolyCode の他の部分と同じ永続化の仕組みに従います。
+`/home/opencode/.hermes` にある既存データは削除も移行もされません。v1.1.3 を通常どおり起動するには、以前の設定から `ENABLE_HERMES=true` を削除してください。将来の統合再開または変更されていない以前のスナップショットへの復元に備えて、このディレクトリを保持してください。
 
 ### Paperclip
 
@@ -701,6 +697,8 @@ environment:
 
 最新イメージをプルしてコンテナを再作成します。データはそのまま残ります。
 
+`v1.1.3` より前のリリースから更新する場合は、上記の seccomp プロファイルをダウンロードし、コンテナを再作成する前に `holycode` サービスへ `security_opt` を追加してください。
+
 ```bash
 docker compose pull
 docker compose up -d
@@ -790,18 +788,18 @@ OpenCode は初期化に数秒かかります。`docker compose up -d` 後、ブ
 </details>
 
 <details>
-<summary><strong>HolyCode に SYS_ADMIN や seccomp=unconfined が不要な理由</strong></summary>
+<summary><strong>HolyCode で Chromium サンドボックスを使う方法</strong></summary>
 
-Chromium はコンテナ内で `--no-sandbox` で実行されますが、これはコンテナ化されたブラウザセットアップの標準です。これにより、他の Docker ブラウザセットアップが必要とする `SYS_ADMIN` 機能や `seccomp=unconfined` が不要になります。コンテナ自体が隔離の境界を提供します。
+Chromium は `opencode` ユーザーとして実行され、組み込みサンドボックスが有効です。Compose ファイルは制限付きプロファイル `config/chromium-seccomp.json` を自動的に読み込みます。
 
-Chromium の組み込みサンドボックスを使用したい場合は、compose ファイルに以下を追加し、`CHROMIUM_FLAGS` 環境変数から `--no-sandbox` を削除してください：
+コンテナを直接起動する場合も、同じプロファイルを読み込んでください：
 
 ```yaml
-cap_add:
-  - SYS_ADMIN
 security_opt:
-  - seccomp=unconfined
+  - seccomp=./config/chromium-seccomp.json
 ```
+
+サンドボックスを無効にしたり、コンテナに追加権限を付与したりしないでください。
 
 </details>
 

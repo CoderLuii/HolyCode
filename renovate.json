@@ -75,17 +75,6 @@
       "customType": "regex",
       "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
-        "ARG HERMES_AGENT_VERSION=(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "NousResearch/hermes-agent",
-      "datasourceTemplate": "github-tags",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
-      "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)\\s+ARG [A-Z0-9_]+_VERSION=(?<currentValue>[^\\s]+)"
       ]
     },
@@ -155,25 +144,24 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Require manual review for runtime, service, TypeScript, Vercel, and plugin pins",
+      "description": "Require manual review for runtime, service, TypeScript, and plugin pins",
       "matchPackageNames": [
         "@anthropic-ai/claude-code",
+        "cli/cli",
         "coderluii/holycode",
         "dandavison/delta",
         "docker/scout-cli",
         "eza-community/eza",
-        "hermes-agent",
         "jesseduffield/lazygit",
         "junegunn/fzf",
         "just-containers/s6-overlay",
+        "golang",
         "node",
-        "NousResearch/hermes-agent",
         "oh-my-openagent",
         "opencode-ai",
         "opencode-claude-auth",
         "paperclipai",
-        "typescript",
-        "vercel"
+        "typescript"
       ],
       "dependencyDashboardApproval": true
     },

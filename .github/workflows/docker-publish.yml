@@ -7,8 +7,8 @@ on:
       - 'v*'
 
 concurrency:
-  group: docker-${{ github.ref }}
-  cancel-in-progress: true
+  group: docker-release
+  cancel-in-progress: false
 
 env:
   DOCKERHUB_IMAGE: coderluii/holycode
@@ -19,26 +19,42 @@ env:
 #   DOCKERHUB_TOKEN - Docker Hub access token with push and description-update access.
 
 jobs:
-  protected-validation:
-    uses: ./.github/workflows/protected-validation.yml
-    secrets: inherit
-    with:
-      version: ${{ github.ref_name }}
-      previous_version: v1.1.1
-      previous_image: coderluii/holycode:1.1.1@sha256:7d64d2cbfa55673b0b98529b38ec11df8e69354e9c36976139ea14132c98a8fd
-      release_title: ${{ github.ref_name }}
-      allow_legacy_bridge: false
-
-  build-and-push:
-    needs: protected-validation
+  verify-protected-validation:
     runs-on: ubuntu-latest
     permissions:
+      actions: read
+      contents: read
+    outputs:
+      run_id: ${{ steps.protected.outputs.run_id }}
+
+    steps:
+      - name: Require successful protected validation for this commit
+        id: protected
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          response="$(gh api \
+            -H 'X-GitHub-Api-Version: 2026-03-10' \
+            "/repos/$GITHUB_REPOSITORY/actions/workflows/protected-validation.yml/runs?head_sha=$GITHUB_SHA&status=success&event=workflow_dispatch&per_page=100")"
+          run_id="$(jq -er --arg sha "$GITHUB_SHA" \
+            '[.workflow_runs[] | select(.head_sha == $sha and .conclusion == "success")] | sort_by(.created_at) | last | .id' \
+            <<<"$response")"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Protected validation run: $run_id" >> "$GITHUB_STEP_SUMMARY"
+
+  promote-candidate:
+    needs: verify-protected-validation
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
       contents: read
       packages: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -46,31 +62,52 @@ jobs:
         run: |
           set -euo pipefail
 
-          current="${GITHUB_REF_NAME}"
+          current="$GITHUB_REF_NAME"
           previous="$(git tag --list 'v*' --sort=-v:refname | grep -Fxv "$current" | head -n 1 || true)"
           commit_title="$(git log -1 --format=%s "$GITHUB_SHA")"
-          legacy_args=()
-
-          if [ "$previous" = "v1.0.13" ] && [ "$current" = "v1.1.0" ]; then
-            legacy_args=(--allow-legacy-v1-0-13-to-v1-1-0)
-          fi
-
           python scripts/validate_version.py \
             --version "$current" \
             --previous-version "$previous" \
             --tag-name "$current" \
-            --commit-title "$commit_title" \
-            "${legacy_args[@]}"
+            --commit-title "$commit_title"
 
-      - name: Free up disk space
+      - name: Require matching published GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
-          sudo apt-get clean
-          docker system prune -af
-          df -h
+          set -euo pipefail
 
-      - name: Set up QEMU (multi-arch)
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+          release=''
+          for _ in $(seq 1 18); do
+            if release="$(gh api \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "/repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" 2>/dev/null)"; then
+              break
+            fi
+            sleep 10
+          done
+          [ -n "$release" ]
+          jq -e --arg tag "$GITHUB_REF_NAME" '
+            .tag_name == $tag and
+            .name == $tag and
+            .draft == false and
+            (.body | test("^## [0-9]{2}/[0-9]{2}/[0-9]{4}"))
+          ' <<<"$release" >/dev/null
+
+      - name: Download protected candidate digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROTECTED_RUN_ID: ${{ needs.verify-protected-validation.outputs.run_id }}
+        run: |
+          set -euo pipefail
+
+          gh run download "$PROTECTED_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "holycode-$GITHUB_REF_NAME-candidate" \
+            --dir candidate
+          candidate_digest="$(tr -d '\r\n' < candidate/candidate-digest.txt)"
+          [[ "$candidate_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          echo "CANDIDATE_DIGEST=$candidate_digest" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -88,39 +125,80 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
-        with:
-          images: |
-            ${{ env.DOCKERHUB_IMAGE }}
-            ${{ env.GHCR_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=semver,pattern={{version}}
+      - name: Verify and promote exact protected candidate
+        run: |
+          set -euo pipefail
 
-      - name: Build and push
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          sbom: true
-          provenance: mode=max
+          version="${GITHUB_REF_NAME#v}"
+          source="$GHCR_IMAGE@$CANDIDATE_DIGEST"
+          manifest="$(docker buildx imagetools inspect "$source" --format '{{json .Manifest}}')"
+          digest="$(jq -er '.digest' <<<"$manifest")"
+          platforms="$(jq '[.manifests[] | select(.platform.os == "linux" and (.platform.architecture == "amd64" or .platform.architecture == "arm64"))] | length' <<<"$manifest")"
+          attestations="$(jq '[.manifests[] | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest")] | length' <<<"$manifest")"
+          [ "$digest" = "$CANDIDATE_DIGEST" ]
+          [ "$platforms" -eq 2 ]
+          [ "$attestations" -ge 2 ]
+
+          docker buildx imagetools create \
+            --tag "$DOCKERHUB_IMAGE:$version" \
+            --tag "$DOCKERHUB_IMAGE:latest" \
+            --tag "$GHCR_IMAGE:$version" \
+            --tag "$GHCR_IMAGE:latest" \
+            "$source"
+
+      - name: Verify published manifests and attestations
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+          refs=(
+            "$DOCKERHUB_IMAGE:$version"
+            "$DOCKERHUB_IMAGE:latest"
+            "$GHCR_IMAGE:$version"
+            "$GHCR_IMAGE:latest"
+          )
+
+          for attempt in $(seq 1 12); do
+            ready=true
+            for ref in "${refs[@]}"; do
+              if ! docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
+                ready=false
+                break
+              fi
+            done
+            [ "$ready" = true ] && break
+            sleep 10
+          done
+          [ "$ready" = true ]
+
+          expected_digest=''
+          for ref in "${refs[@]}"; do
+            manifest="$(docker buildx imagetools inspect "$ref" --format '{{json .Manifest}}')"
+            digest="$(jq -er '.digest' <<<"$manifest")"
+            platforms="$(jq '[.manifests[] | select(.platform.os == "linux" and (.platform.architecture == "amd64" or .platform.architecture == "arm64"))] | length' <<<"$manifest")"
+            attestations="$(jq '[.manifests[] | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest")] | length' <<<"$manifest")"
+            [ "$platforms" -eq 2 ]
+            [ "$attestations" -ge 2 ]
+            if [ -z "$expected_digest" ]; then
+              expected_digest="$digest"
+            else
+              [ "$digest" = "$expected_digest" ]
+            fi
+            echo "$ref -> $digest ($platforms platforms, $attestations attestation manifests)"
+          done
+
+          [ "$expected_digest" = "$CANDIDATE_DIGEST" ]
+          echo "Published multi-architecture digest: $expected_digest" >> "$GITHUB_STEP_SUMMARY"
 
   update-dockerhub-description:
-    needs: build-and-push
+    needs: promote-candidate
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Update Docker Hub description
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0

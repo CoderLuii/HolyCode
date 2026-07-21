@@ -13,7 +13,7 @@ WORKSPACE_DIR="/workspace"
 CLAUDE_AUTH_PLUGIN_NAME="opencode-claude-auth"
 CLAUDE_AUTH_PLUGIN_VERSION="2.0.0"
 OH_MY_OPENAGENT_PLUGIN_NAME="oh-my-openagent"
-OH_MY_OPENAGENT_PLUGIN_VERSION="4.18.1"
+OH_MY_OPENAGENT_PLUGIN_VERSION="4.19.0"
 
 sync_shipped_skills() {
     local source_skills_dir="/usr/local/share/holycode/skills"
@@ -316,12 +316,9 @@ fi
 sync_shipped_skills
 
 if [ "${ENABLE_HERMES}" = "true" ]; then
-    export HERMES_HOME="${HERMES_HOME:-$OC_HOME/.hermes}"
-    mkdir -p "$HERMES_HOME"
-    chown "$PUID:$PGID" "$HERMES_HOME" 2>/dev/null || true
-    touch /etc/s6-overlay/user-bundles.d/user/contents.d/hermes
-else
-    rm -f /etc/s6-overlay/user-bundles.d/user/contents.d/hermes
+    echo "[entrypoint] ERROR: The bundled Hermes is temporarily unavailable in v1.1.3 because its pinned dependencies have unresolved security updates." >&2
+    echo "[entrypoint] Your /home/opencode/.hermes is preserved. Remove ENABLE_HERMES=true to start HolyCode, or run Hermes separately until bundling returns." >&2
+    exit 1
 fi
 
 if [ "${ENABLE_PAPERCLIP}" = "true" ]; then

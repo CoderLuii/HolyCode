@@ -82,24 +82,19 @@ automation via Playwright and Puppeteer.
 Installed via pip. Uses the system Chromium binary, not Playwright's
 bundled browsers.
 
+HolyCode also vendors Playwright's Docker seccomp profile at
+`config/chromium-seccomp.json` under the same Apache-2.0 license. The profile
+permits the namespace syscalls required by Chromium's sandbox.
+
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
 - npm: https://www.npmjs.com/package/@anthropic-ai/claude-code
-- Version: 2.1.210
+- Version: 2.1.216
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.210`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.216`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
-
-## Hermes Agent
-
-- License: MIT
-- Source: https://github.com/NousResearch/hermes-agent
-- Pin: v2026.7.7.2@b7751df34688835a108e0d630f3495fc11f3df79
-
-Installed from the pinned release `v2026.7.7.2` and commit
-`b7751df34688835a108e0d630f3495fc11f3df79`. Used only when ENABLE_HERMES=true.
 
 ## Paperclip
 
@@ -110,15 +105,20 @@ Installed from the pinned release `v2026.7.7.2` and commit
 
 Installed via npm as the global package `paperclipai@2026.707.0`. Paperclip includes
 @paperclipai/skills-catalog through its published package set, which HolyCode
-uses for the Skills page. HolyCode permits the exact architecture-specific embedded
-PostgreSQL postinstall script needed to hydrate its packaged library symlinks before
-Paperclip runs as an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
+uses for the Skills page. HolyCode validates the package version, integrity,
+architecture, and lifecycle-script body before running the exact embedded PostgreSQL
+postinstall needed to hydrate its packaged library symlinks. Paperclip then runs as
+an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 
 ## GitHub CLI (gh)
 
 - License: MIT
 - Copyright: GitHub, Inc.
 - Source: https://github.com/cli/cli
+- Version: 2.96.0 (`b300f2ec7ec9dc9addc39b2ad88c54097ded7ca0`)
+
+Built from the exact upstream tag with Go 1.26.5 because the official 2.96.0
+package was compiled before the Go standard-library fix for CVE-2026-39822.
 
 ## lazygit
 
@@ -137,13 +137,13 @@ Paperclip runs as an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 
 - License: Apache-2.0 OR BSD-2-Clause
 - Source: https://github.com/pypa/packaging
-- Version: 26.0
+- Version: 26.2
 
 ## Wrangler
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.111.0
+- Version: 4.112.0
 
 ## delta
 
