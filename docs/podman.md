@@ -136,7 +136,9 @@ If you enable them, publish the ports you need:
 
 Paperclip listens on `3100` when enabled. `PAPERCLIP_BIND=lan` lets the service bind inside the container so the Podman port publish can reach it. Paperclip runs with `/home/opencode` as its home and keeps OpenCode config/cache/state paths under that same directory, so keep the `/home/opencode` bind mount in place when enabling it. Paperclip ships its Skills catalog through the package set HolyCode installs, so the Skills page can load the bundled catalog without a compatibility shim.
 
-Bundled Hermes is temporarily unavailable in v1.1.3 because its current releases require vulnerable dependency pins. Remove `ENABLE_HERMES=true` from older Podman deployments before recreating the container. HolyCode leaves `/home/opencode/.hermes` untouched.
+Bundled Hermes remains unavailable in v1.1.4 because its current releases require vulnerable dependency pins. Remove `ENABLE_HERMES=true` from older Podman deployments before recreating the container. HolyCode leaves `/home/opencode/.hermes` untouched.
+
+HolyCode-managed oh-my-openagent installation is suspended in v1.1.4. With `ENABLE_OH_MY_OPENAGENT=true`, startup stops without changing plugin state. Remove the flag before recreating an older deployment. The first successful start disables the old active entry, records its package spec, and preserves its settings, skills, and package cache. Add it back manually only if you accept its current upstream dependency risk; HolyCode then treats it as user-managed.
 
 CLIProxyAPI is different. HolyCode keeps its provider integration, but does not bundle the sidecar until its release binaries have verifiable compiler provenance and pass `govulncheck`. Point `CLIPROXYAPI_BASE_URL` at an externally managed endpoint that the Podman container can reach.
 
@@ -161,9 +163,9 @@ podman rm holycode
 
 Run the `podman run` command again. Your data stays in `./data/opencode`, `./local-cache/opencode`, and `./workspace`.
 
-`v1.1.3` removes bundled Hermes and vulnerable global CLIs while preserving existing state. Keep the untouched pre-upgrade copies until Paperclip, OpenCode, Chromium, and your normal provider workflow have all passed.
+`v1.1.4` upgrades Paperclip from 2026.707.0 to 2026.722.0, removes Netlify CLI and `serve`, and suspends HolyCode-managed oh-my-openagent installation. Its one-time migration disables the old active plugin entry but keeps settings, skills, and cached package data. Keep the untouched pre-upgrade copies until Paperclip onboarding, Skills, agents, connections, OpenCode, Chromium, and your normal provider workflow have all passed.
 
-If you need to roll back, stop and remove the container, restore the untouched pre-`v1.1.3` copies, then recreate it with `docker.io/coderluii/holycode:1.1.2`. Rollback means restoring those snapshots, not reversing a database migration in place.
+If you need to roll back, stop and remove the container, restore the untouched pre-`v1.1.4` copies, then recreate it with `docker.io/coderluii/holycode:1.1.3`. Rollback means restoring those snapshots, not reversing a Paperclip database migration in place. Never start `1.1.3` against data already migrated by `1.1.4`.
 
 Do not use `podman start holycode` as an update path. It restarts the existing container with the old image, environment variables, ports, and mount settings.
 

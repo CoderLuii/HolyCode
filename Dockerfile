@@ -6,65 +6,157 @@
 # renovate: datasource=github-releases depName=cli/cli
 ARG GITHUB_CLI_VERSION=2.96.0
 ARG GITHUB_CLI_REF=b300f2ec7ec9dc9addc39b2ad88c54097ded7ca0
+# renovate: datasource=github-releases depName=junegunn/fzf
+ARG FZF_VERSION=0.74.1
+ARG FZF_REF=eae8d9d27eaeffc777699c01bf8f8b8c071908c1
+# renovate: datasource=github-releases depName=jesseduffield/lazygit
+ARG LAZYGIT_VERSION=0.63.1
+ARG LAZYGIT_REF=aafe61082e7ed383d318fd40e48f85645e6afc7b
 
-# GitHub CLI 2.96.0 was released before Go 1.26.5 fixed CVE-2026-39822.
-# Rebuild the exact upstream tag with the fixed toolchain until GitHub ships it.
-FROM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS github-cli-builder
+# Rebuild exact release sources with reviewed dependency fixes.
+FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS github-cli-builder
 ARG GITHUB_CLI_VERSION
 ARG GITHUB_CLI_REF
+ARG TARGETARCH
+COPY patches/github-cli-modules.patch /tmp/github-cli-modules.patch
 RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
       https://github.com/cli/cli.git /src && \
     cd /src && \
     test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}" && \
     test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
+    git apply --check /tmp/github-cli-modules.patch && \
+    git apply /tmp/github-cli-modules.patch && \
+    test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.82.1" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.39.0" && \
+    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.18.7" && \
+    go mod verify && \
+    mkdir -p /tmp/gh-test && \
+    chown -R nobody:nogroup /src /tmp/gh-test && \
+    su -s /bin/sh nobody -c \
+      'HOME=/tmp/gh-test GOCACHE=/tmp/gh-test/go-cache GOPATH=/tmp/gh-test/go go test ./...' && \
+    git config --global --add safe.directory /src && \
+    GH_GOARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
     SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
-      GH_VERSION="${GITHUB_CLI_VERSION}" go run ./script/build.go bin/gh && \
+      GH_VERSION="${GITHUB_CLI_VERSION}" go run ./script/build.go bin/gh \
+      GOOS=linux GOARCH="${GH_GOARCH}" CGO_ENABLED=0 && \
     install -D -m 0755 bin/gh /out/gh && \
     go version -m /out/gh | grep -F "go1.26.5" && \
-    /out/gh --version | grep -F "gh version ${GITHUB_CLI_VERSION}"
+    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.18\.7' && \
+    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.39\.0'
+
+FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS fzf-builder
+ARG FZF_VERSION
+ARG FZF_REF
+ARG TARGETARCH
+COPY patches/fzf-x-sys-0.44.0.patch /tmp/fzf-x-sys-0.44.0.patch
+RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
+      https://github.com/junegunn/fzf.git /src && \
+    cd /src && \
+    test "$(git rev-parse HEAD)" = "${FZF_REF}" && \
+    test "$(git describe --tags --exact-match HEAD)" = "v${FZF_VERSION}" && \
+    git apply --check /tmp/fzf-x-sys-0.44.0.patch && \
+    git apply /tmp/fzf-x-sys-0.44.0.patch && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/sys)" = "v0.44.0" && \
+    go mod verify && \
+    SHELL=/bin/sh go test \
+      github.com/junegunn/fzf/src \
+      github.com/junegunn/fzf/src/algo \
+      github.com/junegunn/fzf/src/tui \
+      github.com/junegunn/fzf/src/util && \
+    mkdir -p /out && \
+    FZF_GOARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
+    GOOS=linux GOARCH="${FZF_GOARCH}" CGO_ENABLED=0 go build -a -trimpath \
+      -ldflags "-s -w -X main.version=${FZF_VERSION} -X main.revision=$(git rev-parse --short=8 HEAD)" \
+      -o /out/fzf && \
+    go version -m /out/fzf | grep -E 'golang.org/x/sys[[:space:]]+v0\.44\.0'
+
+FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS lazygit-builder
+ARG LAZYGIT_VERSION
+ARG LAZYGIT_REF
+ARG TARGETARCH
+COPY patches/lazygit-x-text-0.39.0.patch /tmp/lazygit-x-text-0.39.0.patch
+RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
+      https://github.com/jesseduffield/lazygit.git /src && \
+    cd /src && \
+    test "$(git rev-parse HEAD)" = "${LAZYGIT_REF}" && \
+    test "$(git describe --tags --exact-match HEAD)" = "v${LAZYGIT_VERSION}" && \
+    git apply --check /tmp/lazygit-x-text-0.39.0.patch && \
+    git apply /tmp/lazygit-x-text-0.39.0.patch && \
+    export GOFLAGS=-mod=mod && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.39.0" && \
+    go mod verify && \
+    LAZYGIT_MODULE_FILES_SHA256="$(sha256sum go.mod go.sum)" && \
+    go mod vendor && \
+    test "$(sha256sum go.mod go.sum)" = "${LAZYGIT_MODULE_FILES_SHA256}" && \
+    export GOFLAGS=-mod=vendor && \
+    go test ./... && \
+    mkdir -p /out && \
+    LAZYGIT_GOARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
+    BUILD_DATE="$(git show -s --format=%cI HEAD)" && \
+    GOOS=linux GOARCH="${LAZYGIT_GOARCH}" CGO_ENABLED=0 go build -trimpath \
+      -ldflags "-s -w -X main.version=${LAZYGIT_VERSION} -X main.commit=${LAZYGIT_REF} -X main.date=${BUILD_DATE} -X main.buildSource=binaryRelease" \
+      -o /out/lazygit && \
+    go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.39\.0'
 
 FROM node:24.18.0-trixie-slim@sha256:ae91dcc111a68c9d2d81ff2a17bda61be126426176fde6fe7d08ab13b7f50573
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
+ARG FZF_VERSION
+ARG LAZYGIT_VERSION
+# renovate: datasource=github-releases depName=just-containers/s6-overlay
 ARG S6_OVERLAY_VERSION=3.2.3.2
-ARG FZF_VERSION=0.74.1
-ARG LAZYGIT_VERSION=0.63.1
+# renovate: datasource=github-releases depName=dandavison/delta
 ARG DELTA_VERSION=0.19.2
+# renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.4
+ARG OPENCODE_VERSION=1.18.9
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.216
+ARG CLAUDE_CODE_VERSION=2.1.220
 # renovate: datasource=npm depName=paperclipai
-ARG PAPERCLIP_VERSION=2026.707.0
+ARG PAPERCLIP_VERSION=2026.722.0
 # renovate: datasource=npm depName=undici
-ARG PAPERCLIP_UNDICI_VERSION=6.27.0
+ARG PAPERCLIP_UNDICI_VERSION=6.28.0
+# renovate: datasource=npm depName=opencode-claude-auth
+ARG CLAUDE_AUTH_PLUGIN_VERSION=2.1.5
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
-ARG NPM_VERSION=12.0.1
+ARG NPM_VERSION=12.0.2
+# renovate: datasource=npm depName=brace-expansion
+ARG NPM_BRACE_EXPANSION_VERSION=5.0.8
+# renovate: datasource=npm depName=tar
+ARG NPM_TAR_VERSION=7.5.22
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.1
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=11.15.1
+ARG PNPM_VERSION=11.18.0
 # renovate: datasource=npm depName=vite
 ARG VITE_VERSION=8.1.5
 # renovate: datasource=npm depName=prettier
 ARG PRETTIER_VERSION=3.9.6
 # renovate: datasource=npm depName=prisma
-ARG PRISMA_VERSION=7.9.0
+ARG PRISMA_VERSION=7.9.1
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.112.0
-# renovate: datasource=npm depName=netlify-cli
-ARG NETLIFY_CLI_VERSION=26.2.0
+ARG WRANGLER_VERSION=4.115.0
+# renovate: datasource=npm depName=eslint
+ARG ESLINT_VERSION=10.8.0
 # renovate: datasource=pypi depName=numpy
 ARG NUMPY_VERSION=2.5.1
 # renovate: datasource=pypi depName=pip
-ARG PIP_VERSION=26.1.2
-ARG RELEASE_APT_REFRESH=2026-07-21
+ARG PIP_VERSION=26.2
+# renovate: datasource=pypi depName=msgpack
+ARG PIP_VENDOR_MSGPACK_VERSION=1.2.1
+ARG PIP_VENDOR_MSGPACK_SHA256=04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647
+# pkg_resources was removed in setuptools 81; keep its last fixed source.
+ARG PIP_VENDOR_PKG_RESOURCES_VERSION=80.9.0
+ARG PIP_VENDOR_PKG_RESOURCES_SHA256=f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c
+# renovate: datasource=pypi depName=setuptools
+ARG SETUPTOOLS_VERSION=83.0.0
+ARG RELEASE_APT_REFRESH=2026-07-30
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -72,7 +164,12 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.opencode=${OPENCODE_VERSION} \
     io.holycode.version.claude-code=${CLAUDE_CODE_VERSION} \
     io.holycode.version.paperclip=${PAPERCLIP_VERSION} \
+    io.holycode.version.claude-auth-plugin=${CLAUDE_AUTH_PLUGIN_VERSION} \
     io.holycode.version.npm=${NPM_VERSION} \
+    io.holycode.version.npm-brace-expansion=${NPM_BRACE_EXPANSION_VERSION} \
+    io.holycode.version.npm-tar=${NPM_TAR_VERSION} \
+    io.holycode.version.pip-vendor-msgpack=${PIP_VENDOR_MSGPACK_VERSION} \
+    io.holycode.version.pip-vendor-pkg-resources=${PIP_VENDOR_PKG_RESOURCES_VERSION} \
     io.holycode.version.typescript=${TYPESCRIPT_VERSION} \
     io.holycode.version.tsx=${TSX_VERSION} \
     io.holycode.version.pnpm=${PNPM_VERSION} \
@@ -83,7 +180,6 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.s6-overlay=${S6_OVERLAY_VERSION} \
     io.holycode.version.fzf=${FZF_VERSION} \
     io.holycode.version.wrangler=${WRANGLER_VERSION} \
-    io.holycode.version.netlify-cli=${NETLIFY_CLI_VERSION} \
     io.holycode.version.numpy=${NUMPY_VERSION}
 
 # ---------- Environment ----------
@@ -156,15 +252,7 @@ RUN chmod u+s /usr/bin/bwrap
 RUN ln -sf /usr/bin/batcat /usr/local/bin/bat 2>/dev/null || true
 
 # ---------- fzf ----------
-RUN FZF_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "f22204dd1a091d43e102268d062fd53b47133c8d8581671ee5eb225b75e31183";; \
-      *) echo "df53438be5f51e151bb4044d78fda72bdfe209e3ecd2baecae48e8dea370c81b";; \
-    esac) && \
-    curl -fsSL -o /tmp/fzf.tar.gz \
-      "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${TARGETARCH}.tar.gz" && \
-    echo "${FZF_SHA256}  /tmp/fzf.tar.gz" | sha256sum -c - && \
-    tar -C /usr/local/bin -xzf /tmp/fzf.tar.gz fzf && \
-    rm /tmp/fzf.tar.gz
+COPY --from=fzf-builder /out/fzf /usr/local/bin/fzf
 
 # ---------- Python 3 (for user projects) ----------
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -180,16 +268,8 @@ COPY --from=github-cli-builder /out/gh /usr/local/bin/gh
 RUN gh --version | grep -F "gh version ${GITHUB_CLI_VERSION}"
 
 # ---------- lazygit ----------
-RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
-    LAZYGIT_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "555dbc9a8efcf2e33bc24e7fbd9463e9fa375e3c5e23cc270763733c38eeae36";; \
-      *) echo "8e033bc78c8e192dee9510e951f6c9e154289b7198d22c924ed1d0a951b0dac1";; \
-    esac) && \
-    curl -fsSL -o /tmp/lazygit.tar.gz \
-      "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_${LAZYGIT_ARCH}.tar.gz" && \
-    echo "${LAZYGIT_SHA256}  /tmp/lazygit.tar.gz" | sha256sum -c - && \
-    tar -C /usr/local/bin -xzf /tmp/lazygit.tar.gz lazygit && \
-    rm /tmp/lazygit.tar.gz
+COPY --from=lazygit-builder /out/lazygit /usr/local/bin/lazygit
+RUN lazygit --version | grep -F "version=${LAZYGIT_VERSION}"
 
 # ---------- delta (git diff pager) ----------
 RUN DELTA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64-unknown-linux-gnu";; *) echo "x86_64-unknown-linux-gnu";; esac) && \
@@ -222,43 +302,82 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     fonts-liberation2 fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji \
     && test -u /usr/lib/chromium/chrome-sandbox \
+    && dpkg-query -W -f='${Version}\n' chromium | grep -E '^150\.0\.7871\.(18[1-9]|19[0-9]|[2-9][0-9]{2,})-' \
+    && test "$(dpkg-query -W -f='${Version}' chromium)" = "$(dpkg-query -W -f='${Version}' chromium-sandbox)" \
     && rm -rf /var/lib/apt/lists/*
 
-# ---------- Playwright (Python, uses system Chromium via env vars) ----------
-RUN pip install --no-cache-dir --break-system-packages playwright==1.61.0
-
-# Trixie's packaging and wheel modules are dpkg-owned and have no pip RECORD.
-# Install the audited releases into /usr/local without removing Debian files.
-RUN pip install --no-cache-dir --break-system-packages --ignore-installed \
-    packaging==26.2 wheel==0.47.0
-
-RUN pip install --no-cache-dir --break-system-packages \
-    requests==2.34.2 httpx==0.28.1 beautifulsoup4==4.15.0 lxml==6.1.1 \
-    Pillow==12.3.0 openpyxl==3.1.5 python-docx==1.2.0 \
-    pandas==3.0.3 numpy==${NUMPY_VERSION} matplotlib==3.11.1 seaborn==0.13.2 \
-    rich==15.0.0 click==8.4.2 tqdm==4.69.0 apprise==1.12.0 \
-    jinja2==3.1.6 pyyaml==6.0.3 python-dotenv==1.2.2 markdown==3.10.2 \
-    fastapi==0.139.2 uvicorn==0.51.0
+# ---------- Python packages ----------
+COPY config/python-requirements.lock /usr/local/share/holycode/python-requirements.lock
+COPY config/python-seed-requirements.lock /usr/local/share/holycode/python-seed-requirements.lock
+COPY patches/pip-vendored-pkg-resources-80.9.0.patch /tmp/pip-vendored-pkg-resources.patch
+RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
+      --require-hashes -r /usr/local/share/holycode/python-requirements.lock
 
 # Replace Debian's vulnerable wheel metadata after installing fixed copies in
 # /usr/local. pip remains available from the exact PyPI package.
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
-      "pip==${PIP_VERSION}" && \
+      --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock && \
+    curl -fsSL -o /tmp/msgpack.tar.gz \
+      "https://files.pythonhosted.org/packages/31/f9/c0a1c127f9049db9155afc316952ea571720dd01833ff5e4d7e8e6352dbb/msgpack-${PIP_VENDOR_MSGPACK_VERSION}.tar.gz" && \
+    echo "${PIP_VENDOR_MSGPACK_SHA256}  /tmp/msgpack.tar.gz" | sha256sum -c - && \
+    curl -fsSL -o /tmp/setuptools.tar.gz \
+      "https://files.pythonhosted.org/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-${PIP_VENDOR_PKG_RESOURCES_VERSION}.tar.gz" && \
+    echo "${PIP_VENDOR_PKG_RESOURCES_SHA256}  /tmp/setuptools.tar.gz" | sha256sum -c - && \
+    mkdir -p /tmp/msgpack /tmp/setuptools && \
+    tar -xzf /tmp/msgpack.tar.gz -C /tmp/msgpack --strip-components=1 && \
+    tar -xzf /tmp/setuptools.tar.gz -C /tmp/setuptools --strip-components=1 && \
+    (cd /tmp/setuptools && patch -p1 < /tmp/pip-vendored-pkg-resources.patch) && \
+    PIP_VENDOR_DIR="$(python3 -c 'import pathlib,pip._vendor; print(pathlib.Path(pip._vendor.__file__).parent)')" && \
+    rm -rf "$PIP_VENDOR_DIR/msgpack" "$PIP_VENDOR_DIR/pkg_resources" && \
+    cp -a /tmp/msgpack/msgpack "$PIP_VENDOR_DIR/msgpack" && \
+    cp -a /tmp/setuptools/pkg_resources "$PIP_VENDOR_DIR/pkg_resources" && \
+    cp /tmp/msgpack/COPYING "$PIP_VENDOR_DIR/msgpack/COPYING" && \
+    cp /tmp/setuptools/LICENSE "$PIP_VENDOR_DIR/pkg_resources/LICENSE" && \
+    rm -rf "$PIP_VENDOR_DIR/pkg_resources/tests" "$PIP_VENDOR_DIR/pkg_resources/api_tests.txt" && \
+    sed -i \
+      "s/^msgpack==.*/msgpack==${PIP_VENDOR_MSGPACK_VERSION}/; s/^setuptools==.*/setuptools==${PIP_VENDOR_PKG_RESOURCES_VERSION}/" \
+      "$PIP_VENDOR_DIR/vendor.txt" && \
+    python3 -c 'import json,pathlib,sys; path=pathlib.Path(sys.argv[1]); data=json.loads(path.read_text()); versions={"msgpack":sys.argv[2],"setuptools":sys.argv[3]}; [(component.update(version=versions[component["name"]],purl="pkg:pypi/{0}@{1}".format(component["name"],versions[component["name"]])) if component.get("name") in versions else None) for component in data.get("components",[])]; path.write_text(json.dumps(data,indent=2)+"\n")' \
+      "$PIP_VENDOR_DIR/bom.cdx.json" "$PIP_VENDOR_MSGPACK_VERSION" "$PIP_VENDOR_PKG_RESOURCES_VERSION" && \
+    rm -rf \
+      /tmp/msgpack /tmp/setuptools /tmp/msgpack.tar.gz /tmp/setuptools.tar.gz \
+      /tmp/pip-vendored-pkg-resources.patch && \
     apt-get purge -y python3-pip python3-wheel && \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip --version | grep -F "pip ${PIP_VERSION}" && \
+    python3 -c 'import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == "1.2.1"; import pip._vendor.pkg_resources' && \
+    _PIP_USE_IMPORTLIB_METADATA=0 python3 -m pip list --format=json >/dev/null && \
+    python3 -c 'import setuptools; assert setuptools.__version__ == "83.0.0"' && \
     python3 -m pip check
 
 RUN rm -f /usr/local/bin/dotenv
 
-# npm 12 blocks dependency lifecycle scripts unless they are explicitly reviewed.
-# Allow only the exact OpenCode, Claude, and architecture-specific embedded
-# PostgreSQL scripts required at runtime; validate every allowed and blocked pin.
-COPY config/npm-global-script-policy.json /usr/local/share/holycode/npm-global-script-policy.json
-COPY scripts/validate_npm_script_policy.py /usr/local/bin/validate-npm-script-policy
-RUN chmod +x /usr/local/bin/validate-npm-script-policy && \
-    npm install -g --ignore-scripts "npm@${NPM_VERSION}" && \
-    test "$(npm --version)" = "${NPM_VERSION}"
+RUN npm install -g --ignore-scripts "npm@${NPM_VERSION}" && \
+    test "$(npm --version)" = "${NPM_VERSION}" && \
+    rm -rf /root/.npm
+RUN test "$(npm view "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}" dist.integrity)" = \
+      "sha512-JZyDyq3D4AUifKTPOB7DELf6XsB3WdPuNxCtob1vFXPsSXhdAiHBWJ/tJ8HAc9aH84BK+5JFZLNkJKx3G9kzQg==" && \
+    BRACE_TARBALL=$(npm pack --silent --pack-destination /tmp \
+      "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}") && \
+    BRACE_DIR=/usr/local/lib/node_modules/npm/node_modules/brace-expansion && \
+    rm -rf "$BRACE_DIR" && mkdir "$BRACE_DIR" && \
+    tar -xzf "/tmp/${BRACE_TARBALL}" -C "$BRACE_DIR" --strip-components=1 && \
+    rm "/tmp/${BRACE_TARBALL}" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json").version')" = \
+      "${NPM_BRACE_EXPANSION_VERSION}" && \
+    (cd /usr/local/lib/node_modules/npm && npm ls brace-expansion --all >/dev/null) && \
+    rm -rf /root/.npm
+RUN test "$(npm view "tar@${NPM_TAR_VERSION}" dist.integrity)" = \
+      "sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA==" && \
+    NPM_TAR_TARBALL=$(npm pack --silent --pack-destination /tmp "tar@${NPM_TAR_VERSION}") && \
+    NPM_TAR_DIR=/usr/local/lib/node_modules/npm/node_modules/tar && \
+    rm -rf "$NPM_TAR_DIR" && mkdir "$NPM_TAR_DIR" && \
+    tar -xzf "/tmp/${NPM_TAR_TARBALL}" -C "$NPM_TAR_DIR" --strip-components=1 && \
+    rm "/tmp/${NPM_TAR_TARBALL}" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/tar/package.json").version')" = \
+      "${NPM_TAR_VERSION}" && \
+    (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null) && \
+    rm -rf /root/.npm
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
@@ -272,8 +391,8 @@ RUN npm i -g --ignore-scripts \
     "typescript@${TYPESCRIPT_VERSION}" "tsx@${TSX_VERSION}" \
     "pnpm@${PNPM_VERSION}" \
     "vite@${VITE_VERSION}" esbuild@0.28.1 \
-    eslint@10.7.0 "prettier@${PRETTIER_VERSION}" \
-    serve@14.2.6 nodemon@3.1.14 \
+    "eslint@${ESLINT_VERSION}" "prettier@${PRETTIER_VERSION}" \
+    nodemon@3.1.14 \
     dotenv-cli@11.0.0 \
     "wrangler@${WRANGLER_VERSION}" \
     pm2@7.0.3 \
@@ -294,17 +413,6 @@ RUN npm i -g --ignore-scripts \
     drizzle-kit --help >/dev/null && \
     rm -rf /root/.npm
 
-# Netlify's optional platform package still contains stale local-functions-proxy
-# binaries. Keep remote build/deploy commands and remove the unsupported local runtime.
-RUN npm i -g --ignore-scripts --omit=optional "netlify-cli@${NETLIFY_CLI_VERSION}" && \
-    rm -rf /usr/local/lib/node_modules/netlify-cli/node_modules/@netlify/local-functions-proxy-* && \
-    rm -f /usr/local/lib/node_modules/netlify-cli/node_modules/.bin/local-functions-proxy && \
-    test -z "$(find /usr/local/lib/node_modules/netlify-cli -path '*/@netlify/local-functions-proxy-*/bin/local-functions-proxy' -print -quit)" && \
-    netlify --version | grep -F "netlify-cli/${NETLIFY_CLI_VERSION}" && \
-    netlify build --help >/dev/null && \
-    netlify deploy --help >/dev/null && \
-    rm -rf /root/.npm
-
 RUN npm i -g --ignore-scripts \
     "paperclipai@${PAPERCLIP_VERSION}" && \
     rm -rf /root/.npm
@@ -312,7 +420,7 @@ RUN npm i -g --ignore-scripts \
 # Keep Paperclip stable while replacing that HTTP client with the first fixed
 # 6.x release; remove this reviewed compatibility patch when Paperclip updates Connect.
 RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
-      "sha512-YmfV3YnEDzXRC5lZ2jWtWWHKGUm1zIt8AhesR1tens+HTNv+YZlN/dp6G727LOvMJ8xjP9Be7Y2Sdr96LDm+pg==" && \
+      "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==" && \
     UNDICI_TARBALL=$(npm pack --silent --pack-destination /tmp "undici@${PAPERCLIP_UNDICI_VERSION}") && \
     UNDICI_DIR=/usr/local/lib/node_modules/paperclipai/node_modules/undici && \
     CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
@@ -324,13 +432,32 @@ RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
     test "$(node -p 'require("/usr/local/lib/node_modules/paperclipai/node_modules/undici/package.json").version')" = \
       "${PAPERCLIP_UNDICI_VERSION}" && \
     (cd /usr/local/lib/node_modules/paperclipai && npm ls undici --all >/dev/null) && \
-    node --input-type=module -e 'const {testEnvironment}=await import("file:///usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/adapter-cursor-cloud/dist/server/index.js"); const result=await testEnvironment({adapterType:"cursor_cloud",config:{}}); if(result.status!=="fail" || !result.checks.some((check)=>check.code==="cursor_cloud_api_key_missing")) process.exit(1)'
+    node --input-type=module -e 'const {testEnvironment}=await import("file:///usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/adapter-cursor-cloud/dist/server/index.js"); const result=await testEnvironment({adapterType:"cursor_cloud",config:{}}); if(result.status!=="fail" || !result.checks.some((check)=>check.code==="cursor_cloud_api_key_missing")) process.exit(1)' && \
+    rm -rf /root/.npm
+# Package the supported Claude Auth plugin for network-free startup.
+RUN test "$(npm view "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}" dist.integrity)" = \
+      "sha512-rRZ3aZJEbgHsXzox1vkXY3sIrE3Z6c5ya/hEJJb2/XavuPufvTLI9dN2VHfvhFTl6eZPbs10hlSirfGnyLr46Q==" && \
+    CLAUDE_AUTH_TARBALL=$(npm pack --silent --pack-destination /tmp \
+      "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}") && \
+    CLAUDE_AUTH_DIR=/usr/local/share/holycode/plugins/opencode-claude-auth && \
+    mkdir -p "${CLAUDE_AUTH_DIR}" && \
+    tar -xzf "/tmp/${CLAUDE_AUTH_TARBALL}" -C "${CLAUDE_AUTH_DIR}" --strip-components=1 && \
+    rm "/tmp/${CLAUDE_AUTH_TARBALL}" && \
+    test "$(node -p 'require(process.argv[1]).version' "${CLAUDE_AUTH_DIR}/package.json")" = \
+      "${CLAUDE_AUTH_PLUGIN_VERSION}" && \
+    rm -rf /root/.npm
 RUN find /usr/local/lib/node_modules/paperclipai/node_modules/@embedded-postgres \
       -path '*/native/lib' -type d -exec sh -c '\
         for lib_dir do \
           [ -f "$lib_dir/libcrypto.so.1.1" ] && ln -sf libcrypto.so.1.1 "$lib_dir/libcrypto.so.1"; \
           [ -f "$lib_dir/libssl.so.1.1" ] && ln -sf libssl.so.1.1 "$lib_dir/libssl.so.1"; \
         done' sh {} +
+# npm 12 blocks dependency lifecycle scripts unless they are explicitly reviewed.
+# Allow only the exact OpenCode, Claude, and architecture-specific embedded
+# PostgreSQL scripts required at runtime; validate every allowed and blocked pin.
+COPY config/npm-global-script-policy.json /usr/local/share/holycode/npm-global-script-policy.json
+COPY scripts/validate_npm_script_policy.py /usr/local/bin/validate-npm-script-policy
+RUN chmod +x /usr/local/bin/validate-npm-script-policy
 RUN python3 /usr/local/bin/validate-npm-script-policy \
       --policy /usr/local/share/holycode/npm-global-script-policy.json \
       --root /usr/local/lib/node_modules \
@@ -348,10 +475,17 @@ RUN python3 /usr/local/bin/validate-npm-script-policy \
     esbuild --version | grep -Fx "0.28.1" && \
     prisma --version >/dev/null && \
     wrangler --version | grep -F "${WRANGLER_VERSION}" && \
-    ! command -v vercel && ! command -v sharp && ! command -v concurrently && ! command -v lhci && \
+    ! command -v vercel && ! command -v sharp && ! command -v concurrently && \
+    ! command -v lhci && ! command -v netlify && ! command -v serve && \
     WORKERD_BIN=$(find /usr/local/lib/node_modules/wrangler -path '*/workerd/bin/workerd' -type f -print -quit) && \
     test -n "${WORKERD_BIN}" && "${WORKERD_BIN}" --version >/dev/null && \
-    node -e 'const ssh2=require("/usr/local/lib/node_modules/paperclipai/node_modules/ssh2"); if(typeof ssh2.Client!=="function") process.exit(1)'
+    node -e 'const ssh2=require("/usr/local/lib/node_modules/paperclipai/node_modules/ssh2"); if(typeof ssh2.Client!=="function") process.exit(1)' && \
+    rm -rf /root/.npm
+
+RUN mkdir -p /usr/local/share/holycode/python-seed && \
+    python3 -m pip download --no-deps --only-binary=:all: \
+      --dest /usr/local/share/holycode/python-seed \
+      --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock
 
 RUN mkdir -p /usr/local/share/holycode && \
     dpkg-query -W -f='${binary:Package}\t${Version}\n' | sort > /usr/local/share/holycode/dpkg-inventory.txt
@@ -360,8 +494,9 @@ RUN mkdir -p /usr/local/share/holycode && \
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/bootstrap.sh /usr/local/bin/bootstrap.sh
 COPY config/opencode.json /usr/local/share/holycode/opencode.json
-COPY config/skills /usr/local/share/holycode/skills
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/bootstrap.sh
+COPY config/security-exceptions-v1.1.4.json /usr/local/share/holycode/security-exceptions-v1.1.4.json
+RUN install -d -m 0755 /usr/local/share/holycode/skills \
+    && chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/bootstrap.sh
 
 # ---------- s6-overlay service: opencode web ----------
 COPY s6-overlay/s6-rc.d/opencode/type /etc/s6-overlay/s6-rc.d/opencode/type

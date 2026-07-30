@@ -71,14 +71,14 @@ services:
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_CLAUDE_AUTH=true
 
-      # --- oh-my-openagent (multi-agent orchestration for OpenCode) ---
-      # Installs automatically on first boot when enabled
-      # Toggle on/off with docker compose down && up -d
+      # --- Legacy oh-my-openagent flag ---
+      # Managed installation is unavailable in v1.1.4. Existing config is preserved.
+      # Remove this flag before upgrading; true stops with a migration message.
       # - ENABLE_OH_MY_OPENAGENT=true
 
       # --- Plugin Updates ---
-      # manual: install enabled plugins only if missing and keep user versions (default)
-      # auto: install if missing and sync declared pins on boot
+      # manual: install supported plugins only if missing and keep user versions (default)
+      # auto: install supported plugins and sync image pins on boot
       # - HOLYCODE_PLUGIN_UPDATE=manual
 
       # --- Bundled services ---

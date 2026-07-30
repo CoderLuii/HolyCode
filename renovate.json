@@ -5,8 +5,7 @@
     "github-actions",
     "dockerfile",
     "docker-compose",
-    "npm",
-    "pip_requirements",
+    "pip-compile",
     "custom.regex"
   ],
   "automerge": false,
@@ -15,62 +14,13 @@
   "separateMultipleMajor": true,
   "prConcurrentLimit": 3,
   "prHourlyLimit": 1,
+  "pip-compile": {
+    "managerFilePatterns": [
+      "/^config\\/python-requirements\\.lock$/",
+      "/^config\\/python-seed-requirements\\.lock$/"
+    ]
+  },
   "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
-      "matchStrings": [
-        "ARG S6_OVERLAY_VERSION=(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "just-containers/s6-overlay",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
-      "matchStrings": [
-        "ARG FZF_VERSION=(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "junegunn/fzf",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
-      "matchStrings": [
-        "ARG LAZYGIT_VERSION=(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "jesseduffield/lazygit",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
-      "matchStrings": [
-        "ARG DELTA_VERSION=(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "dandavison/delta",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
-      "matchStrings": [
-        "ARG EZA_VERSION=(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "eza-community/eza",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
     {
       "customType": "regex",
       "managerFilePatterns": ["/^Dockerfile$/"],
@@ -89,36 +39,7 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
-      "matchStrings": [
-        "(?<depName>[A-Za-z0-9][A-Za-z0-9_.-]*)==(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)"
-      ],
-      "datasourceTemplate": "pypi",
-      "versioningTemplate": "pep440"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^scripts\\/entrypoint\\.sh$/"],
-      "matchStrings": [
-        "CLAUDE_AUTH_PLUGIN_VERSION=\"(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)\""
-      ],
-      "depNameTemplate": "opencode-claude-auth",
-      "datasourceTemplate": "npm",
-      "versioningTemplate": "npm"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^scripts\\/entrypoint\\.sh$/"],
-      "matchStrings": [
-        "OH_MY_OPENAGENT_PLUGIN_VERSION=\"(?<currentValue>\\d+(?:\\.\\d+)*(?:[-+][0-9A-Za-z.-]+)?)\""
-      ],
-      "depNameTemplate": "oh-my-openagent",
-      "datasourceTemplate": "npm",
-      "versioningTemplate": "npm"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^\\.github\\/workflows\\/protected-validation\\.yml$/"],
+      "managerFilePatterns": ["/^\\.github\\/workflows\\/docker-publish\\.yml$/"],
       "matchStrings": [
         "SCOUT_VERSION: (?<currentValue>\\d+(?:\\.\\d+){2})"
       ],
@@ -157,7 +78,6 @@
         "just-containers/s6-overlay",
         "golang",
         "node",
-        "oh-my-openagent",
         "opencode-ai",
         "opencode-claude-auth",
         "paperclipai",

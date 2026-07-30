@@ -2,3 +2,5 @@
 *.py text eol=lf
 s6-overlay/**/run text eol=lf
 s6-overlay/**/type text eol=lf
+config/chromium-seccomp.json text eol=lf
+patches/*.patch text eol=lf whitespace=-blank-at-eol,-space-before-tab

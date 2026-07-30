@@ -4,7 +4,7 @@
 
 OpenCode AI coding agent with built-in web UI, Claude subscription support, 50+ dev tools, a sandboxed headless browser, optional Paperclip, and external CLIProxyAPI endpoint support. Use your existing Claude Max/Pro plan. No separate API key needed.
 
-v1.1.3 refreshes OpenCode to 1.18.4, Claude Code to 2.1.216, and compatible tool pins. It temporarily removes bundled Hermes and the Vercel, sharp-cli, concurrently, and LHCI CLIs to eliminate vulnerable dependency paths. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Every version segment is one digit: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`.
+v1.1.4 refreshes OpenCode to 1.18.9, Claude Code to 2.1.220, Paperclip to 2026.722.0, and the compatible tool pins listed below. It removes Netlify CLI and `serve`, keeps Hermes and previously removed vulnerable CLIs out of the image, and suspends HolyCode-managed oh-my-openagent installation. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Every version segment is one digit: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`.
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/coderluii/holycode?style=flat-square&logo=docker)](https://hub.docker.com/r/coderluii/holycode)
 [![GitHub Stars](https://img.shields.io/github/stars/coderluii/holycode?style=flat-square&logo=github)](https://github.com/CoderLuii/HolyCode)
@@ -56,13 +56,13 @@ That's it. Open your browser and start building.
 
 🔑 **Claude Subscription Support** — Use your existing Claude Max/Pro plan with OpenCode. No separate API key. Toggle with `ENABLE_CLAUDE_AUTH=true`.
 
-🧠 **Multi-Agent Orchestration** — Enable oh-my-openagent for parallel execution, specialized agents, and background tasks. Toggle with `ENABLE_OH_MY_OPENAGENT=true`.
+🧠 **Bring Your Own Multi-Agent Plugin** — HolyCode-managed oh-my-openagent installation is suspended in v1.1.4. The first flag-free start disables the old managed entry while keeping its settings, skills, and package cache.
 
 🌐 **Headless Browser** — Chromium + Xvfb + Playwright, pre-configured for screenshots, scraping, and browser automation.
 
-🛠️ **50+ Dev Tools:** Node.js 24.18.0 LTS with npm 12.0.1, Python 3.13 on Trixie, OpenCode 1.18.4, Paperclip 2026.707.0, eza 0.23.5, fzf 0.74.1, lazygit 0.63.1, pnpm 11.15.1, tsx 4.23.1, Vite 8.1.5, ESLint 10.7.0, Prettier 3.9.6, Wrangler 4.112.0, Prisma 7.9.0, Lighthouse 13.4.1, Netlify CLI 26.2.0, tqdm 4.69.0, uvicorn 0.51.0, Claude stable 2.1.216, TypeScript 6.0.3, NumPy 2.5.1, json-server 0.17.4, git, ripgrep, bat, delta, gh CLI, and more.
+🛠️ **50+ Dev Tools:** Node.js 24.18.0 LTS with npm 12.0.2, Python 3.13 on Trixie, OpenCode 1.18.9, Paperclip 2026.722.0, eza 0.23.5, fzf 0.74.1, lazygit 0.63.1, pnpm 11.18.0, tsx 4.23.1, Vite 8.1.5, ESLint 10.8.0, Prettier 3.9.6, Wrangler 4.115.0, Prisma 7.9.1, Lighthouse 13.4.1, tqdm 4.70.0, FastAPI 0.141.1, Uvicorn 0.52.0, Claude stable 2.1.220, TypeScript 6.0.3, NumPy 2.5.1, json-server 0.17.4, git, ripgrep, bat, delta, gh CLI, and more.
 
-TypeScript stays on 6.0.3 until the 7.x programmatic API is ready for the bundled toolchains. json-server stays on its stable 0.17.4 release. Vercel, sharp-cli, concurrently, and LHCI are removed because their current dependency trees contain fixable high or critical findings. Wrangler's removed `legacy_env` mode is not supported.
+TypeScript stays on 6.0.3 until the 7.x programmatic API is ready for the bundled toolchains. json-server stays on its stable 0.17.4 release. Netlify CLI, `serve`, Vercel, sharp-cli, concurrently, and LHCI are not bundled. Wrangler's removed `legacy_env` mode is not supported.
 
 🧩 **Bundled Services** — Optional Paperclip on port 3100. Hermes is temporarily unbundled while upstream dependency fixes land; existing `.hermes` data is preserved. CLIProxyAPI integration remains available for an externally managed endpoint.
 
@@ -84,12 +84,12 @@ TypeScript stays on 6.0.3 until the 7.x programmatic API is ready for the bundle
 | `GROQ_API_KEY` | Groq |
 | `PUID` / `PGID` | Container user UID/GID (default: 1000) |
 | `ENABLE_CLAUDE_AUTH` | Use Claude subscription instead of API key |
-| `ENABLE_OH_MY_OPENAGENT` | Enable multi-agent orchestration |
+| `ENABLE_OH_MY_OPENAGENT` | Legacy flag; `true` stops v1.1.4 while managed installation is suspended |
 | `ENABLE_PAPERCLIP` | Start the Paperclip dashboard |
 | `PAPERCLIP_DEPLOYMENT_MODE` | Keep Paperclip in Docker-safe authenticated mode |
 | `PAPERCLIP_BIND` | Paperclip reachability preset; defaults to `lan` for Docker port publishing |
 | `PAPERCLIP_ALLOWED_HOSTNAMES` | Allow comma-separated Paperclip remote hostnames/IPs, without scheme or port |
-| `ENABLE_HERMES` | Legacy flag; `true` stops v1.1.3 with a migration message while Hermes is unbundled |
+| `ENABLE_HERMES` | Legacy flag; `true` stops v1.1.4 with a migration message while Hermes is unbundled |
 | `CLIPROXYAPI_ENABLED` | Add an OpenCode `cliproxyapi` provider for an external CLIProxyAPI endpoint |
 | `CLIPROXYAPI_BASE_URL` | Externally managed CLIProxyAPI base URL reachable from the container |
 | `CLIPROXYAPI_API_KEY` | Optional CLIProxyAPI API key env reference |
@@ -104,7 +104,9 @@ Paperclip now ships its Skills catalog through the package set HolyCode installs
 
 Set `PAPERCLIP_ALLOWED_HOSTNAMES` only for trusted LAN/private hostnames or IPs. Restart after changing it; hostname guard and authentication remain enabled.
 
-Hermes is temporarily not bundled. Remove `ENABLE_HERMES=true` from older deployments before starting v1.1.3. HolyCode leaves `/home/opencode/.hermes` untouched for a future fixed release or an externally managed Hermes instance.
+Hermes is temporarily not bundled. Remove `ENABLE_HERMES=true` from older deployments before starting v1.1.4. HolyCode leaves `/home/opencode/.hermes` untouched for a future fixed release or an externally managed Hermes instance.
+
+HolyCode-managed oh-my-openagent installation is suspended in v1.1.4. With `ENABLE_OH_MY_OPENAGENT=true`, startup stops without changing plugin state. Remove the flag and the first successful start disables the old active entry, records its package spec, and preserves its settings, skills, and package cache. Add it back manually only if you accept its current upstream dependency risk; HolyCode then treats it as user-managed.
 
 CLIProxyAPI support is disabled by default and targets an externally managed endpoint. HolyCode does not bundle the sidecar until its release binaries have verifiable compiler provenance and pass `govulncheck`. The integration still adds a separate `cliproxyapi` provider without changing `ENABLE_CLAUDE_AUTH`, `opencode-claude-auth`, or `/home/opencode/.claude`.
 
@@ -130,7 +132,9 @@ docker compose pull
 docker compose up -d
 ```
 
-Tagged images pin direct npm, PyPI, and GitHub-release versions. Binary assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is pinned to `@anthropic-ai/claude-code@2.1.216`. npm lifecycle scripts are disabled during installation and validated by exact package version, integrity, architecture, and script body before approved scripts run. Debian packages resolve from current Trixie repositories at build time, and boot-installed OpenCode plugins are live registry installs outside the image SBOM. Netlify CLI is limited to remote build/deploy commands; its local functions binaries are removed. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without claiming byte-for-byte reproducibility or universal freshness.
+`v1.1.4` upgrades Paperclip from 2026.707.0 to 2026.722.0. Keep untouched pre-upgrade copies of your volumes until onboarding, Skills, agents, connections, and normal provider work pass. Roll back only by restoring those copies with image `1.1.3`; do not point `1.1.3` at Paperclip data already migrated by `1.1.4`.
+
+Tagged images pin direct npm, PyPI, and GitHub-release versions. Binary assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is pinned to `@anthropic-ai/claude-code@2.1.220`. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file and an offline packaging-tool seed. npm lifecycle scripts are disabled during installation and validated by exact package version, integrity, architecture, and script body before approved scripts run. Debian packages resolve from current Trixie repositories at build time. User-installed plugins remain outside the image SBOM. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without claiming byte-for-byte reproducibility, universal freshness, or zero total findings.
 
 ## Links
 

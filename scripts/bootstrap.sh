@@ -16,17 +16,15 @@ SOURCE_DIR="/usr/local/share/holycode"
 sync_shipped_skills() {
     local source_skills_dir="$SOURCE_DIR/skills"
     local target_skills_dir="$OC_HOME/.config/opencode/skills"
-    local oh_my_openagent_skill="oh-my-openagent-setup"
 
     [ -d "$source_skills_dir" ] || return 0
 
     mkdir -p "$target_skills_dir"
 
     find "$source_skills_dir" -mindepth 1 -maxdepth 1 -type d | while read -r skill_dir; do
-        local skill_name target_dir marker_file
+        local skill_name target_dir
         skill_name=$(basename "$skill_dir")
         target_dir="$target_skills_dir/$skill_name"
-        marker_file="$target_dir/.holycode-managed"
 
         if [ -e "$target_dir" ]; then
             echo "[bootstrap] Skill '$skill_name' already exists, skipping"
@@ -34,9 +32,6 @@ sync_shipped_skills() {
         fi
 
         cp -R "$skill_dir" "$target_dir"
-        if [ "$skill_name" = "$oh_my_openagent_skill" ]; then
-            touch "$marker_file"
-        fi
         echo "[bootstrap] Installed built-in skill '$skill_name'"
     done
 

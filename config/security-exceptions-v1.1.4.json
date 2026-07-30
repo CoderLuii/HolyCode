@@ -1,0 +1,74 @@
+{
+  "release": "v1.1.4",
+  "reviewDate": "2026-07-29",
+  "exceptions": [
+    {
+      "cve": "CVE-2026-16804",
+      "package": "chromium",
+      "installedVersion": "150.0.7871.181-1~deb13u1",
+      "fixedVersion": "150.0.7871.186",
+      "availableVersion": "150.0.7871.181-1~deb13u1",
+      "approvedSource": "Debian Trixie security",
+      "reason": "Debian Trixie security has not published the fixed Chromium build.",
+      "reachability": "Chromium renders pages requested by the container user.",
+      "controls": [
+        "Chromium runs as the unprivileged opencode user.",
+        "The setuid sandbox and constrained seccomp profile remain enabled.",
+        "No browser service is exposed as a public container port."
+      ],
+      "expires": "2026-08-28",
+      "removalTrigger": "Upgrade when Debian Trixie publishes Chromium 150.0.7871.186 or newer."
+    },
+    {
+      "cve": "CVE-2026-16805",
+      "package": "chromium",
+      "installedVersion": "150.0.7871.181-1~deb13u1",
+      "fixedVersion": "150.0.7871.186",
+      "availableVersion": "150.0.7871.181-1~deb13u1",
+      "approvedSource": "Debian Trixie security",
+      "reason": "Debian Trixie security has not published the fixed Chromium build.",
+      "reachability": "Chromium renders pages requested by the container user.",
+      "controls": [
+        "Chromium runs as the unprivileged opencode user.",
+        "The setuid sandbox and constrained seccomp profile remain enabled.",
+        "No browser service is exposed as a public container port."
+      ],
+      "expires": "2026-08-28",
+      "removalTrigger": "Upgrade when Debian Trixie publishes Chromium 150.0.7871.186 or newer."
+    },
+    {
+      "cve": "CVE-2026-16806",
+      "package": "chromium",
+      "installedVersion": "150.0.7871.181-1~deb13u1",
+      "fixedVersion": "150.0.7871.186",
+      "availableVersion": "150.0.7871.181-1~deb13u1",
+      "approvedSource": "Debian Trixie security",
+      "reason": "Debian Trixie security has not published the fixed Chromium build.",
+      "reachability": "Chromium renders pages requested by the container user.",
+      "controls": [
+        "Chromium runs as the unprivileged opencode user.",
+        "The setuid sandbox and constrained seccomp profile remain enabled.",
+        "No browser service is exposed as a public container port."
+      ],
+      "expires": "2026-08-28",
+      "removalTrigger": "Upgrade when Debian Trixie publishes Chromium 150.0.7871.186 or newer."
+    },
+    {
+      "cve": "CVE-2026-16807",
+      "package": "chromium",
+      "installedVersion": "150.0.7871.181-1~deb13u1",
+      "fixedVersion": "150.0.7871.186",
+      "availableVersion": "150.0.7871.181-1~deb13u1",
+      "approvedSource": "Debian Trixie security",
+      "reason": "Debian Trixie security has not published the fixed Chromium build.",
+      "reachability": "Chromium renders pages requested by the container user.",
+      "controls": [
+        "Chromium runs as the unprivileged opencode user.",
+        "The setuid sandbox and constrained seccomp profile remain enabled.",
+        "No browser service is exposed as a public container port."
+      ],
+      "expires": "2026-08-28",
+      "removalTrigger": "Upgrade when Debian Trixie publishes Chromium 150.0.7871.186 or newer."
+    }
+  ]
+}

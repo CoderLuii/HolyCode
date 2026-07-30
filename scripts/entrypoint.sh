@@ -11,47 +11,22 @@ OC_USER="opencode"
 OC_HOME="/home/opencode"
 WORKSPACE_DIR="/workspace"
 CLAUDE_AUTH_PLUGIN_NAME="opencode-claude-auth"
-CLAUDE_AUTH_PLUGIN_VERSION="2.0.0"
-OH_MY_OPENAGENT_PLUGIN_NAME="oh-my-openagent"
-OH_MY_OPENAGENT_PLUGIN_VERSION="4.19.0"
+CLAUDE_AUTH_PLUGIN_VERSION="2.1.5"
+CLAUDE_AUTH_PLUGIN_SOURCE="/usr/local/share/holycode/plugins/opencode-claude-auth"
 
 sync_shipped_skills() {
     local source_skills_dir="/usr/local/share/holycode/skills"
     local target_skills_dir="$OC_HOME/.config/opencode/skills"
-    local oh_my_openagent_skill="oh-my-openagent-setup"
 
     [ -d "$source_skills_dir" ] || return 0
 
     mkdir -p "$target_skills_dir"
     chown "$PUID:$PGID" "$target_skills_dir"
 
-    local oh_skill_target="$target_skills_dir/$oh_my_openagent_skill"
-    local oh_skill_marker="$oh_skill_target/.holycode-managed"
-
-    if [ "${ENABLE_OH_MY_OPENAGENT}" = "true" ]; then
-        if [ ! -e "$oh_skill_target" ]; then
-            if [ -d "$source_skills_dir/$oh_my_openagent_skill" ]; then
-                cp -R "$source_skills_dir/$oh_my_openagent_skill" "$oh_skill_target"
-                touch "$oh_skill_marker"
-                chown -R "$PUID:$PGID" "$oh_skill_target"
-                echo "[entrypoint] Installed built-in skill '$oh_my_openagent_skill'"
-            fi
-        elif [ ! -f "$oh_skill_marker" ]; then
-            echo "[entrypoint] Skill '$oh_my_openagent_skill' exists (not HolyCode-managed), skipping"
-        fi
-    else
-        if [ -f "$oh_skill_marker" ]; then
-            rm -rf "$oh_skill_target"
-            echo "[entrypoint] Removed HolyCode-managed skill '$oh_my_openagent_skill'"
-        fi
-    fi
-
     find "$source_skills_dir" -mindepth 1 -maxdepth 1 -type d | while read -r skill_dir; do
         local skill_name target_dir
         skill_name=$(basename "$skill_dir")
         target_dir="$target_skills_dir/$skill_name"
-
-        [ "$skill_name" = "$oh_my_openagent_skill" ] && continue
 
         if [ -e "$target_dir" ]; then
             continue
@@ -126,6 +101,46 @@ with open(config_file, 'w', encoding='utf-8') as f:
 PY
 }
 
+migrate_oh_my_openagent_config() {
+    local config_file="$1"
+    local tui_config_file="$OC_HOME/.config/opencode/tui.json"
+    local plugin_name="oh-my-openagent"
+    local marker_file="$OC_HOME/.config/opencode/.holycode-oh-my-openagent-migrated-v1.1.4"
+    local config_spec tui_spec plugin_spec
+    local removed=0
+
+    config_spec="$(plugin_config_spec "$config_file" "$plugin_name" || true)"
+    tui_spec="$(plugin_config_spec "$tui_config_file" "$plugin_name" || true)"
+    plugin_spec="${config_spec:-$tui_spec}"
+    [ -n "$plugin_spec" ] || return 0
+
+    if [ -f "$marker_file" ]; then
+        echo "[entrypoint] WARNING: '$plugin_spec' was added after the v1.1.4 migration and is user-managed."
+        echo "[entrypoint] HolyCode will not install or update it. Remove it from your OpenCode configuration to disable it."
+        return 0
+    fi
+
+    if [ -n "$config_spec" ]; then
+        remove_plugin_config "$config_file" "$plugin_name"
+        removed=1
+    fi
+    if [ -n "$tui_spec" ]; then
+        remove_plugin_config "$tui_config_file" "$plugin_name"
+        removed=1
+    fi
+
+    if [ "$removed" -eq 1 ]; then
+        runuser -u "$OC_USER" -- python3 - "$marker_file" "$plugin_spec" <<'PY'
+from pathlib import Path
+import sys
+
+Path(sys.argv[1]).write_text(f"{sys.argv[2]}\n", encoding="utf-8")
+PY
+        echo "[entrypoint] Disabled legacy HolyCode-managed '$plugin_spec' configuration."
+        echo "[entrypoint] Its package cache and settings were preserved; add it back manually to accept the current upstream risk."
+    fi
+}
+
 plugin_installed_version() {
     local plugin_name="$1"
     local plugin_spec="${2:-}"
@@ -156,18 +171,37 @@ print(version)
 PY
 }
 
-install_plugin_spec() {
-    local plugin_spec="$1"
+set_plugin_config() {
+    local config_file="$1"
+    local plugin_name="$2"
+    local plugin_spec="$3"
 
-    runuser -u "$OC_USER" -- env \
-        HOME="$OC_HOME" \
-        USER="$OC_USER" \
-        LOGNAME="$OC_USER" \
-        XDG_CONFIG_HOME="$OC_HOME/.config" \
-        XDG_CACHE_HOME="$OC_HOME/.cache" \
-        XDG_DATA_HOME="$OC_HOME/.local/share" \
-        XDG_STATE_HOME="$OC_HOME/.local/state" \
-        opencode plugin "$plugin_spec" -g -f
+    runuser -u "$OC_USER" -- python3 - "$config_file" "$plugin_name" "$plugin_spec" <<'PY'
+import json
+import sys
+
+config_file, plugin_name, plugin_spec = sys.argv[1:]
+with open(config_file, 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+plugins = config.get('plugin', [])
+if not isinstance(plugins, list):
+    plugins = []
+plugins = [
+    plugin
+    for plugin in plugins
+    if not (
+        isinstance(plugin, str)
+        and (plugin == plugin_name or plugin.startswith(f'{plugin_name}@'))
+    )
+]
+plugins.append(plugin_spec)
+config['plugin'] = plugins
+
+with open(config_file, 'w', encoding='utf-8') as f:
+    json.dump(config, f, indent=2)
+    f.write('\n')
+PY
 }
 
 log_plugin_installed_version() {
@@ -182,12 +216,13 @@ log_plugin_installed_version() {
     fi
 }
 
-ensure_plugin_installed() {
-    local plugin_name="$1"
-    local plugin_version="$2"
+install_offline_claude_auth() {
+    local plugin_name="$CLAUDE_AUTH_PLUGIN_NAME"
+    local plugin_version="$CLAUDE_AUTH_PLUGIN_VERSION"
     local desired_spec="${plugin_name}@${plugin_version}"
     local configured_spec installed_version target_spec target_version
     local update_mode="${HOLYCODE_PLUGIN_UPDATE:-manual}"
+    local package_root package_dir
 
     if [ "$update_mode" != "auto" ]; then
         update_mode="manual"
@@ -206,17 +241,33 @@ ensure_plugin_installed() {
         target_version="${target_spec#"$plugin_name"@}"
     fi
 
+    if [ "$update_mode" = "manual" ] && [ "$target_spec" != "$desired_spec" ] && \
+       [ -n "$installed_version" ] && [ "$installed_version" = "$target_version" ]; then
+        echo "[entrypoint] Plugin '$plugin_name' remains at '$target_spec' (manual mode)"
+        log_plugin_installed_version "$plugin_name"
+        return 0
+    fi
+
     if [ "$configured_spec" != "$target_spec" ] || \
        [ -z "$installed_version" ] || \
        { [ -n "$target_version" ] && [ "$target_version" != "latest" ] && [ "$installed_version" != "$target_version" ]; }; then
+        if [ "$target_spec" != "$desired_spec" ]; then
+            echo "[entrypoint] Plugin '$plugin_name' remains at '$target_spec' (manual mode); no matching offline payload is bundled"
+            log_plugin_installed_version "$plugin_name"
+            return 0
+        fi
         if [ "$update_mode" = "auto" ] && [ -n "$configured_spec" ]; then
             echo "[entrypoint] Plugin '$plugin_name' syncing to $plugin_version (auto mode)"
         else
             echo "[entrypoint] Plugin '$plugin_name' installing $target_spec"
         fi
-        if ! install_plugin_spec "$target_spec"; then
-            echo "[entrypoint] WARNING: Failed to install plugin '$target_spec'"
-        fi
+        package_root="$OC_HOME/.cache/opencode/packages/$target_spec/node_modules"
+        package_dir="$package_root/$plugin_name"
+        rm -rf "$package_dir"
+        mkdir -p "$package_root"
+        cp -a "$CLAUDE_AUTH_PLUGIN_SOURCE" "$package_dir"
+        chown -R "$PUID:$PGID" "$OC_HOME/.cache/opencode/packages/$target_spec"
+        set_plugin_config "$CONFIG_FILE" "$plugin_name" "$target_spec"
     fi
 
     log_plugin_installed_version "$plugin_name"
@@ -316,8 +367,14 @@ fi
 sync_shipped_skills
 
 if [ "${ENABLE_HERMES}" = "true" ]; then
-    echo "[entrypoint] ERROR: The bundled Hermes is temporarily unavailable in v1.1.3 because its pinned dependencies have unresolved security updates." >&2
+    echo "[entrypoint] ERROR: The bundled Hermes is temporarily unavailable in v1.1.4 because its pinned dependencies have unresolved security updates." >&2
     echo "[entrypoint] Your /home/opencode/.hermes is preserved. Remove ENABLE_HERMES=true to start HolyCode, or run Hermes separately until bundling returns." >&2
+    exit 1
+fi
+
+if [ "${ENABLE_OH_MY_OPENAGENT}" = "true" ]; then
+    echo "[entrypoint] ERROR: HolyCode-managed oh-my-openagent installation is unavailable in v1.1.4." >&2
+    echo "[entrypoint] Your existing configuration and data were not changed. Remove ENABLE_OH_MY_OPENAGENT=true to start HolyCode, then manage the plugin directly if you accept its current upstream risk." >&2
     exit 1
 fi
 
@@ -333,24 +390,16 @@ fi
 # ---------- Plugin toggles (run every boot for enable/disable) ----------
 CONFIG_FILE="$OC_HOME/.config/opencode/opencode.json"
 if [ -f "$CONFIG_FILE" ]; then
+    migrate_oh_my_openagent_config "$CONFIG_FILE"
+
     # Claude Auth plugin
     if [ "${ENABLE_CLAUDE_AUTH}" = "true" ]; then
-        ensure_plugin_installed "$CLAUDE_AUTH_PLUGIN_NAME" "$CLAUDE_AUTH_PLUGIN_VERSION"
+        install_offline_claude_auth
     else
         if remove_plugin_config "$CONFIG_FILE" "$CLAUDE_AUTH_PLUGIN_NAME"; then
             echo "[entrypoint] Claude Auth plugin disabled"
         fi
         remove_plugin_config "$OC_HOME/.config/opencode/tui.json" "$CLAUDE_AUTH_PLUGIN_NAME" || true
-    fi
-
-    # oh-my-openagent plugin
-    if [ "${ENABLE_OH_MY_OPENAGENT}" = "true" ]; then
-        ensure_plugin_installed "$OH_MY_OPENAGENT_PLUGIN_NAME" "$OH_MY_OPENAGENT_PLUGIN_VERSION"
-    else
-        if remove_plugin_config "$CONFIG_FILE" "$OH_MY_OPENAGENT_PLUGIN_NAME"; then
-            echo "[entrypoint] oh-my-openagent plugin disabled"
-        fi
-        remove_plugin_config "$OC_HOME/.config/opencode/tui.json" "$OH_MY_OPENAGENT_PLUGIN_NAME" || true
     fi
 
     # CLIProxyAPI provider

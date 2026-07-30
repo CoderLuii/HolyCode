@@ -30,7 +30,7 @@ OpenCode 在容器中运行，一切都已预先安装。50+ 开发工具，10+ 
 
 **支持你的 Claude 订阅。** 启用 Claude Auth 插件，使用你现有的 Claude Max/Pro 计划。无需单独的 API 密钥。
 
-**内置多代理编排。** 启用 oh-my-openagent，将 OpenCode 变成具有并行执行能力的协调代理系统。
+**目前请自行管理多代理插件。** HolyCode 管理的 oh-my-openagent 安装已在 v1.1.4 中暂停。移除旧设置后的首次成功启动会停用之前由 HolyCode 管理的插件条目，同时保留设置、Skills 和软件包缓存。
 
 **你本来要花一个小时恢复环境。或者直接运行 `docker compose up`。**
 > **不想自托管？** [HolyCode Cloud](https://holycode.coderluii.dev/cloud) 即将推出。相同的工具，零配置。抢先体验免费。
@@ -328,9 +328,9 @@ services:
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_CLAUDE_AUTH=true
 
-      # --- oh-my-openagent (multi-agent orchestration for OpenCode) ---
-      # Installs automatically on first boot when enabled
-      # Toggle on/off with docker compose down && up -d
+      # --- Legacy oh-my-openagent flag ---
+      # Managed installation is unavailable in v1.1.4. Existing config is preserved.
+      # Startup stops with a migration message while this flag is true.
       # - ENABLE_OH_MY_OPENAGENT=true
 
 ```
@@ -370,25 +370,23 @@ services:
 | `OPENCODE_SERVER_PASSWORD` | （无） | 使用基本认证保护 Web UI |
 | `OPENCODE_SERVER_USERNAME` | `opencode` | Web UI 基本认证用户名 |
 | `ENABLE_CLAUDE_AUTH` | （无） | 设置为 `true` 以使用 Claude 订阅而非 API 密钥 |
-| `ENABLE_OH_MY_OPENAGENT` | （无） | 设置为 `true` 以启用多代理编排插件 |
+| `ENABLE_OH_MY_OPENAGENT` | （无） | 旧设置；设为 `true` 时会停止启动且不做更改，移除后的一次性迁移会停用之前的活动条目 |
 | `ENABLE_PAPERCLIP` | （无） | 设置为 `true` 以启动 Paperclip 仪表板和代理看板 |
 | `PAPERCLIP_PORT` | `3100` | 覆盖 Paperclip 使用的容器端口 |
 | `PAPERCLIP_INSTANCE_ID` | `default` | 用于隔离状态的本地 Paperclip 实例名称 |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
-| `ENABLE_HERMES` | （无） | 旧设置；在 Hermes 未捆绑期间，v1.1.3 会显示迁移提示并停止启动 |
+| `ENABLE_HERMES` | （无） | 旧设置；在 Hermes 未捆绑期间，v1.1.4 会显示迁移提示并停止启动 |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | 插件更新模式：`manual`（只安装缺失项并保留用户版本）或 `auto`（启动时同步已声明的 pin） |
 
-> 插件开关（`ENABLE_CLAUDE_AUTH`、`ENABLE_OH_MY_OPENAGENT`）在容器重启时生效。设置环境变量并运行 `docker compose down && up -d`。
+> `ENABLE_CLAUDE_AUTH` 在容器重启时生效。`ENABLE_OH_MY_OPENAGENT` 现在是旧设置，v1.1.4 会显示迁移提示并停止启动。
 
 > `HOLYCODE_PLUGIN_UPDATE` 控制插件包更新。`manual`（默认）仅在插件缺失时安装已启用的插件并保留用户版本。`auto` 安装缺失的插件并在每次启动时同步已声明的 pin。这与 `OPENCODE_DISABLE_AUTOUPDATE` 不同，后者只影响 OpenCode 本身。
 
-> `ENABLE_OH_MY_OPENAGENT=true` 启用插件并公开内置的 `/oh-my-openagent-setup` 技能。该技能仅在插件启用时出现。使用它在 `~/.config/opencode/oh-my-openagent.jsonc` 创建或更新插件专用配置文件。
-
-> HolyCode 的默认选择器策略：可见：`sisyphus`、`hephaestus`、`prometheus`、`atlas`；隐藏子代理：`oracle`、`librarian`、`explore`、`metis`、`momus`、`multimodal-looker`、`sisyphus-junior`。如果你添加了新提供商且默认可见模型看起来过时，请重新运行 `/oh-my-openagent-setup`，然后：`docker exec -it holycode bash -c "bunx oh-my-opencode doctor"` 和 `docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities"`。
+> HolyCode 不会在 v1.1.4 中安装 oh-my-openagent。如果旧安装中仍有 `ENABLE_OH_MY_OPENAGENT=true`，容器会停止启动且不更改插件状态。移除该设置后的首次成功启动会停用之前的活动条目，同时保留设置、Skills 和软件包缓存。
 
 > `ENABLE_PAPERCLIP=true` 在容器内的端口 `3100` 上启动 Paperclip。打开仪表板，创建公司，然后在那里雇用 OpenCode 支持的代理。Paperclip 自动持久化到 `~/.paperclip`。
 
-> v1.1.3 暂时不捆绑 Hermes。如果旧安装中仍有 `ENABLE_HERMES=true`，HolyCode 会显示简短的迁移提示并停止启动。`/home/opencode/.hermes` 会保持不变，以便将来恢复集成或还原之前的快照。
+> Hermes 在 v1.1.4 中仍不可用。如果旧安装中仍有 `ENABLE_HERMES=true`，HolyCode 会显示简短的迁移提示并停止启动。`/home/opencode/.hermes` 会保持不变，以便将来恢复集成或还原之前的快照。
 
 > `GIT_USER_NAME` 和 `GIT_USER_EMAIL` 仅在首次启动时应用。要重新应用，删除哨兵文件并重启：`docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` 然后 `docker compose restart`。
 
@@ -429,13 +427,13 @@ services:
 | 运行时 | 版本 |
 |---------|---------|
 | Node.js | 24.18.0 (LTS) |
-| npm | 12.0.1 |
+| npm | 12.0.2 |
 | Python | 3.13（Trixie） |
 | pip | 随 Python 3.13 捆绑 |
 
 > 发布标签严格使用 `vX.Y.Z`。Docker 镜像标签会去掉 `v`。`v1.0.9` 之后使用 `v1.1.0`，`v1.1.9` 之后使用 `v1.2.0`，`v1.9.9` 之后使用 `v2.0.0`。`v1.0.10` 到 `v1.0.13` 保持不可变。
 
-> v1.1.3 将 OpenCode 更新到 1.18.4、Claude Code 更新到 2.1.216、oh-my-openagent 更新到 4.19.0、s6-overlay 更新到 3.2.3.2、fzf 更新到 0.74.1、pnpm 更新到 11.15.1、Vite 更新到 8.1.5、Prettier 更新到 3.9.6、Wrangler 更新到 4.112.0、Prisma 更新到 7.9.0，并将 Lighthouse 更新到 13.4.1。Paperclip 保持在 2026.707.0。Hermes 暂时不捆绑；Vercel、LHCI、sharp-cli 和 concurrently 已从镜像中移除。Netlify 仅支持远程构建和部署。外部管理的 CLIProxyAPI endpoint 继续受支持。
+> v1.1.4 使用 OpenCode 1.18.9、Claude Code 2.1.220、Paperclip 2026.722.0、npm 12.0.2、pnpm 11.18.0、ESLint 10.8.0、Wrangler 4.115.0 和 Prisma 7.9.1。Python 包含 tqdm 4.70.0、FastAPI 0.141.1 和 Uvicorn 0.52.0。`opencode-claude-auth` 2.1.5 已放入镜像，并在启动时离线安装。Netlify CLI 和 npm 包 `serve` 已移除。HolyCode 管理的 oh-my-openagent 安装已暂停，Hermes 仍不可用，外部管理的 CLIProxyAPI endpoint 继续受支持。
 
 </details>
 
@@ -507,9 +505,9 @@ Paperclip 继续作为 OpenCode 之上的可选服务捆绑。CLIProxyAPI 集成
 
 ### Hermes Agent（暂时不捆绑）
 
-v1.1.3 暂时移除 Hermes 运行时服务，因为其当前依赖项尚未兼容所需的安全修复。HolyCode 不会启动 Hermes 进程，也不会发布其端口。
+Hermes 在 v1.1.4 中仍不可用，因为其当前依赖项尚未兼容所需的安全修复。HolyCode 不会启动 Hermes 进程，也不会发布其端口。
 
-`/home/opencode/.hermes` 中的现有数据不会被删除或迁移。请从旧配置中移除 `ENABLE_HERMES=true`，让 v1.1.3 正常启动。保留该目录，以便将来恢复集成或还原未被修改的旧快照。
+`/home/opencode/.hermes` 中的现有数据不会被删除或迁移。请从旧配置中移除 `ENABLE_HERMES=true`，让 v1.1.4 正常启动。保留该目录，以便将来恢复集成或还原未被修改的旧快照。
 
 ### Paperclip
 
@@ -601,20 +599,9 @@ docker exec -it holycode bash -c "opencode providers list"
 docker exec -it holycode bash -c "opencode providers login"
 ```
 
-### oh-my-openagent 设置和重新配置
+### oh-my-openagent 迁移
 
-如果你启用了 `ENABLE_OH_MY_OPENAGENT=true`，`/oh-my-openagent-setup` 技能就会可用。使用它来创建或刷新插件专用配置：
-
-```text
-/oh-my-openagent-setup
-```
-
-如果你添加了新提供商且默认可见模型看起来过时，请重新运行 `/oh-my-openagent-setup`，然后：
-
-```bash
-docker exec -it holycode bash -c "bunx oh-my-opencode doctor"
-docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities"
-```
+HolyCode 不会在 v1.1.4 中安装或更新 oh-my-openagent。设置 `ENABLE_OH_MY_OPENAGENT=true` 时，启动会停止且不更改插件状态。移除该设置后的首次成功启动会停用旧条目、记录其软件包说明，并保留设置、Skills 和缓存。之后如果你手动重新添加插件，HolyCode 会将其视为用户管理。
 
 ### 常用命令
 
@@ -627,8 +614,6 @@ docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities
 | `opencode serve` | 无头 API 服务器 |
 | `opencode providers list` | 显示已配置的提供商 |
 | `opencode providers login` | 添加或切换提供商 |
-| `bunx oh-my-opencode doctor` | 诊断 oh-my-openagent 配置和模型解析 |
-| `bunx oh-my-opencode refresh-model-capabilities` | 刷新提供商/模型能力缓存 |
 | `opencode models` | 列出可用模型 |
 | `opencode models <provider>` | 列出特定提供商的模型 |
 | `opencode stats` | 显示 token 用量和费用 |
@@ -698,6 +683,8 @@ environment:
 拉取最新镜像并重新创建容器。你的数据保持不变。
 
 如果从 `v1.1.3` 之前的版本升级，请下载上面的 seccomp 配置文件，并在重新创建容器前把 `security_opt` 添加到 `holycode` 服务中。
+
+v1.1.4 会把 Paperclip 从 2026.707.0 迁移到 2026.722.0。回滚时必须使用镜像 `1.1.3` 和升级到 v1.1.4 前未改动的卷。不要用镜像 `1.1.3` 启动已经由 v1.1.4 迁移过的 Paperclip 数据。
 
 ```bash
 docker compose pull

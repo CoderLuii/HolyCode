@@ -24,7 +24,8 @@ HolyCode does not modify OpenCode's source code.
 
 Optional OpenCode plugin that bridges Claude Code OAuth credentials into
 OpenCode. Not installed by default. Enabled via ENABLE_CLAUDE_AUTH=true
-environment variable. Auto-installed by OpenCode's plugin system at
+environment variable. HolyCode includes the exact `2.1.5` npm payload in the
+image after registry-integrity verification, then installs it offline at
 container startup when enabled. HolyCode does not modify this plugin.
 
 Note: This plugin impersonates the Claude CLI at the HTTP level to pass
@@ -39,9 +40,13 @@ Terms of Service.
 - npm: https://www.npmjs.com/package/oh-my-openagent
 
 Optional OpenCode plugin for multi-agent orchestration. Not installed by
-default. Enabled via ENABLE_OH_MY_OPENAGENT=true environment variable.
-Auto-installed by OpenCode's plugin system at container startup when
-enabled. HolyCode does not modify this plugin.
+default. HolyCode-managed installation is suspended in v1.1.4 while the
+current upstream package tree retains unresolved security findings.
+ENABLE_OH_MY_OPENAGENT=true stops startup with a migration message and does
+not modify existing user configuration. After the flag is removed, the first
+v1.1.4 start removes the legacy active entry from OpenCode configuration while
+preserving plugin settings, skills, and cached package files. HolyCode does not
+distribute or modify this plugin in v1.1.4.
 
 ## s6-overlay
 
@@ -57,7 +62,7 @@ enabled. HolyCode does not modify this plugin.
 
 - License: Artistic-2.0
 - Source: https://github.com/npm/cli
-- Version: 12.0.1
+- Version: 12.0.2
 
 ## Debian GNU/Linux
 
@@ -90,9 +95,9 @@ permits the namespace syscalls required by Chromium's sandbox.
 
 - License: SEE LICENSE IN README.md
 - npm: https://www.npmjs.com/package/@anthropic-ai/claude-code
-- Version: 2.1.216
+- Version: 2.1.220
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.216`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.220`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -103,7 +108,7 @@ ENABLE_CLAUDE_AUTH=true.
 - npm: https://www.npmjs.com/package/paperclipai
 - Catalog npm: https://www.npmjs.com/package/@paperclipai/skills-catalog
 
-Installed via npm as the global package `paperclipai@2026.707.0`. Paperclip includes
+Installed via npm as the global package `paperclipai@2026.722.0`. Paperclip includes
 @paperclipai/skills-catalog through its published package set, which HolyCode
 uses for the Skills page. HolyCode validates the package version, integrity,
 architecture, and lifecycle-script body before running the exact embedded PostgreSQL
@@ -117,8 +122,8 @@ an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 - Source: https://github.com/cli/cli
 - Version: 2.96.0 (`b300f2ec7ec9dc9addc39b2ad88c54097ded7ca0`)
 
-Built from the exact upstream tag with Go 1.26.5 because the official 2.96.0
-package was compiled before the Go standard-library fix for CVE-2026-39822.
+Built from the exact upstream tag with Go 1.26.5 and reviewed module updates
+for gRPC 1.82.1, klauspost/compress 1.18.7, and x/text 0.39.0.
 
 ## lazygit
 
@@ -126,6 +131,9 @@ package was compiled before the Go standard-library fix for CVE-2026-39822.
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
 - Version: 0.63.1
+
+Built from the exact upstream tag with the reviewed x/text 0.39.0 module
+update.
 
 ## NumPy
 
@@ -139,11 +147,30 @@ package was compiled before the Go standard-library fix for CVE-2026-39822.
 - Source: https://github.com/pypa/packaging
 - Version: 26.2
 
+## pip vendored msgpack
+
+- License: Apache-2.0
+- Source: https://github.com/msgpack/msgpack-python
+- Version: 1.2.1
+
+HolyCode replaces pip 26.2's internal msgpack copy with the hash-verified
+official PyPI source. The replacement remains under pip's vendored namespace.
+
+## pip vendored pkg_resources
+
+- License: MIT
+- Source: https://github.com/pypa/setuptools
+- Version: 80.9.0
+
+HolyCode replaces pip 26.2's internal pkg_resources copy with the
+hash-verified official setuptools source. A reviewed namespace-import patch
+keeps the module compatible with pip's vendoring layout.
+
 ## Wrangler
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.112.0
+- Version: 4.115.0
 
 ## delta
 
@@ -174,6 +201,10 @@ package was compiled before the Go standard-library fix for CVE-2026-39822.
 - License: MIT
 - Copyright: Junegunn Choi
 - Source: https://github.com/junegunn/fzf
+- Version: 0.74.1
+
+Built from the exact upstream tag with the reviewed x/sys 0.44.0 module
+update.
 
 ## bat
 

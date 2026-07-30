@@ -30,7 +30,7 @@ OpenCode läuft in einem Container mit allem bereits installiert. 50+ Entwicklun
 
 **Funktioniert mit deinem Claude-Abonnement.** Aktiviere das Claude Auth-Plugin und nutze deinen bestehenden Claude Max/Pro-Plan. Kein separater API-Schlüssel nötig.
 
-**Multi-Agenten-Orchestrierung integriert.** Aktiviere oh-my-openagent und verwandle OpenCode in ein koordiniertes Agentensystem mit paralleler Ausführung.
+**Mehragenten-Plugin vorerst selbst verwalten.** Die von HolyCode verwaltete Installation von oh-my-openagent ist in v1.1.4 ausgesetzt. Beim ersten erfolgreichen Start ohne das alte Flag wird der frühere verwaltete Plugin-Eintrag deaktiviert; Einstellungen, Skills und Paket-Cache bleiben erhalten.
 
 **Du wolltest eine Stunde damit verbringen, deine Umgebung wiederherzustellen. Oder du kannst einfach `docker compose up` ausführen.**
 > **Kein Self-Hosting gewünscht?** [HolyCode Cloud](https://holycode.coderluii.dev/cloud) kommt. Dieselben Werkzeuge, null Einrichtung. Frühzugang ist kostenlos.
@@ -328,9 +328,9 @@ services:
       # Toggle on/off with docker compose down && up -d
       # - ENABLE_CLAUDE_AUTH=true
 
-      # --- oh-my-openagent (multi-agent orchestration for OpenCode) ---
-      # Installs automatically on first boot when enabled
-      # Toggle on/off with docker compose down && up -d
+      # --- Legacy oh-my-openagent flag ---
+      # Managed installation is unavailable in v1.1.4. Existing config is preserved.
+      # Startup stops with a migration message while this flag is true.
       # - ENABLE_OH_MY_OPENAGENT=true
 
 ```
@@ -370,25 +370,23 @@ services:
 | `OPENCODE_SERVER_PASSWORD` | (keiner) | Schützt das Web-UI mit Basisauthentifizierung |
 | `OPENCODE_SERVER_USERNAME` | `opencode` | Benutzername für Web-UI-Basisauthentifizierung |
 | `ENABLE_CLAUDE_AUTH` | (keiner) | Auf `true` setzen, um Claude-Abonnement statt API-Schlüssel zu verwenden |
-| `ENABLE_OH_MY_OPENAGENT` | (keiner) | Auf `true` setzen, um Multi-Agenten-Orchestrierungs-Plugin zu aktivieren |
+| `ENABLE_OH_MY_OPENAGENT` | (keiner) | Veraltete Einstellung; `true` beendet den Start ohne Änderungen, danach deaktiviert eine einmalige Migration den alten aktiven Eintrag |
 | `ENABLE_PAPERCLIP` | (keiner) | Auf `true` setzen, um das Paperclip-Dashboard und Agenten-Board zu starten |
 | `PAPERCLIP_PORT` | `3100` | Überschreibt den Container-Port für Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Lokaler Paperclip-Instanzname für isolierten Zustand |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
-| `ENABLE_HERMES` | (keiner) | Veraltete Einstellung; v1.1.3 beendet den Start mit einem Migrationshinweis, solange Hermes nicht gebündelt ist |
+| `ENABLE_HERMES` | (keiner) | Veraltete Einstellung; v1.1.4 beendet den Start mit einem Migrationshinweis, solange Hermes nicht gebündelt ist |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin-Aktualisierungsmodus: `manual` (installiert nur fehlende Plugins und lässt Benutzer-Versionen unverändert) oder `auto` (synchronisiert deklarierte Pins beim Start) |
 
-> Plugin-Umschalter (`ENABLE_CLAUDE_AUTH`, `ENABLE_OH_MY_OPENAGENT`) werden beim Neustart des Containers wirksam. Umgebungsvariable setzen und `docker compose down && up -d` ausführen.
+> `ENABLE_CLAUDE_AUTH` wird beim Neustart des Containers wirksam. `ENABLE_OH_MY_OPENAGENT` ist nur noch eine veraltete Einstellung und beendet in v1.1.4 den Start mit einem Migrationshinweis.
 
 > `HOLYCODE_PLUGIN_UPDATE` steuert Plugin-Paketaktualisierungen. `manual` (Standard) installiert aktivierte Plugins nur wenn sie fehlen und behält vom Benutzer installierte Versionen bei. `auto` installiert fehlende Plugins und synchronisiert die deklarierten Pins beim Start. Dies ist unabhängig von `OPENCODE_DISABLE_AUTOUPDATE`, das nur OpenCode betrifft.
 
-> `ENABLE_OH_MY_OPENAGENT=true` aktiviert das Plugin und stellt die integrierte Skill `/oh-my-openagent-setup` bereit. Die Skill erscheint nur wenn das Plugin aktiviert ist. Verwende sie, um die plugin-spezifische Konfigurationsdatei unter `~/.config/opencode/oh-my-openagent.jsonc` zu erstellen oder zu aktualisieren.
-
-> HolyCodes Standard-Picker-Richtlinie: sichtbar: `sisyphus`, `hephaestus`, `prometheus`, `atlas`; versteckte Unteragenten: `oracle`, `librarian`, `explore`, `metis`, `momus`, `multimodal-looker`, `sisyphus-junior`. Wenn du einen neuen Anbieter hinzufügst und das sichtbare Standardmodell veraltet erscheint, führe `/oh-my-openagent-setup` erneut aus und dann: `docker exec -it holycode bash -c "bunx oh-my-opencode doctor"` und `docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities"`.
+> HolyCode installiert oh-my-openagent in v1.1.4 nicht. Wenn `ENABLE_OH_MY_OPENAGENT=true` in einer älteren Installation bestehen bleibt, stoppt der Container ohne Änderungen. Nach dem Entfernen des Flags deaktiviert der erste erfolgreiche Start den alten aktiven Eintrag und erhält Einstellungen, Skills und Paket-Cache.
 
 > `ENABLE_PAPERCLIP=true` startet Paperclip auf Port `3100` im Container. Öffne das Dashboard, erstelle ein Unternehmen und stelle dort OpenCode-gestützte Agenten ein. Paperclip persistiert automatisch unter `~/.paperclip`.
 
-> Hermes ist in v1.1.3 vorübergehend nicht gebündelt. Wenn `ENABLE_HERMES=true` aus einer älteren Installation bestehen bleibt, beendet HolyCode den Start mit einem kurzen Migrationshinweis. `/home/opencode/.hermes` bleibt unverändert erhalten, damit die Daten nach einer späteren Wiederaufnahme der Integration oder bei einem Rollback verfügbar sind.
+> Hermes ist in v1.1.4 weiterhin nicht gebündelt. Wenn `ENABLE_HERMES=true` aus einer älteren Installation bestehen bleibt, beendet HolyCode den Start mit einem kurzen Migrationshinweis. `/home/opencode/.hermes` bleibt unverändert erhalten, damit die Daten nach einer späteren Wiederaufnahme der Integration oder bei einem Rollback verfügbar sind.
 
 > `GIT_USER_NAME` und `GIT_USER_EMAIL` werden nur beim ersten Start angewendet. Zum erneuten Anwenden die Sentinel-Datei löschen und neu starten: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` dann `docker compose restart`.
 
@@ -429,13 +427,13 @@ services:
 | Laufzeit | Version |
 |---------|---------|
 | Node.js | 24.18.0 (LTS) |
-| npm | 12.0.1 |
+| npm | 12.0.2 |
 | Python | 3.13 (Trixie) |
 | pip | Mit Python 3.13 gebündelt |
 
 > Release-Tags verwenden exakt `vX.Y.Z`. Docker-Image-Tags lassen das `v` weg. Nach `v1.0.9` folgt `v1.1.0`, nach `v1.1.9` folgt `v1.2.0` und nach `v1.9.9` folgt `v2.0.0`. `v1.0.10` bis `v1.0.13` bleiben unveränderlich.
 
-> v1.1.3 aktualisiert OpenCode auf 1.18.4, Claude Code auf 2.1.216, oh-my-openagent auf 4.19.0, s6-overlay auf 3.2.3.2, fzf auf 0.74.1, pnpm auf 11.15.1, Vite auf 8.1.5, Prettier auf 3.9.6, Wrangler auf 4.112.0, Prisma auf 7.9.0 und Lighthouse auf 13.4.1. Paperclip bleibt bei 2026.707.0. Hermes ist vorübergehend nicht gebündelt; Vercel, LHCI, sharp-cli und concurrently wurden aus dem Image entfernt. Netlify unterstützt nur Remote-Builds und -Deployments. Extern verwaltete CLIProxyAPI-Endpunkte werden weiterhin unterstützt.
+> v1.1.4 verwendet OpenCode 1.18.9, Claude Code 2.1.220, Paperclip 2026.722.0, npm 12.0.2, pnpm 11.18.0, ESLint 10.8.0, Wrangler 4.115.0 und Prisma 7.9.1. Python enthält tqdm 4.70.0, FastAPI 0.141.1 und Uvicorn 0.52.0. `opencode-claude-auth` 2.1.5 liegt im Image und wird beim Start offline installiert. Netlify CLI und das npm-Paket `serve` wurden entfernt. Die von HolyCode verwaltete Installation von oh-my-openagent ist ausgesetzt, Hermes bleibt nicht verfügbar und extern verwaltete CLIProxyAPI-Endpunkte werden weiterhin unterstützt.
 
 </details>
 
@@ -507,9 +505,9 @@ Paperclip bleibt als optionaler Dienst über OpenCode gebündelt. Die CLIProxyAP
 
 ### Hermes Agent (vorübergehend nicht gebündelt)
 
-v1.1.3 entfernt den Hermes-Laufzeitdienst vorübergehend, weil die derzeitigen Abhängigkeiten noch nicht mit den erforderlichen Sicherheitskorrekturen kompatibel sind. HolyCode startet keinen Hermes-Prozess und veröffentlicht keinen Hermes-Port.
+Hermes bleibt in v1.1.4 nicht verfügbar, weil die derzeitigen Abhängigkeiten noch nicht mit den erforderlichen Sicherheitskorrekturen kompatibel sind. HolyCode startet keinen Hermes-Prozess und veröffentlicht keinen Hermes-Port.
 
-Deine vorhandenen Daten unter `/home/opencode/.hermes` werden weder gelöscht noch migriert. Entferne `ENABLE_HERMES=true` aus älteren Konfigurationen, damit v1.1.3 normal startet. Bewahre das Verzeichnis für eine spätere Wiederaufnahme der Integration oder für die Wiederherstellung eines unveränderten Vorab-Snapshots auf.
+Deine vorhandenen Daten unter `/home/opencode/.hermes` werden weder gelöscht noch migriert. Entferne `ENABLE_HERMES=true` aus älteren Konfigurationen, damit v1.1.4 normal startet. Bewahre das Verzeichnis für eine spätere Wiederaufnahme der Integration oder für die Wiederherstellung eines unveränderten Vorab-Snapshots auf.
 
 ### Paperclip
 
@@ -601,20 +599,9 @@ docker exec -it holycode bash -c "opencode providers list"
 docker exec -it holycode bash -c "opencode providers login"
 ```
 
-### oh-my-openagent Einrichtung und Neukonfiguration
+### oh-my-openagent Migration
 
-Wenn `ENABLE_OH_MY_OPENAGENT=true` aktiviert ist, wird die Skill `/oh-my-openagent-setup` verfügbar. Verwende sie, um die plugin-spezifische Konfiguration zu erstellen oder zu aktualisieren:
-
-```text
-/oh-my-openagent-setup
-```
-
-Wenn du einen neuen Anbieter hinzufügst und das sichtbare Standardmodell veraltet erscheint, führe `/oh-my-openagent-setup` erneut aus und dann:
-
-```bash
-docker exec -it holycode bash -c "bunx oh-my-opencode doctor"
-docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities"
-```
+HolyCode installiert oder aktualisiert oh-my-openagent in v1.1.4 nicht. Mit `ENABLE_OH_MY_OPENAGENT=true` stoppt der Start, ohne den Plugin-Zustand zu ändern. Nach dem Entfernen des Flags deaktiviert der erste erfolgreiche Start den alten Eintrag, speichert dessen Paketangabe und erhält Einstellungen, Skills und Paket-Cache. Fügst du das Plugin später manuell wieder hinzu, behandelt HolyCode es als benutzerverwaltet.
 
 ### Nützliche Befehle
 
@@ -627,8 +614,6 @@ docker exec -it holycode bash -c "bunx oh-my-opencode refresh-model-capabilities
 | `opencode serve` | Headloser API-Server |
 | `opencode providers list` | Zeigt konfigurierte Anbieter |
 | `opencode providers login` | Anbieter hinzufügen oder wechseln |
-| `bunx oh-my-opencode doctor` | Diagnostiziert oh-my-openagent-Konfiguration und Modellauflösung |
-| `bunx oh-my-opencode refresh-model-capabilities` | Aktualisiert Anbieter/Modell-Fähigkeits-Cache |
 | `opencode models` | Listet verfügbare Modelle |
 | `opencode models <provider>` | Listet Modelle für einen bestimmten Anbieter |
 | `opencode stats` | Zeigt Token-Nutzung und Kosten |
@@ -698,6 +683,8 @@ Wenn du das weglässt, können Dateien in deinem Workspace root gehören und du 
 Das neueste Image herunterladen und den Container neu erstellen. Deine Daten bleiben unberührt.
 
 Wenn du von einer Version vor `v1.1.3` aktualisierst, lade das oben gezeigte seccomp-Profil herunter und füge `security_opt` zum Dienst `holycode` hinzu, bevor du den Container neu erstellst.
+
+Paperclip wird in v1.1.4 von 2026.707.0 auf 2026.722.0 migriert. Ein Rollback ist nur mit Image `1.1.3` und unveränderten Volumes von vor dem v1.1.4-Upgrade möglich. Starte Image `1.1.3` niemals mit bereits von v1.1.4 migrierten Paperclip-Daten.
 
 ```bash
 docker compose pull

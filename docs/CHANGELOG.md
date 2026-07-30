@@ -4,6 +4,40 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.4] - 07/30/2026
+
+### Added
+
+- Add hash-locked Python requirements and a separately hash-locked offline pip, setuptools, Packaging, and wheel seed for new virtual environments
+- Add exact, expiring security-exception records for Chromium fixes that Debian Trixie has not published yet
+
+### Changed
+
+- Refresh OpenCode to 1.18.9, Claude Code to 2.1.220, Paperclip to 2026.722.0, npm to 12.0.2, pnpm to 11.18.0, ESLint to 10.8.0, Wrangler to 4.115.0, Prisma to 7.9.1, and the protected Renovate validator to 44.2.3
+- Refresh pip to 26.2, pandas to 3.0.5, tqdm to 4.70.0, FastAPI to 0.141.1, and Uvicorn to 0.52.0
+- Upgrade Paperclip's reviewed nested Undici replacement to 6.28.0 and validate its installed dependency tree
+- Rebuild GitHub CLI 2.96.0, fzf 0.74.1, and lazygit 0.63.1 from exact upstream commits with reviewed Go module security updates
+- Install `opencode-claude-auth@2.1.5` from an integrity-verified payload included in the image instead of downloading it at container startup
+
+### Removed
+
+- Remove Netlify CLI and `serve` from the image
+- Suspend HolyCode-managed oh-my-openagent installation while its current release tree retains unresolved security findings; stop without changes when the legacy flag is enabled, then disable the old active entry once the flag is removed while preserving settings, skills, and cached package data
+
+### Fixed
+
+- Test Paperclip migrations `0136` through `0183`, user membership, agent runtime state, plugin configuration, post-migration connections, restart persistence, and snapshot-only rollback from `v1.1.3`
+- Replace npm's bundled `brace-expansion` and `tar` copies with 5.0.8 and 7.5.22 after verifying registry integrity
+- Replace pip's vulnerable vendored msgpack and pkg_resources copies with hash-verified msgpack 1.2.1 and pkg_resources from setuptools 80.9.0
+- Remove the root npm cache after reviewed lifecycle scripts run so package tarballs and stale dependency metadata do not remain in the final image
+- Run protected release validation against the exact `v1.1.3` predecessor image and require the same candidate digest for publication
+
+### Security
+
+- Install Debian Chromium 150.0.7871.181 with its setuid sandbox enabled and record four unavailable `.186` fixes as exact 30-day exceptions
+- Require zero unexcepted fixable critical and high findings from Docker Scout and Trivy on AMD64 and ARM64
+- Pin `actions/setup-node` v7.0.0 and `docker/login-action` v4.6.0 by commit, bind protected validation to the exact `origin/main` commit, and validate exact scanner exceptions, plugin modes, release evidence, seccomp, workflows, Compose, and Renovate
+
 ## [1.1.3] - 07/21/2026
 
 ### Changed

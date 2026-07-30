@@ -17,6 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Set up Node for Renovate validation
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+
       - name: Python version policy tests
         run: python -m unittest discover -s tests
 
@@ -43,7 +48,7 @@ jobs:
           fi
 
       - name: Renovate configuration
-        run: npx --yes --package renovate@43.274.0 renovate-config-validator --strict renovate.json
+        run: bash scripts/validate_renovate_extraction.sh 44.2.3
 
   build-and-smoke-test:
     needs: static-validation

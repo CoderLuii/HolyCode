@@ -1,16 +1,16 @@
 {
-  "npmVersion": "12.0.1",
+  "npmVersion": "12.0.2",
   "mode": "deny-by-default",
   "allowScripts": {
-    "@anthropic-ai/claude-code@2.1.216": {
+    "@anthropic-ai/claude-code@2.1.220": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-UH4XncIO6ceNZMq2HxphEn9YR7uu5NGVJMcogGSPvu0nXRw8ubEjbu5cD3Dhvx3vXxizwFA82tmk6mVXjhr/dw==",
+      "integrity": "sha512-ogBrvwkqF9f8okmnXKxmRNHuvtFxFEffe5pWdqOV3iQDxlUOKirFqnyWC7NGXXnDA4WkkbPH8pvSbwyCR2Auyw==",
       "scripts": { "postinstall": "node install.cjs" },
       "reason": "Claude Code uses this script to install its pinned platform-native binary."
     },
-    "opencode-ai@1.18.4": {
+    "opencode-ai@1.18.9": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-B8pFAs1g158ZU+C6eSiJz/5ZhG7Vr2mH7Z7ruYEHLElAlX9tehrRTnzTTgjSxHY2vwZ/5VplwR3odFU+Dai8jg==",
+      "integrity": "sha512-tqvu/hJ26c2dBj/V/uTHaQI3bMSpLck0hIgGXO2z7b11s5mYfnaq+K1CBjsg8Pp6EirfzwUYGzi85K/SvOgkKg==",
       "scripts": { "postinstall": "node ./postinstall.mjs" },
       "reason": "OpenCode uses this script to hydrate its pinned platform CLI and refuses to start without it."
     },
@@ -34,41 +34,23 @@
       "scripts": { "postinstall": "node install.js" },
       "reason": "The platform binary is packaged and verified directly."
     },
-    "esbuild@0.28.0": {
+    "prisma@7.9.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-sNR9MHpXSUV/XB4zmsFKN+QgVG82Cc7+/aaxJ8Adi8hyOac+EXptIp45QBPaVyX3N70664wRbTcLTOemCAnyqw==",
-      "scripts": { "postinstall": "node install.js" },
-      "reason": "The transitive platform binary is packaged; Netlify local functions remain unsupported."
-    },
-    "prisma@7.9.0": {
-      "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-isQTJEK4pyOlAVzm6kBUDjzgdsgs0A/snpB38ycTHeOHW34qfepP+ClQltgDXqjZBnXALhEtE4duh9L3tN5fHw==",
+      "integrity": "sha512-aPqePoZIqwlAchbgbFDO/wHqGB+7H1nj9gaM+OsL9h77S5S3TnLd9BgD3LnoeDikULo7cl2HSUrEyQ55Z7DYbg==",
       "scripts": { "preinstall": "node scripts/preinstall-entry.js" },
       "reason": "The pinned CLI and packaged engine are verified directly."
     },
-    "@prisma/engines@7.9.0": {
+    "@prisma/engines@7.9.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-lDWJp/pgSWCLfYsupmmNo96jfsbQnH1yjia8XVM2Kh8nRZhD0bQU2jCHuy3ZTPMLR3apRD3k145ybENalAYjYw==",
+      "integrity": "sha512-UprXSMNXx2NF5ow4pqaQtE8OuBz6K78B0wc0tn2L28G5r933iWp1DR9Do2qWrsNvvFIP3x6mpEWnQtckMO0Uhg==",
       "scripts": { "postinstall": "node scripts/postinstall.js" },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "sharp@0.34.5": {
+    "workerd@1.20260722.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg==",
-      "scripts": { "install": "node install/check.js || npm run build" },
-      "reason": "The packaged native module is verified with an in-memory image operation."
-    },
-    "workerd@1.20260714.1": {
-      "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-oIbQzfdyl9UQUnG6XLegcSq0Mgt/7WKDbFOoqGgOWCS+/fhyGB460uKEgdAQQ9RHCO/ttcNCX/KiMIQzdoeu3Q==",
+      "integrity": "sha512-NycKuc1x2onvsRfGGpM093vRlLFU2zHDAM0+APpccfg4+gZxDGCH27RmdDvkeBuoZyYqgLo3oAfF6re4mvC3vQ==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
-    },
-    "netlify-cli@26.2.0": {
-      "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-3jQg9WQoa1H74478fHZisj3T8dLM67x4F4Sgi7kROBHzJD9NNCYYw99dKRYWJOtEa1dUNyZu2W4VTdPzA1kjiw==",
-      "scripts": { "postinstall": "node ./scripts/postinstall.js" },
-      "reason": "Only remote build and deploy commands are supported; local function binaries are removed."
     },
     "ssh2@1.17.0": {
       "architectures": ["amd64", "arm64"],

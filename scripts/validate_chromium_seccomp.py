@@ -15,7 +15,10 @@ EXPECTED_SHA256 = "cc3e61cabda6bbc1e53e54d27ba4d55a9d3be829b6dd1a596f4a7b31b1cc7
 
 def main() -> int:
     content = PROFILE.read_bytes()
-    actual = hashlib.sha256(content).hexdigest()
+    normalized = content.replace(b"\r\n", b"\n")
+    if b"\r" in normalized:
+        raise SystemExit("Chromium seccomp profile contains an unsupported line ending")
+    actual = hashlib.sha256(normalized).hexdigest()
     if actual != EXPECTED_SHA256:
         raise SystemExit(f"Chromium seccomp profile SHA-256 mismatch: {actual}")
 

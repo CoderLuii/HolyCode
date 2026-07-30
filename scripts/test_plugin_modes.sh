@@ -43,13 +43,13 @@ wait_for_log() {
   return 1
 }
 
-run_with_plugins() {
+run_with_auth() {
   local mode="$1"
 
   docker run -d --name "$name" \
+    --network none \
     -v "$volume:/home/opencode" \
     -e ENABLE_CLAUDE_AUTH=true \
-    -e ENABLE_OH_MY_OPENAGENT=true \
     -e "HOLYCODE_PLUGIN_UPDATE=$mode" \
     "$image" >/dev/null
   wait_for_opencode
@@ -65,50 +65,130 @@ assert_plugin() {
 }
 
 docker volume create "$volume" >/dev/null
-run_with_plugins manual
-assert_plugin opencode-claude-auth 2.0.0
-assert_plugin oh-my-openagent 4.19.0
-wait_for_log "configured as 'opencode-claude-auth@2.0.0'; installed version 2.0.0"
-wait_for_log "configured as 'oh-my-openagent@4.19.0'; installed version 4.19.0"
+run_with_auth manual
+assert_plugin opencode-claude-auth 2.1.5
+wait_for_log "configured as 'opencode-claude-auth@2.1.5'; installed version 2.1.5"
 
-docker exec -u opencode \
-  -e HOME=/home/opencode \
-  -e USER=opencode \
-  -e LOGNAME=opencode \
-  -e XDG_CONFIG_HOME=/home/opencode/.config \
-  -e XDG_CACHE_HOME=/home/opencode/.cache \
-  -e XDG_DATA_HOME=/home/opencode/.local/share \
-  -e XDG_STATE_HOME=/home/opencode/.local/state \
-  "$name" opencode plugin opencode-claude-auth@1.5.4 -g -f >/dev/null
+docker exec "$name" sh -lc '
+  set -eu
+  old_root=/home/opencode/.cache/opencode/packages/opencode-claude-auth@1.5.4/node_modules/opencode-claude-auth
+  mkdir -p "$old_root"
+  printf "{\"name\":\"opencode-claude-auth\",\"version\":\"1.5.4\"}\n" > "$old_root/package.json"
+  sed -i "s/opencode-claude-auth@2.1.5/opencode-claude-auth@1.5.4/" \
+    /home/opencode/.config/opencode/opencode.json
+  chown -R opencode:opencode /home/opencode/.cache/opencode/packages/opencode-claude-auth@1.5.4
+'
 
 docker restart "$name" >/dev/null
 wait_for_opencode
 assert_plugin opencode-claude-auth 1.5.4
+wait_for_log "remains at 'opencode-claude-auth@1.5.4' (manual mode)"
 
 docker rm -f "$name" >/dev/null
-run_with_plugins auto
-assert_plugin opencode-claude-auth 2.0.0
-wait_for_log "Plugin 'opencode-claude-auth' syncing to 2.0.0 (auto mode)"
+run_with_auth auto
+assert_plugin opencode-claude-auth 2.1.5
+wait_for_log "Plugin 'opencode-claude-auth' syncing to 2.1.5 (auto mode)"
 
 docker rm -f "$name" >/dev/null
-run_with_plugins manual
-docker exec "$name" sed -i 's/opencode-claude-auth@2.0.0/opencode-claude-auth/' \
+run_with_auth manual
+docker exec "$name" sed -i 's/opencode-claude-auth@2.1.5/opencode-claude-auth/' \
   /home/opencode/.config/opencode/opencode.json
 docker restart "$name" >/dev/null
 wait_for_opencode
-assert_plugin opencode-claude-auth 2.0.0
-wait_for_log "Plugin 'opencode-claude-auth' installing opencode-claude-auth@2.0.0"
+assert_plugin opencode-claude-auth 2.1.5
+wait_for_log "Plugin 'opencode-claude-auth' installing opencode-claude-auth@2.1.5"
 
 docker rm -f "$name" >/dev/null
-docker run -d --name "$name" -v "$volume:/home/opencode" "$image" >/dev/null
+docker run -d --name "$name" --network none -v "$volume:/home/opencode" "$image" >/dev/null
 wait_for_opencode
-if docker exec "$name" grep -Eq 'opencode-claude-auth|oh-my-openagent' /home/opencode/.config/opencode/opencode.json; then
+if docker exec "$name" grep -Eq 'opencode-claude-auth' /home/opencode/.config/opencode/opencode.json; then
   echo "disabled plugin remains in opencode.json" >&2
   exit 1
 fi
-if docker exec "$name" sh -lc "test -f /home/opencode/.config/opencode/tui.json && grep -Eq 'opencode-claude-auth|oh-my-openagent' /home/opencode/.config/opencode/tui.json"; then
+if docker exec "$name" sh -lc "test -f /home/opencode/.config/opencode/tui.json && grep -Eq 'opencode-claude-auth' /home/opencode/.config/opencode/tui.json"; then
   echo "disabled plugin remains in tui.json" >&2
   exit 1
 fi
+
+docker exec -i "$name" python3 - <<'PY'
+import json
+from pathlib import Path
+
+config_path = Path("/home/opencode/.config/opencode/opencode.json")
+config = json.loads(config_path.read_text())
+config.setdefault("plugin", []).append("oh-my-openagent@4.19.0")
+config_path.write_text(json.dumps(config, indent=2) + "\n")
+tui_path = Path("/home/opencode/.config/opencode/tui.json")
+tui_path.write_text(
+    json.dumps({"plugin": ["oh-my-openagent@4.19.0"]}, indent=2) + "\n"
+)
+for path in (
+    Path("/home/opencode/.config/opencode/oh-my-openagent.jsonc"),
+    Path("/home/opencode/.cache/opencode/oh-my-openagent-preserved"),
+    Path("/home/opencode/.config/opencode/skills/oh-my-openagent-setup/preserved"),
+    Path("/home/opencode/.cache/opencode/packages/oh-my-openagent@4.19.0/node_modules/oh-my-openagent/package.json"),
+):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        '{"name":"oh-my-openagent","version":"4.19.0"}\n'
+        if path.name == "package.json"
+        else "preserved\n"
+    )
+PY
+docker exec "$name" chown opencode:opencode \
+  /home/opencode/.config/opencode/tui.json
+docker rm -f "$name" >/dev/null
+
+if docker run --rm --network none -v "$volume:/home/opencode" \
+  -e ENABLE_OH_MY_OPENAGENT=true "$image" >/tmp/holycode-oh-my-openagent.log 2>&1; then
+  echo "ENABLE_OH_MY_OPENAGENT=true unexpectedly started" >&2
+  exit 1
+fi
+grep -F "HolyCode-managed oh-my-openagent installation is unavailable" /tmp/holycode-oh-my-openagent.log
+grep -F "existing configuration and data were not changed" /tmp/holycode-oh-my-openagent.log
+docker run -d --name "$name" --network none -v "$volume:/home/opencode" "$image" >/dev/null
+wait_for_opencode
+wait_for_log "Disabled legacy HolyCode-managed 'oh-my-openagent@4.19.0' configuration"
+docker run --rm --entrypoint sh -v "$volume:/home/opencode" "$image" -lc '
+  ! grep -F "oh-my-openagent@4.19.0" /home/opencode/.config/opencode/opencode.json
+  ! grep -F "oh-my-openagent@4.19.0" /home/opencode/.config/opencode/tui.json
+  grep -Fx "oh-my-openagent@4.19.0" \
+    /home/opencode/.config/opencode/.holycode-oh-my-openagent-migrated-v1.1.4
+  test -f /home/opencode/.config/opencode/oh-my-openagent.jsonc
+  test -f /home/opencode/.cache/opencode/oh-my-openagent-preserved
+  test -f /home/opencode/.config/opencode/skills/oh-my-openagent-setup/preserved
+  test -f /home/opencode/.cache/opencode/packages/oh-my-openagent@4.19.0/node_modules/oh-my-openagent/package.json
+'
+docker rm -f "$name" >/dev/null
+docker run --rm --entrypoint sh -v "$volume:/home/opencode" "$image" -lc '
+  rm /home/opencode/.config/opencode/.holycode-oh-my-openagent-migrated-v1.1.4
+  printf "{\"plugin\":[\"oh-my-openagent@4.19.0\"]}\n" \
+    > /home/opencode/.config/opencode/tui.json
+  chown opencode:opencode /home/opencode/.config/opencode/tui.json
+'
+docker run -d --name "$name" --network none -v "$volume:/home/opencode" "$image" >/dev/null
+wait_for_opencode
+wait_for_log "Disabled legacy HolyCode-managed 'oh-my-openagent@4.19.0' configuration"
+docker exec "$name" sh -lc '
+  ! grep -F "oh-my-openagent@4.19.0" /home/opencode/.config/opencode/opencode.json
+  ! grep -F "oh-my-openagent@4.19.0" /home/opencode/.config/opencode/tui.json
+  grep -Fx "oh-my-openagent@4.19.0" \
+    /home/opencode/.config/opencode/.holycode-oh-my-openagent-migrated-v1.1.4
+'
+docker exec -i "$name" python3 - <<'PY'
+import json
+from pathlib import Path
+
+config_path = Path("/home/opencode/.config/opencode/opencode.json")
+config = json.loads(config_path.read_text())
+config.setdefault("plugin", []).append("oh-my-openagent@4.19.0")
+config_path.write_text(json.dumps(config, indent=2) + "\n")
+PY
+docker restart "$name" >/dev/null
+wait_for_opencode
+wait_for_log "'oh-my-openagent@4.19.0' was added after the v1.1.4 migration and is user-managed"
+docker exec "$name" grep -F "oh-my-openagent@4.19.0" \
+  /home/opencode/.config/opencode/opencode.json
+docker rm -f "$name" >/dev/null
 
 echo "plugin mode validation passed"

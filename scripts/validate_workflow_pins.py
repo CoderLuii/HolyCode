@@ -15,10 +15,11 @@ USES_RE = re.compile(r"^\s*uses:\s*([^@\s]+)@([^\s#]+)(?:\s*#\s*(\S+))?\s*$")
 
 REQUIRED_PINS = {
     "actions/checkout": ("3d3c42e5aac5ba805825da76410c181273ba90b1", "v7.0.1"),
+    "actions/setup-node": ("820762786026740c76f36085b0efc47a31fe5020", "v7.0.0"),
     "actions/upload-artifact": ("043fb46d1a93c77aae656e7c1c64a875d1fc6a0a", "v7.0.1"),
     "docker/setup-qemu-action": ("96fe6ef7f33517b61c61be40b68a1882f3264fb8", "v4.2.0"),
     "docker/setup-buildx-action": ("bb05f3f5519dd87d3ba754cc423b652a5edd6d2c", "v4.2.0"),
-    "docker/login-action": ("af1e73f918a031802d376d3c8bbc3fe56130a9b0", "v4.4.0"),
+    "docker/login-action": ("dbcb813823bdd20940b903addbd779551569679f", "v4.6.0"),
     "docker/build-push-action": ("53b7df96c91f9c12dcc8a07bcb9ccacbed38856a", "v7.3.0"),
     "peter-evans/dockerhub-description": ("1b9a80c056b620d92cedb9d9b5a223409c68ddfa", "v5.0.0"),
     "aquasecurity/trivy-action": ("ed142fd0673e97e23eac54620cfb913e5ce36c25", "v0.36.0"),
@@ -61,6 +62,7 @@ def collect_errors() -> list[str]:
         action
         for action in (
             "actions/checkout",
+            "actions/setup-node",
             "actions/upload-artifact",
             "docker/setup-qemu-action",
             "docker/setup-buildx-action",
@@ -74,11 +76,8 @@ def collect_errors() -> list[str]:
     for action in sorted(missing_required):
         errors.append(f"required pinned action is not present: {action}")
 
-    protected_validation = WORKFLOWS / "protected-validation.yml"
-    protected_text = protected_validation.read_text(encoding="utf-8")
+    protected_text = publish_text
     for required_text in (
-        "workflow_call:",
-        "workflow_dispatch:",
         "runner: ubuntu-24.04",
         "runner: ubuntu-24.04-arm",
         "SCOUT_VERSION: 1.23.1",
@@ -87,24 +86,37 @@ def collect_errors() -> list[str]:
         "docker/scout-cli/releases/download/v${SCOUT_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.72.0",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.1.2@sha256:65740c4d8aa416217391f53de4be984ea9f8dfd5f10553dead94db402645b537",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.1.3@sha256:1a62f8e2f7a381c14bb84890a05bc04763f6804ac83e17e4dc022df0e5ef6e7f",
+        "PREVIOUS_VERSION: v1.1.3",
+        "RELEASE_VERSION: v1.1.4",
+        "python -m unittest discover -s tests",
+        "python scripts/validate_workflow_pins.py",
+        "python scripts/validate_chromium_seccomp.py",
+        "bash scripts/validate_renovate_extraction.sh 44.2.3",
+        "scripts/validate_security_exceptions.py",
+        "scripts/validate_scanner_findings.py",
+        "bash scripts/test_plugin_modes.sh",
+        "config/security-exceptions-v1.1.4.json",
+        '--installed "chromium=$installed"',
+        '--available "chromium=$available"',
         'ref: ${{ github.sha }}',
+        'git rev-parse origin/main',
         "Pull exact candidate digest",
         "scripts/test_upgrade_rollback.sh",
     ):
         if required_text not in protected_text:
-            errors.append(f"protected-validation.yml must contain {required_text!r}")
+            errors.append(f"docker-publish.yml must contain {required_text!r}")
     if protected_text.count("scanners: vuln,secret") != 2:
-        errors.append("protected-validation.yml must run both Trivy gates with vuln and secret scanners")
+        errors.append("docker-publish.yml must run both Trivy gates with vuln and secret scanners")
     if "trivyignores:" in protected_text:
-        errors.append("protected-validation.yml must not bypass the fixable critical/high gate")
+        errors.append("docker-publish.yml must not bypass the fixable critical/high gate")
     if "eceasy/cli-proxy-api" in protected_text:
-        errors.append("protected-validation.yml must not pull the removed CLIProxyAPI sidecar")
+        errors.append("docker-publish.yml must not pull the removed CLIProxyAPI sidecar")
 
     pr_validation = WORKFLOWS / "pr-validation.yml"
     pr_text = pr_validation.read_text(encoding="utf-8")
-    if "renovate@43.274.0 renovate-config-validator --strict renovate.json" not in pr_text:
-        errors.append("pr-validation.yml must validate renovate.json with the audited Renovate pin")
+    if "bash scripts/validate_renovate_extraction.sh 44.2.3" not in pr_text:
+        errors.append("pr-validation.yml must validate Renovate extraction with the audited pin")
 
     return errors
 
