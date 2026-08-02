@@ -26,20 +26,19 @@
 
 ### One container. Every tool. Any provider.
 
+> **Stop maintaining. Start building.** A hosted AI workstation. Always-on Linux box. [holycode.cloud](https://holycode.cloud/?ref=hcode-readme)
+
 OpenCode running in a container with everything already installed. 50+ dev tools, 10+ AI providers, a sandboxed headless browser, persistent state, and Paperclip on top. Drop it on any machine and pick up exactly where you left off.
 
-Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each version segment is one digit, so `v1.0.9` rolls to `v1.1.0`, `v1.1.9` rolls to `v1.2.0`, and `v1.9.9` rolls to `v2.0.0`. The commit subject, Git tag, and GitHub release title must match. Published `v1.0.10` through `v1.0.13` stay immutable as historical releases.
-
-**Hermes remains temporarily unbundled in v1.1.4.** Its current releases pin vulnerable dependencies. HolyCode leaves `/home/opencode/.hermes` untouched so you can restore the service when upstream publishes compatible fixed pins.
+**Hermes remains temporarily unbundled.** Its current releases pin vulnerable dependencies. HolyCode leaves `/home/opencode/.hermes` untouched so you can restore the service when upstream publishes compatible fixed pins.
 
 **Paperclip turns HolyCode into an agent board.** You get a dashboard on port `3100` where you create a company, hire OpenCode-backed workers, wake them on heartbeat, and manage agent work from a real UI instead of hand-rolling scripts around `opencode run`.
 
 **Works with your Claude subscription.** Enable the Claude Auth plugin and use your existing Claude Max/Pro plan. No separate API key needed.
 
-**Bring your own multi-agent plugin for now.** HolyCode-managed oh-my-openagent installation is suspended in v1.1.4 while its current dependency tree retains unresolved security findings. The first flag-free v1.1.4 start disables the old managed plugin entry but keeps its settings, skills, and package cache.
+**Bring your own multi-agent plugin for now.** HolyCode-managed oh-my-openagent installation remains suspended while its current dependency tree retains unresolved security findings. The first flag-free start disables the old managed plugin entry but keeps its settings, skills, and package cache.
 
 **You were going to spend an hour getting your environment back. Or you could just `docker compose up` and get a coding workstation and an agent board in one shot.**
-> **Don't want to self-host?** [HolyCode Cloud](https://holycode.coderluii.dev/cloud) is coming. Same tools, zero setup. Early access is free.
 
 ---
 
@@ -66,7 +65,7 @@ You pull it. You run it. You open your browser. You build.
 | | Section |
 |---|---------|
 | 1 | [Quick Start](#-quick-start) |
-| 2 | [HolyCode Cloud](#-holycode-cloud-coming-soon) |
+| 2 | [HolyCode Cloud (Live)](#-holycode-cloud-live) |
 | 3 | [Platform Support](#-platform-support) |
 | 4 | [Why HolyCode](#-why-holycode) |
 | 5 | [Provider Support](#-provider-support) |
@@ -150,11 +149,9 @@ Open http://localhost:4096. You're in.
 
 ---
 
-## ☁ HolyCode Cloud (Coming Soon)
+## ☁ HolyCode Cloud (Live)
 
-Don't want to self-host? We're building a managed version of HolyCode.
-
-Same 50+ tools. Same 10+ providers. Same persistent state. No Docker. No terminal. Just open your browser and code.
+HolyCode Cloud is a hosted AI workstation with an always-on Linux box.
 
 **What you get with Cloud:**
 - Zero setup. No Docker, no config files, no terminal commands.
@@ -162,9 +159,7 @@ Same 50+ tools. Same 10+ providers. Same persistent state. No Docker. No termina
 - Tagged releases refresh OpenCode and the tool pins for you.
 - Your state follows you. Sessions, settings, MCP configs saved between uses.
 
-**Early access is free.** No credit card required.
-
-**[Claim your spot](https://holycode.coderluii.dev/cloud)**
+**[Open HolyCode Cloud](https://holycode.cloud/?ref=hcode-readme)**
 
 <p align="right">
   <a href="#top">back to top</a>

@@ -2,7 +2,7 @@
 
 Podman can run the same HolyCode image as Docker. Use this guide when you prefer a daemonless or rootless container runtime, especially on Fedora, RHEL, CoreOS, Rocky, AlmaLinux, or similar Linux hosts.
 
-This guide mirrors the minimal HolyCode web UI setup. For the full Docker Compose reference, use the main README and `docker-compose.full.yaml`. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Each version segment is one digit, so `v1.0.9` rolls to `v1.1.0`.
+This guide mirrors the minimal HolyCode web UI setup. For the full Docker Compose reference, use the main README and `docker-compose.full.yaml`.
 
 ## What this guide covers
 

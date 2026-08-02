@@ -4,6 +4,22 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.5] - 08/02/2026
+
+### Changed
+
+- Correct the HolyCode Cloud README copy, move the live hosted link beneath the product headline, and remove internal release-policy text from public documentation
+- Rebuild the image with current Debian Trixie security packages
+
+### Fixed
+
+- Download only the named release-evidence artifacts so BuildKit's `.dockerbuild` record cannot break release attachment uploads
+
+### Security
+
+- Upgrade Chromium to Debian Trixie's available 151.0.7922.71 security package and retire the four Chromium exceptions used by v1.1.4
+- Require every fixable critical or high scanner finding to fail the release without active exceptions
+
 ## [1.1.4] - 07/30/2026
 
 ### Added

@@ -156,7 +156,7 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=80.9.0
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=83.0.0
-ARG RELEASE_APT_REFRESH=2026-07-30
+ARG RELEASE_APT_REFRESH=2026-08-02
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -302,7 +302,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     fonts-liberation2 fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji \
     && test -u /usr/lib/chromium/chrome-sandbox \
-    && dpkg-query -W -f='${Version}\n' chromium | grep -E '^150\.0\.7871\.(18[1-9]|19[0-9]|[2-9][0-9]{2,})-' \
+    && dpkg-query -W -f='${Version}\n' chromium | grep -E '^(15[1-9]|1[6-9][0-9]|[2-9][0-9]{2})\.' \
     && test "$(dpkg-query -W -f='${Version}' chromium)" = "$(dpkg-query -W -f='${Version}' chromium-sandbox)" \
     && rm -rf /var/lib/apt/lists/*
 
@@ -494,7 +494,6 @@ RUN mkdir -p /usr/local/share/holycode && \
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/bootstrap.sh /usr/local/bin/bootstrap.sh
 COPY config/opencode.json /usr/local/share/holycode/opencode.json
-COPY config/security-exceptions-v1.1.4.json /usr/local/share/holycode/security-exceptions-v1.1.4.json
 RUN install -d -m 0755 /usr/local/share/holycode/skills \
     && chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/bootstrap.sh
 

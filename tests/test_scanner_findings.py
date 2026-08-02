@@ -74,7 +74,9 @@ def scout_report(cve="CVE-2026-16804", package="chromium", version="150.0.7871.1
 
 
 class ScannerFindingTests(unittest.TestCase):
-    def run_validator(self, scanner, report, exceptions=None, as_of="2026-07-30"):
+    def run_validator(
+        self, scanner, report, exceptions=None, as_of="2026-07-30", use_exceptions=True
+    ):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
             report_path = temp / "report.json"
@@ -83,19 +85,20 @@ class ScannerFindingTests(unittest.TestCase):
             exceptions_path.write_text(
                 json.dumps(exceptions or exception_record()), encoding="utf-8"
             )
+            command = [
+                sys.executable,
+                str(VALIDATOR),
+                "--scanner",
+                scanner,
+                "--report",
+                str(report_path),
+                "--as-of",
+                as_of,
+            ]
+            if use_exceptions:
+                command.extend(("--exceptions", str(exceptions_path)))
             return subprocess.run(
-                [
-                    sys.executable,
-                    str(VALIDATOR),
-                    "--scanner",
-                    scanner,
-                    "--report",
-                    str(report_path),
-                    "--exceptions",
-                    str(exceptions_path),
-                    "--as-of",
-                    as_of,
-                ],
+                command,
                 capture_output=True,
                 text=True,
                 check=False,
@@ -143,6 +146,19 @@ class ScannerFindingTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         result = self.run_validator("scout", {"runs": [{"results": []}]})
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_no_exception_mode_accepts_empty_report(self):
+        result = self.run_validator(
+            "trivy", {"Results": []}, use_exceptions=False
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_no_exception_mode_rejects_finding(self):
+        result = self.run_validator(
+            "trivy", trivy_report(), use_exceptions=False
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unexcepted", result.stderr)
 
 
 if __name__ == "__main__":

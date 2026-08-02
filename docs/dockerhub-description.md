@@ -4,7 +4,7 @@
 
 OpenCode AI coding agent with built-in web UI, Claude subscription support, 50+ dev tools, a sandboxed headless browser, optional Paperclip, and external CLIProxyAPI endpoint support. Use your existing Claude Max/Pro plan. No separate API key needed.
 
-v1.1.4 refreshes OpenCode to 1.18.9, Claude Code to 2.1.220, Paperclip to 2026.722.0, and the compatible tool pins listed below. It removes Netlify CLI and `serve`, keeps Hermes and previously removed vulnerable CLIs out of the image, and suspends HolyCode-managed oh-my-openagent installation. Release tags use exact `vX.Y.Z`; Docker image tags drop the `v` prefix. Every version segment is one digit: `v1.0.9` rolls to `v1.1.0`, `v1.1.9` to `v1.2.0`, and `v1.9.9` to `v2.0.0`.
+v1.1.5 rebuilds the image with current Debian Trixie security packages, including Chromium 151.0.7922.71. It keeps the OpenCode, Claude Code, Paperclip, and compatible tool pins from v1.1.4.
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/coderluii/holycode?style=flat-square&logo=docker)](https://hub.docker.com/r/coderluii/holycode)
 [![GitHub Stars](https://img.shields.io/github/stars/coderluii/holycode?style=flat-square&logo=github)](https://github.com/CoderLuii/HolyCode)

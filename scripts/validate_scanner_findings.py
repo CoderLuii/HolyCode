@@ -86,14 +86,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--scanner", choices=("scout", "trivy"), required=True)
     parser.add_argument("--report", type=Path, required=True)
-    parser.add_argument("--exceptions", type=Path, required=True)
+    parser.add_argument("--exceptions", type=Path)
     parser.add_argument("--as-of", required=True)
     args = parser.parse_args()
 
     try:
         report = load_json(args.report)
-        record = load_json(args.exceptions)
         as_of = date.fromisoformat(args.as_of)
+        record = load_json(args.exceptions) if args.exceptions else {"exceptions": []}
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(error, file=sys.stderr)
         return 2
@@ -118,7 +118,7 @@ def main():
 
     print(
         f"validated {len(findings)} {args.scanner} finding(s): "
-        f"{len(findings)} excepted, 0 unexcepted"
+        f"{len(findings) - len(unexcepted)} excepted, 0 unexcepted"
     )
     return 0
 

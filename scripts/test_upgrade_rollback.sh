@@ -24,7 +24,13 @@ previous_paperclip_version="$(docker run --rm --platform "$platform" --entrypoin
   -p 'require("/usr/local/lib/node_modules/paperclipai/package.json").version')"
 
 [ "$current_paperclip_version" = "2026.722.0" ]
-[ "$previous_paperclip_version" = "2026.707.0" ]
+paperclip_migration=false
+if [ "$previous_paperclip_version" = "2026.707.0" ]; then
+  paperclip_migration=true
+elif [ "$previous_paperclip_version" != "$current_paperclip_version" ]; then
+  echo "unsupported Paperclip upgrade: $previous_paperclip_version -> $current_paperclip_version" >&2
+  exit 1
+fi
 
 company_id=""
 agent_id=""
@@ -525,7 +531,9 @@ local = next(item for item in environments if item["driver"] == "local")
 print(local["id"])
 ')"
 
-  seed_internal_paperclip_state "$name"
+  if [ "$paperclip_migration" = "true" ]; then
+    seed_internal_paperclip_state "$name"
+  fi
 }
 
 assert_internal_paperclip_state() {
@@ -742,7 +750,9 @@ assert_persisted_state() {
   api_get "$name" "/api/companies/${company_id}/skills/${skill_id}" |
     assert_json_field "$name" slug "upgrade-verification"
 
-  assert_internal_paperclip_state "$name" "$phase"
+  if [ "$paperclip_migration" = "true" ]; then
+    assert_internal_paperclip_state "$name" "$phase"
+  fi
 }
 
 docker pull --platform "$platform" "$previous_image" >/dev/null
@@ -766,16 +776,20 @@ clone_volume "$baseline_workspace" "$upgrade_workspace"
 
 start_stack "$upgrade_name" "$current_image" "$upgrade_home" "$upgrade_workspace" false
 assert_persisted_state "$upgrade_name" upgraded
-seed_post_upgrade_connections "$upgrade_name"
-assert_post_upgrade_connections "$upgrade_name"
-upgrade_logs="$(docker logs "$upgrade_name" 2>&1)"
-grep -Fq '0136_acpx_default_engine_migration.sql' <<<"$upgrade_logs"
-grep -Fq '0183_connection_user_authorization_state.sql' <<<"$upgrade_logs"
+if [ "$paperclip_migration" = "true" ]; then
+  seed_post_upgrade_connections "$upgrade_name"
+  assert_post_upgrade_connections "$upgrade_name"
+  upgrade_logs="$(docker logs "$upgrade_name" 2>&1)"
+  grep -Fq '0136_acpx_default_engine_migration.sql' <<<"$upgrade_logs"
+  grep -Fq '0183_connection_user_authorization_state.sql' <<<"$upgrade_logs"
+fi
 docker exec "$upgrade_name" node --version | grep -Fx "$current_node_version"
 docker restart "$upgrade_name" >/dev/null
 wait_for_services "$upgrade_name" false
 assert_persisted_state "$upgrade_name" upgraded
-assert_post_upgrade_connections "$upgrade_name"
+if [ "$paperclip_migration" = "true" ]; then
+  assert_post_upgrade_connections "$upgrade_name"
+fi
 docker rm -f "$upgrade_name" >/dev/null
 
 start_stack "$rollback_name" "$previous_image" "$baseline_home" "$baseline_workspace" false

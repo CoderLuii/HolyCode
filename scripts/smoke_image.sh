@@ -185,7 +185,7 @@ EOF
   test "$sharp_count" -gt 0
   grep -F "<policy domain=\"coder\" rights=\"none\" pattern=\"*\" />" /etc/ImageMagick-7/policy.xml >/dev/null
   grep -F "<policy domain=\"coder\" rights=\"read|write\" pattern=\"{GIF,JPEG,PNG,WEBP}\" />" /etc/ImageMagick-7/policy.xml >/dev/null
-  chromium --version | grep -E "Chromium 150\\.0\\.7871\\.(18[1-9]|19[0-9]|[2-9][0-9]{2,})"
+  chromium --version | grep -E "Chromium (15[1-9]|1[6-9][0-9]|[2-9][0-9]{2})\\."
   test "$(dpkg-query -W -f="\${Version}" chromium)" = "$(dpkg-query -W -f="\${Version}" chromium-sandbox)"
   test -u /usr/lib/chromium/chrome-sandbox
   runuser -u opencode -- chromium --headless --disable-gpu --disable-dev-shm-usage --dump-dom about:blank | grep -F "<html><head></head><body></body></html>"

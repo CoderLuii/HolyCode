@@ -318,11 +318,11 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("chromium-sandbox", self.dockerfile)
         self.assertIn("test -u /usr/lib/chromium/chrome-sandbox", self.dockerfile)
 
-    def test_release_workflow_uses_v1_1_3_predecessor(self):
-        self.assertIn("RELEASE_VERSION: v1.1.4", self.protected)
-        self.assertIn("PREVIOUS_VERSION: v1.1.3", self.protected)
+    def test_release_workflow_uses_v1_1_4_predecessor(self):
+        self.assertIn("RELEASE_VERSION: v1.1.5", self.protected)
+        self.assertIn("PREVIOUS_VERSION: v1.1.4", self.protected)
         self.assertIn(
-            "coderluii/holycode:1.1.3@sha256:1a62f8e2f7a381c14bb84890a05bc04763f6804ac83e17e4dc022df0e5ef6e7f",
+            "coderluii/holycode:1.1.4@sha256:56756701a8b7468e1929b956950edb06ba8e0f0c87c5796aa57bde1389f82a91",
             self.protected,
         )
         self.assertIn("needs: protected-validation", self.publish)
@@ -330,6 +330,7 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("Download protected candidate digest", self.publish)
         self.assertNotIn("event=workflow_dispatch", self.publish)
         self.assertEqual(self.publish.count("docker/build-push-action"), 1)
+        self.assertNotIn("config/security-exceptions-v1.1.4.json", self.protected)
 
     def test_upgrade_fixture_covers_stateful_paperclip_paths(self):
         expected = (
@@ -345,6 +346,11 @@ class ReleaseContractTests(unittest.TestCase):
         for value in expected:
             with self.subTest(value=value):
                 self.assertIn(value, self.upgrade)
+        self.assertIn("paperclip_migration=false", self.upgrade)
+        self.assertIn(
+            'previous_paperclip_version" != "$current_paperclip_version',
+            self.upgrade,
+        )
 
     def test_release_workflows_bind_and_promote_the_validated_candidate(self):
         self.assertIn('[ "$REQUESTED_REF" = "$GITHUB_SHA" ]', self.protected)
@@ -409,7 +415,7 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("Trivy fixable critical and high gate", self.protected)
         self.assertIn("Docker Scout fixable critical and high gate", self.protected)
         self.assertIn("severity: CRITICAL,HIGH", self.protected)
-        self.assertIn("validate_security_exceptions.py", self.protected)
+        self.assertNotIn("--exceptions", self.protected)
         self.assertIn("format: json", self.protected)
         self.assertIn("trivy-fixable.json", self.protected)
 

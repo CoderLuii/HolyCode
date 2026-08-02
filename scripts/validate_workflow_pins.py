@@ -86,19 +86,15 @@ def collect_errors() -> list[str]:
         "docker/scout-cli/releases/download/v${SCOUT_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.72.0",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.1.3@sha256:1a62f8e2f7a381c14bb84890a05bc04763f6804ac83e17e4dc022df0e5ef6e7f",
-        "PREVIOUS_VERSION: v1.1.3",
-        "RELEASE_VERSION: v1.1.4",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.1.4@sha256:56756701a8b7468e1929b956950edb06ba8e0f0c87c5796aa57bde1389f82a91",
+        "PREVIOUS_VERSION: v1.1.4",
+        "RELEASE_VERSION: v1.1.5",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
         "bash scripts/validate_renovate_extraction.sh 44.2.3",
-        "scripts/validate_security_exceptions.py",
         "scripts/validate_scanner_findings.py",
         "bash scripts/test_plugin_modes.sh",
-        "config/security-exceptions-v1.1.4.json",
-        '--installed "chromium=$installed"',
-        '--available "chromium=$available"',
         'ref: ${{ github.sha }}',
         'git rev-parse origin/main',
         "Pull exact candidate digest",
@@ -112,6 +108,8 @@ def collect_errors() -> list[str]:
         errors.append("docker-publish.yml must not bypass the fixable critical/high gate")
     if "eceasy/cli-proxy-api" in protected_text:
         errors.append("docker-publish.yml must not pull the removed CLIProxyAPI sidecar")
+    if "config/security-exceptions-v1.1.4.json" in protected_text:
+        errors.append("docker-publish.yml must not reuse the historical v1.1.4 exceptions")
 
     pr_validation = WORKFLOWS / "pr-validation.yml"
     pr_text = pr_validation.read_text(encoding="utf-8")
