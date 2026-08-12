@@ -4,7 +4,7 @@
 
 OpenCode AI coding agent with built-in web UI, Claude subscription support, 50+ dev tools, a sandboxed headless browser, optional Paperclip, and external CLIProxyAPI endpoint support. Use your existing Claude Max/Pro plan. No separate API key needed.
 
-v1.1.5 rebuilds the image with current Debian Trixie security packages, including Chromium 151.0.7922.71. It keeps the OpenCode, Claude Code, Paperclip, and compatible tool pins from v1.1.4.
+v1.1.6 refreshes Node.js 24.19.0, OpenCode 1.18.16, Claude Code 2.1.228, Claude Auth 2.1.6, and the compatible development toolchain. Native AMD64 and ARM64 pull-request jobs build and smoke-test the image.
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/coderluii/holycode?style=flat-square&logo=docker)](https://hub.docker.com/r/coderluii/holycode)
 [![GitHub Stars](https://img.shields.io/github/stars/coderluii/holycode?style=flat-square&logo=github)](https://github.com/CoderLuii/HolyCode)

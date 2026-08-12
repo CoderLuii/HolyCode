@@ -4,31 +4,28 @@
 # ==============================================================================
 
 # renovate: datasource=github-releases depName=cli/cli
-ARG GITHUB_CLI_VERSION=2.96.0
-ARG GITHUB_CLI_REF=b300f2ec7ec9dc9addc39b2ad88c54097ded7ca0
+ARG GITHUB_CLI_VERSION=2.97.0
+ARG GITHUB_CLI_REF=55dbb4dc6b7edb10b48e3d7fc5bccd32318d1b55
 # renovate: datasource=github-releases depName=junegunn/fzf
-ARG FZF_VERSION=0.74.1
-ARG FZF_REF=eae8d9d27eaeffc777699c01bf8f8b8c071908c1
+ARG FZF_VERSION=0.74.2
+ARG FZF_REF=3337be9d450cd349e99273a2d3985ceaf5f3753f
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.63.1
-ARG LAZYGIT_REF=aafe61082e7ed383d318fd40e48f85645e6afc7b
+ARG LAZYGIT_VERSION=0.64.0
+ARG LAZYGIT_REF=aee0e40ec1235476e9328678f0f3e2462576b9ae
 
 # Rebuild exact release sources with reviewed dependency fixes.
-FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS github-cli-builder
+FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:98988b42f3293b627bf07c884ff17181a59501769cd8c06c7ba901e0ce2c9853 AS github-cli-builder
 ARG GITHUB_CLI_VERSION
 ARG GITHUB_CLI_REF
 ARG TARGETARCH
-COPY patches/github-cli-modules.patch /tmp/github-cli-modules.patch
 RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
       https://github.com/cli/cli.git /src && \
     cd /src && \
     test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}" && \
     test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
-    git apply --check /tmp/github-cli-modules.patch && \
-    git apply /tmp/github-cli-modules.patch && \
     test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.82.1" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.39.0" && \
-    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.18.7" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.40.0" && \
+    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.19.1" && \
     go mod verify && \
     mkdir -p /tmp/gh-test && \
     chown -R nobody:nogroup /src /tmp/gh-test && \
@@ -41,10 +38,10 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
       GOOS=linux GOARCH="${GH_GOARCH}" CGO_ENABLED=0 && \
     install -D -m 0755 bin/gh /out/gh && \
     go version -m /out/gh | grep -F "go1.26.5" && \
-    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.18\.7' && \
-    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.39\.0'
+    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.19\.1' && \
+    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.40\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS fzf-builder
+FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:98988b42f3293b627bf07c884ff17181a59501769cd8c06c7ba901e0ce2c9853 AS fzf-builder
 ARG FZF_VERSION
 ARG FZF_REF
 ARG TARGETARCH
@@ -70,20 +67,17 @@ RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
       -o /out/fzf && \
     go version -m /out/fzf | grep -E 'golang.org/x/sys[[:space:]]+v0\.44\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:4ee9ffa999b4583ce281939cdff828763083610292f252279a0cee77473bd9a7 AS lazygit-builder
+FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:98988b42f3293b627bf07c884ff17181a59501769cd8c06c7ba901e0ce2c9853 AS lazygit-builder
 ARG LAZYGIT_VERSION
 ARG LAZYGIT_REF
 ARG TARGETARCH
-COPY patches/lazygit-x-text-0.39.0.patch /tmp/lazygit-x-text-0.39.0.patch
 RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
       https://github.com/jesseduffield/lazygit.git /src && \
     cd /src && \
     test "$(git rev-parse HEAD)" = "${LAZYGIT_REF}" && \
     test "$(git describe --tags --exact-match HEAD)" = "v${LAZYGIT_VERSION}" && \
-    git apply --check /tmp/lazygit-x-text-0.39.0.patch && \
-    git apply /tmp/lazygit-x-text-0.39.0.patch && \
     export GOFLAGS=-mod=mod && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.39.0" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.40.0" && \
     go mod verify && \
     LAZYGIT_MODULE_FILES_SHA256="$(sha256sum go.mod go.sum)" && \
     go mod vendor && \
@@ -96,9 +90,9 @@ RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
     GOOS=linux GOARCH="${LAZYGIT_GOARCH}" CGO_ENABLED=0 go build -trimpath \
       -ldflags "-s -w -X main.version=${LAZYGIT_VERSION} -X main.commit=${LAZYGIT_REF} -X main.date=${BUILD_DATE} -X main.buildSource=binaryRelease" \
       -o /out/lazygit && \
-    go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.39\.0'
+    go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.40\.0'
 
-FROM node:24.18.0-trixie-slim@sha256:ae91dcc111a68c9d2d81ff2a17bda61be126426176fde6fe7d08ab13b7f50573
+FROM node:24.19.0-trixie-slim@sha256:0711b541c1c33a8a530ac4f0d391baa9a15b3d804695b1b24a47daa5fb60e74d
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -111,29 +105,29 @@ ARG DELTA_VERSION=0.19.2
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.9
+ARG OPENCODE_VERSION=1.18.16
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.220
+ARG CLAUDE_CODE_VERSION=2.1.228
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.722.0
 # renovate: datasource=npm depName=undici
 ARG PAPERCLIP_UNDICI_VERSION=6.28.0
 # renovate: datasource=npm depName=opencode-claude-auth
-ARG CLAUDE_AUTH_PLUGIN_VERSION=2.1.5
+ARG CLAUDE_AUTH_PLUGIN_VERSION=2.1.6
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
 ARG NPM_VERSION=12.0.2
 # renovate: datasource=npm depName=brace-expansion
-ARG NPM_BRACE_EXPANSION_VERSION=5.0.8
+ARG NPM_BRACE_EXPANSION_VERSION=5.0.9
 # renovate: datasource=npm depName=tar
 ARG NPM_TAR_VERSION=7.5.22
 # renovate: datasource=npm depName=tsx
-ARG TSX_VERSION=4.23.1
+ARG TSX_VERSION=4.23.12
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=11.18.0
+ARG PNPM_VERSION=11.21.0
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.1.5
+ARG VITE_VERSION=8.2.1
 # renovate: datasource=npm depName=prettier
 ARG PRETTIER_VERSION=3.9.6
 # renovate: datasource=npm depName=prisma
@@ -141,13 +135,13 @@ ARG PRISMA_VERSION=7.9.1
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.115.0
+ARG WRANGLER_VERSION=4.121.0
 # renovate: datasource=npm depName=eslint
-ARG ESLINT_VERSION=10.8.0
+ARG ESLINT_VERSION=10.8.1
 # renovate: datasource=pypi depName=numpy
-ARG NUMPY_VERSION=2.5.1
+ARG NUMPY_VERSION=2.5.2
 # renovate: datasource=pypi depName=pip
-ARG PIP_VERSION=26.2
+ARG PIP_VERSION=26.2.1
 # renovate: datasource=pypi depName=msgpack
 ARG PIP_VENDOR_MSGPACK_VERSION=1.2.1
 ARG PIP_VENDOR_MSGPACK_SHA256=04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647
@@ -156,7 +150,7 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=80.9.0
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=83.0.0
-ARG RELEASE_APT_REFRESH=2026-08-02
+ARG RELEASE_APT_REFRESH=2026-08-11
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -356,7 +350,7 @@ RUN npm install -g --ignore-scripts "npm@${NPM_VERSION}" && \
     test "$(npm --version)" = "${NPM_VERSION}" && \
     rm -rf /root/.npm
 RUN test "$(npm view "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}" dist.integrity)" = \
-      "sha512-JZyDyq3D4AUifKTPOB7DELf6XsB3WdPuNxCtob1vFXPsSXhdAiHBWJ/tJ8HAc9aH84BK+5JFZLNkJKx3G9kzQg==" && \
+      "sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==" && \
     BRACE_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}") && \
     BRACE_DIR=/usr/local/lib/node_modules/npm/node_modules/brace-expansion && \
@@ -436,7 +430,7 @@ RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
     rm -rf /root/.npm
 # Package the supported Claude Auth plugin for network-free startup.
 RUN test "$(npm view "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}" dist.integrity)" = \
-      "sha512-rRZ3aZJEbgHsXzox1vkXY3sIrE3Z6c5ya/hEJJb2/XavuPufvTLI9dN2VHfvhFTl6eZPbs10hlSirfGnyLr46Q==" && \
+      "sha512-PVHMBoGms/e2cRDXi1gMx4N8UK4ZSBaviNO7UfheXm5mEW+PnFe7H1brXK5pDjvm1naGn9AntWUNIhOeJnyhvA==" && \
     CLAUDE_AUTH_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}") && \
     CLAUDE_AUTH_DIR=/usr/local/share/holycode/plugins/opencode-claude-auth && \

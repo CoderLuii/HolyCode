@@ -464,7 +464,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 | Runtime | Version |
 |---------|---------|
-| Node.js | 24.18.0 (LTS) |
+| Node.js | 24.19.0 (LTS) |
 | npm | 12.0.2 |
 | Python | 3.13 (Trixie) |
 | pip | Bundled with Python 3.13 |
@@ -472,40 +472,40 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 </details>
 
 <details>
-<summary><strong>v1.1.4 release pins</strong></summary>
+<summary><strong>v1.1.6 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
-| OpenCode | 1.18.9 |
+| OpenCode | 1.18.16 |
 | Paperclip | 2026.722.0 with reviewed Undici 6.28.0 replacement |
 | Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
 | s6-overlay | 3.2.3.2 |
 | eza | 0.23.5 |
-| fzf | 0.74.1 |
-| lazygit | 0.63.1 |
-| pnpm | 11.18.0 |
-| Vite | 8.1.5 |
-| ESLint | 10.8.0 |
+| fzf | 0.74.2 |
+| lazygit | 0.64.0 |
+| pnpm | 11.21.0 |
+| Vite | 8.2.1 |
+| ESLint | 10.8.1 |
 | Prettier | 3.9.6 |
-| Wrangler | 4.115.0; legacy service environments are not supported |
+| Wrangler | 4.121.0; legacy service environments are not supported |
 | Prisma | 7.9.1 |
 | Lighthouse | 13.4.1 |
 | Netlify CLI and `serve` | Removed |
 | Hermes, Vercel, sharp-cli, concurrently, LHCI | Removed because their current dependency trees contain unresolved or fixable security findings |
 | tqdm | 4.70.0 |
-| FastAPI / Uvicorn | 0.141.1 / 0.52.0 |
-| Claude stable | 2.1.220 |
-| tsx | 4.23.1 |
+| FastAPI / Uvicorn | 0.141.1 / 0.52.1 |
+| Claude stable | 2.1.228 |
+| tsx | 4.23.12 |
 | TypeScript | 6.0.3, held until TypeScript 7 exposes the stable toolchain APIs this image needs |
-| NumPy | 2.5.1 on Python 3.13 |
+| NumPy | 2.5.2 on Python 3.13 |
 | json-server | 0.17.4, held on the stable release instead of the 1.0 beta |
-| opencode-claude-auth default | 2.1.5, integrity-verified and installed from the image |
+| opencode-claude-auth default | 2.1.6, integrity-verified and installed from the image |
 | oh-my-openagent | HolyCode-managed installation suspended; legacy active entry disabled once while settings, skills, and cache remain |
 
 Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. HolyCode also publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
 
-The dated adoption, hold, removal, exception, and scanner decisions are in the [v1.1.4 dependency audit](docs/dependency-audit-v1.1.4.md).
+The dated adoption, hold, removal, exception, and scanner decisions are in the [v1.1.6 dependency audit](docs/dependency-audit-v1.1.6.md).
 
 </details>
 

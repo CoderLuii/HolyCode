@@ -11,7 +11,7 @@ OC_USER="opencode"
 OC_HOME="/home/opencode"
 WORKSPACE_DIR="/workspace"
 CLAUDE_AUTH_PLUGIN_NAME="opencode-claude-auth"
-CLAUDE_AUTH_PLUGIN_VERSION="2.1.5"
+CLAUDE_AUTH_PLUGIN_VERSION="2.1.6"
 CLAUDE_AUTH_PLUGIN_SOURCE="/usr/local/share/holycode/plugins/opencode-claude-auth"
 
 sync_shipped_skills() {

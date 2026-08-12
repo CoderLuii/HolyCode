@@ -17,6 +17,7 @@ class ValidateVersionTests(unittest.TestCase):
     def test_accepts_standard_rollovers(self):
         cases = [
             ("v1.1.4", "v1.1.5"),
+            ("v1.1.5", "v1.1.6"),
             ("v1.0.9", "v1.1.0"),
             ("v1.1.9", "v1.2.0"),
             ("v1.9.9", "v2.0.0"),

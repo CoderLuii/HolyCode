@@ -14,9 +14,9 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.1.4@sha256:56756701a8b7468e1929b956950edb06ba8e0f0c87c5796aa57bde1389f82a91
-  PREVIOUS_VERSION: v1.1.4
-  RELEASE_VERSION: v1.1.5
+  PREVIOUS_IMAGE: coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8
+  PREVIOUS_VERSION: v1.1.5
+  RELEASE_VERSION: v1.1.6
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -74,7 +74,7 @@ jobs:
       - name: Set up Node for Renovate validation
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.18.0
+          node-version: 24.19.0
 
       - name: Static release validation
         run: |
@@ -87,7 +87,7 @@ jobs:
           ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
           docker compose -f docker-compose.yaml config --no-interpolate >/tmp/docker-compose.yaml
           docker compose -f docker-compose.full.yaml config --no-interpolate >/tmp/docker-compose.full.yaml
-          bash scripts/validate_renovate_extraction.sh 44.2.3
+          bash scripts/validate_renovate_extraction.sh 44.24.2
 
       - name: Free up disk space
         run: |
@@ -151,12 +151,12 @@ jobs:
             suffix: amd64
             runner: ubuntu-24.04
             scout_arch: amd64
-            scout_sha256: 0f778f9d833f28bc6cccff95e33039849c0afcecafa38d9f46fe74bfd0915714
+            scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b
           - platform: linux/arm64
             suffix: arm64
             runner: ubuntu-24.04-arm
             scout_arch: arm64
-            scout_sha256: 88eecb7273f19bd18300d70e6f85b2e7d784e9e4f3cbb4a2b400db6b8355a52a
+            scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58
     permissions:
       contents: read
       packages: read
@@ -202,7 +202,7 @@ jobs:
       - name: Generate SPDX SBOM for Docker Scout
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.72.0
+          version: v0.73.0
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: spdx-json
           output: holycode-${{ matrix.suffix }}.spdx.json
@@ -210,7 +210,7 @@ jobs:
       - name: Install Docker Scout CLI
         env:
           SCOUT_SHA256: ${{ matrix.scout_sha256 }}
-          SCOUT_VERSION: 1.23.1
+          SCOUT_VERSION: 1.24.0
         run: |
           set -euo pipefail
 
@@ -282,7 +282,7 @@ jobs:
       - name: Trivy vulnerability report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.72.0
+          version: v0.73.0
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret
@@ -293,7 +293,7 @@ jobs:
       - name: Trivy fixable critical and high gate
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.72.0
+          version: v0.73.0
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret

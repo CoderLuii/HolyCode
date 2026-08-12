@@ -130,7 +130,7 @@ PY
   python3 -m venv /tmp/holycode-python-seed
   /tmp/holycode-python-seed/bin/python -m pip install --no-index \
     --find-links /usr/local/share/holycode/python-seed \
-    pip==26.2 setuptools==83.0.0 packaging==26.2 wheel==0.47.0
+    pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.47.0
   /tmp/holycode-python-seed/bin/python - <<PY
 import importlib.metadata as metadata
 assert metadata.version("pip") == "26.2"
