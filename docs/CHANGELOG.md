@@ -4,6 +4,19 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.6] - 08/11/2026
+
+### Changed
+
+- Refresh Node.js to 24.19.0, GitHub CLI to 2.97.0, fzf to 0.74.2, lazygit to 0.64.0, OpenCode to 1.18.16, Claude Code to 2.1.228, and Claude Auth to 2.1.6
+- Refresh pnpm to 11.21.0, tsx to 4.23.12, Vite to 8.2.1, Wrangler to 4.121.0, ESLint to 10.8.1, and the protected Renovate validator to 44.24.2
+- Refresh the hash-locked Python set with Playwright 1.62.0, NumPy 2.5.2, Packaging 26.3, setuptools 84.0.0, Markdown 3.10.3, Uvicorn 0.52.1, and pip 26.2.1
+
+### Security
+
+- Run pull-request image builds and smoke tests natively on both AMD64 and ARM64
+- Refresh Docker Scout to 1.24.0 and Trivy to 0.73.0 while keeping fixable critical and high findings fail-closed
+
 ## [1.1.5] - 08/02/2026
 
 ### Changed

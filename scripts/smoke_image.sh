@@ -114,12 +114,12 @@ assert metadata.version("pandas") == "3.0.5"
 assert metadata.version("matplotlib") == "3.11.1"
 assert metadata.version("tqdm") == "4.70.0"
 assert metadata.version("fastapi") == "0.141.1"
-assert metadata.version("uvicorn") == "0.52.0"
-assert metadata.version("packaging") == "26.2"
+assert metadata.version("uvicorn") == "0.52.1"
+assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.47.0"
-assert metadata.version("pip") == "26.2"
+assert metadata.version("pip") == "26.2.1"
 assert metadata.version("rich") == "15.0.0"
-assert metadata.version("setuptools") == "83.0.0"
+assert metadata.version("setuptools") == "84.0.0"
 try:
     metadata.version("hermes-agent")
 except metadata.PackageNotFoundError:
@@ -130,12 +130,12 @@ PY
   python3 -m venv /tmp/holycode-python-seed
   /tmp/holycode-python-seed/bin/python -m pip install --no-index \
     --find-links /usr/local/share/holycode/python-seed \
-    pip==26.2 setuptools==83.0.0 packaging==26.2 wheel==0.47.0
+    pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.47.0
   /tmp/holycode-python-seed/bin/python - <<PY
 import importlib.metadata as metadata
-assert metadata.version("pip") == "26.2"
-assert metadata.version("setuptools") == "83.0.0"
-assert metadata.version("packaging") == "26.2"
+assert metadata.version("pip") == "26.2.1"
+assert metadata.version("setuptools") == "84.0.0"
+assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.47.0"
 PY
 

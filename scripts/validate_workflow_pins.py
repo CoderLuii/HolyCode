@@ -80,19 +80,19 @@ def collect_errors() -> list[str]:
     for required_text in (
         "runner: ubuntu-24.04",
         "runner: ubuntu-24.04-arm",
-        "SCOUT_VERSION: 1.23.1",
-        "scout_sha256: 0f778f9d833f28bc6cccff95e33039849c0afcecafa38d9f46fe74bfd0915714",
-        "scout_sha256: 88eecb7273f19bd18300d70e6f85b2e7d784e9e4f3cbb4a2b400db6b8355a52a",
+        "SCOUT_VERSION: 1.24.0",
+        "scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b",
+        "scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58",
         "docker/scout-cli/releases/download/v${SCOUT_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
-        "version: v0.72.0",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.1.4@sha256:56756701a8b7468e1929b956950edb06ba8e0f0c87c5796aa57bde1389f82a91",
-        "PREVIOUS_VERSION: v1.1.4",
-        "RELEASE_VERSION: v1.1.5",
+        "version: v0.73.0",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8",
+        "PREVIOUS_VERSION: v1.1.5",
+        "RELEASE_VERSION: v1.1.6",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
-        "bash scripts/validate_renovate_extraction.sh 44.2.3",
+        "bash scripts/validate_renovate_extraction.sh 44.24.2",
         "scripts/validate_scanner_findings.py",
         "bash scripts/test_plugin_modes.sh",
         'ref: ${{ github.sha }}',
@@ -113,7 +113,22 @@ def collect_errors() -> list[str]:
 
     pr_validation = WORKFLOWS / "pr-validation.yml"
     pr_text = pr_validation.read_text(encoding="utf-8")
-    if "bash scripts/validate_renovate_extraction.sh 44.2.3" not in pr_text:
+    for required_text in (
+        "workflow_dispatch:",
+        "if: github.event_name == 'workflow_dispatch'",
+        "test \"$GITHUB_REF\" = 'refs/heads/main'",
+        "runner: ubuntu-24.04",
+        "runner: ubuntu-24.04-arm",
+        "platform: linux/amd64",
+        "platform: linux/arm64",
+        "bash scripts/smoke_image.sh",
+        "bash scripts/test_plugin_modes.sh",
+    ):
+        if required_text not in pr_text:
+            errors.append(f"pr-validation.yml must contain {required_text!r}")
+    if "github.event_name == 'pull_request' || github.ref" in pr_text:
+        errors.append("pr-validation.yml must fail rejected manual refs, not skip every job")
+    if "bash scripts/validate_renovate_extraction.sh 44.24.2" not in pr_text:
         errors.append("pr-validation.yml must validate Renovate extraction with the audited pin")
 
     return errors

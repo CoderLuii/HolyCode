@@ -66,15 +66,15 @@ assert_plugin() {
 
 docker volume create "$volume" >/dev/null
 run_with_auth manual
-assert_plugin opencode-claude-auth 2.1.5
-wait_for_log "configured as 'opencode-claude-auth@2.1.5'; installed version 2.1.5"
+assert_plugin opencode-claude-auth 2.1.6
+wait_for_log "configured as 'opencode-claude-auth@2.1.6'; installed version 2.1.6"
 
 docker exec "$name" sh -lc '
   set -eu
   old_root=/home/opencode/.cache/opencode/packages/opencode-claude-auth@1.5.4/node_modules/opencode-claude-auth
   mkdir -p "$old_root"
   printf "{\"name\":\"opencode-claude-auth\",\"version\":\"1.5.4\"}\n" > "$old_root/package.json"
-  sed -i "s/opencode-claude-auth@2.1.5/opencode-claude-auth@1.5.4/" \
+  sed -i "s/opencode-claude-auth@2.1.6/opencode-claude-auth@1.5.4/" \
     /home/opencode/.config/opencode/opencode.json
   chown -R opencode:opencode /home/opencode/.cache/opencode/packages/opencode-claude-auth@1.5.4
 '
@@ -86,17 +86,17 @@ wait_for_log "remains at 'opencode-claude-auth@1.5.4' (manual mode)"
 
 docker rm -f "$name" >/dev/null
 run_with_auth auto
-assert_plugin opencode-claude-auth 2.1.5
-wait_for_log "Plugin 'opencode-claude-auth' syncing to 2.1.5 (auto mode)"
+assert_plugin opencode-claude-auth 2.1.6
+wait_for_log "Plugin 'opencode-claude-auth' syncing to 2.1.6 (auto mode)"
 
 docker rm -f "$name" >/dev/null
 run_with_auth manual
-docker exec "$name" sed -i 's/opencode-claude-auth@2.1.5/opencode-claude-auth/' \
+docker exec "$name" sed -i 's/opencode-claude-auth@2.1.6/opencode-claude-auth/' \
   /home/opencode/.config/opencode/opencode.json
 docker restart "$name" >/dev/null
 wait_for_opencode
-assert_plugin opencode-claude-auth 2.1.5
-wait_for_log "Plugin 'opencode-claude-auth' installing opencode-claude-auth@2.1.5"
+assert_plugin opencode-claude-auth 2.1.6
+wait_for_log "Plugin 'opencode-claude-auth' installing opencode-claude-auth@2.1.6"
 
 docker rm -f "$name" >/dev/null
 docker run -d --name "$name" --network none -v "$volume:/home/opencode" "$image" >/dev/null

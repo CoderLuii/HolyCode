@@ -2,6 +2,7 @@ name: HolyCode - PR Validation
 
 on:
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: pr-validation-${{ github.event.pull_request.number || github.ref }}
@@ -14,13 +15,17 @@ jobs:
       contents: read
 
     steps:
+      - name: Require main for manual validation
+        if: github.event_name == 'workflow_dispatch'
+        run: test "$GITHUB_REF" = 'refs/heads/main'
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node for Renovate validation
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.18.0
+          node-version: 24.19.0
 
       - name: Python version policy tests
         run: python -m unittest discover -s tests
@@ -48,11 +53,21 @@ jobs:
           fi
 
       - name: Renovate configuration
-        run: bash scripts/validate_renovate_extraction.sh 44.2.3
+        run: bash scripts/validate_renovate_extraction.sh 44.24.2
 
   build-and-smoke-test:
     needs: static-validation
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            suffix: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            suffix: arm64
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
 
@@ -61,14 +76,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build image
-        run: docker build -t holycode-pr-test .
+        run: docker build --platform "${{ matrix.platform }}" -t "holycode-pr-test:${{ matrix.suffix }}" .
 
       - name: Smoke test image tools and secret hygiene
-        run: bash scripts/smoke_image.sh holycode-pr-test
+        run: bash scripts/smoke_image.sh "holycode-pr-test:${{ matrix.suffix }}"
 
       - name: Validate Drizzle esbuild remediation
         run: |
-          docker run --rm --entrypoint sh holycode-pr-test -lc '
+          docker run --rm --entrypoint sh "holycode-pr-test:${{ matrix.suffix }}" -lc '
             set -eu
             test ! -e /usr/local/lib/node_modules/drizzle-kit/node_modules/@esbuild-kit
             jq -e ".version == \"0.28.1\"" /usr/local/lib/node_modules/drizzle-kit/node_modules/esbuild/package.json >/dev/null
@@ -77,13 +92,13 @@ jobs:
           '
 
       - name: Validate plugin pin modes
-        run: bash scripts/test_plugin_modes.sh holycode-pr-test
+        run: bash scripts/test_plugin_modes.sh "holycode-pr-test:${{ matrix.suffix }}"
 
       - name: Smoke test Paperclip skills catalog
         run: |
           set -eu
 
-          docker run --rm --entrypoint sh holycode-pr-test -lc "
+          docker run --rm --entrypoint sh "holycode-pr-test:${{ matrix.suffix }}" -lc "
             set -eu
             test -f /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/skills-catalog/generated/catalog.json
             node --input-type=module -e '
@@ -102,7 +117,7 @@ jobs:
 
           docker run -d --name holycode-paperclip-test \
             -e ENABLE_PAPERCLIP=true \
-            holycode-pr-test
+            "holycode-pr-test:${{ matrix.suffix }}"
 
           cleanup() {
             docker logs holycode-paperclip-test || true
@@ -151,15 +166,15 @@ jobs:
 
           docker volume create holycode-hermes-data >/dev/null
           trap 'docker volume rm holycode-hermes-data >/dev/null 2>&1 || true' EXIT
-          docker run --rm --entrypoint sh -v holycode-hermes-data:/home/opencode holycode-pr-test \
+          docker run --rm --entrypoint sh -v holycode-hermes-data:/home/opencode "holycode-pr-test:${{ matrix.suffix }}" \
             -lc 'mkdir -p /home/opencode/.hermes && touch /home/opencode/.hermes/preserved'
 
           if docker run --rm -v holycode-hermes-data:/home/opencode \
-            -e ENABLE_HERMES=true holycode-pr-test >/tmp/holycode-hermes.log 2>&1; then
+            -e ENABLE_HERMES=true "holycode-pr-test:${{ matrix.suffix }}" >/tmp/holycode-hermes.log 2>&1; then
             echo "ENABLE_HERMES=true unexpectedly started the removed bundled service" >&2
             exit 1
           fi
           grep -F "bundled Hermes is temporarily unavailable" /tmp/holycode-hermes.log
           grep -F "/home/opencode/.hermes is preserved" /tmp/holycode-hermes.log
           docker run --rm --entrypoint test -v holycode-hermes-data:/home/opencode \
-            holycode-pr-test -f /home/opencode/.hermes/preserved
+            "holycode-pr-test:${{ matrix.suffix }}" -f /home/opencode/.hermes/preserved

@@ -2,15 +2,15 @@
   "npmVersion": "12.0.2",
   "mode": "deny-by-default",
   "allowScripts": {
-    "@anthropic-ai/claude-code@2.1.220": {
+    "@anthropic-ai/claude-code@2.1.228": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-ogBrvwkqF9f8okmnXKxmRNHuvtFxFEffe5pWdqOV3iQDxlUOKirFqnyWC7NGXXnDA4WkkbPH8pvSbwyCR2Auyw==",
+      "integrity": "sha512-S3Iy+c6ZuFjswQOekbVgXA+RxAuU8H2ae2nxFynqmvR5r3Gm9oyFV19XgiuatYRFKKjxP0K3i5vvvelPDgx12g==",
       "scripts": { "postinstall": "node install.cjs" },
       "reason": "Claude Code uses this script to install its pinned platform-native binary."
     },
-    "opencode-ai@1.18.9": {
+    "opencode-ai@1.18.16": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-tqvu/hJ26c2dBj/V/uTHaQI3bMSpLck0hIgGXO2z7b11s5mYfnaq+K1CBjsg8Pp6EirfzwUYGzi85K/SvOgkKg==",
+      "integrity": "sha512-l4nUfoucuw8u5WYU9my9Yz7lYpBI649i/ppgL0BGTjp/HC3p2jN50i331YpcGbKfGTEv9VG6mxU1+QZyaR5hxA==",
       "scripts": { "postinstall": "node ./postinstall.mjs" },
       "reason": "OpenCode uses this script to hydrate its pinned platform CLI and refuses to start without it."
     },
@@ -46,9 +46,9 @@
       "scripts": { "postinstall": "node scripts/postinstall.js" },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "workerd@1.20260722.1": {
+    "workerd@1.20260804.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-NycKuc1x2onvsRfGGpM093vRlLFU2zHDAM0+APpccfg4+gZxDGCH27RmdDvkeBuoZyYqgLo3oAfF6re4mvC3vQ==",
+      "integrity": "sha512-b0P38g5/ssemwWxd/mafNYggEZ0ere7PCiUH6RCHkgqjRhhXTP45nDiL2L3iIvi8uF2IjNrGpVgMXEunCaeY/w==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
     },
