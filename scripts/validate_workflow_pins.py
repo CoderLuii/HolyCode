@@ -83,12 +83,15 @@ def collect_errors() -> list[str]:
         "SCOUT_VERSION: 1.24.0",
         "scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b",
         "scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58",
+        "trivy_sha256: 2edd39da482bb4e9831962487b68f68e3928ec3137794757f54d00383d79547b",
+        "trivy_sha256: 13833d97e8a1a5367471c372a173180157f593bece570e20d5d925fef552f5dd",
         "docker/scout-cli/releases/download/v${SCOUT_VERSION}",
+        "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.73.0",
         "PREVIOUS_IMAGE: coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8",
-        "PREVIOUS_VERSION: v1.1.5",
-        "RELEASE_VERSION: v1.1.6",
+        "PREVIOUS_VERSION: v1.1.6",
+        "RELEASE_VERSION: v1.1.7",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
@@ -104,6 +107,8 @@ def collect_errors() -> list[str]:
             errors.append(f"docker-publish.yml must contain {required_text!r}")
     if protected_text.count("scanners: vuln,secret") != 2:
         errors.append("docker-publish.yml must run both Trivy gates with vuln and secret scanners")
+    if protected_text.count("skip-setup-trivy: true") != 3:
+        errors.append("docker-publish.yml must use the integrity-bound Trivy installation")
     if "trivyignores:" in protected_text:
         errors.append("docker-publish.yml must not bypass the fixable critical/high gate")
     if "eceasy/cli-proxy-api" in protected_text:
@@ -123,6 +128,30 @@ def collect_errors() -> list[str]:
         "platform: linux/arm64",
         "bash scripts/smoke_image.sh",
         "bash scripts/test_plugin_modes.sh",
+        "scout_arch: amd64",
+        "scout_arch: arm64",
+        "scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b",
+        "scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58",
+        "trivy_sha256: 2edd39da482bb4e9831962487b68f68e3928ec3137794757f54d00383d79547b",
+        "trivy_sha256: 13833d97e8a1a5367471c372a173180157f593bece570e20d5d925fef552f5dd",
+        "SCOUT_VERSION: 1.24.0",
+        "TRIVY_VERSION: 0.73.0",
+        "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
+        'docker-scout cves "sbom://$SCOUT_SBOM"',
+        "--scanner scout",
+        "--scanner trivy",
+        "version: v0.73.0",
+        "ignore-unfixed: true",
+        "holycode-pretag-${{ github.sha }}-${{ matrix.suffix }}-evidence",
+        "holycode-${{ matrix.suffix }}.commit-sha.txt",
+        "holycode-${{ matrix.suffix }}.dpkg-inventory.txt",
+        "holycode-${{ matrix.suffix }}.image-id.txt",
+        "holycode-${{ matrix.suffix }}.scout-fixable.sarif",
+        "holycode-${{ matrix.suffix }}.trivy-fixable.json",
+        "SCOUT_GATE_OUTCOME: ${{ steps.scout_gate.outcome }}",
+        "TRIVY_GATE_OUTCOME: ${{ steps.trivy_gate.outcome }}",
+        'test "$SCOUT_GATE_OUTCOME" = "success"',
+        'test "$TRIVY_GATE_OUTCOME" = "success"',
     ):
         if required_text not in pr_text:
             errors.append(f"pr-validation.yml must contain {required_text!r}")
@@ -130,6 +159,32 @@ def collect_errors() -> list[str]:
         errors.append("pr-validation.yml must fail rejected manual refs, not skip every job")
     if "bash scripts/validate_renovate_extraction.sh 44.24.2" not in pr_text:
         errors.append("pr-validation.yml must validate Renovate extraction with the audited pin")
+    if pr_text.count("scanners: vuln,secret") != 2:
+        errors.append("manual pre-tag validation must run both Trivy gates with vuln and secret scanners")
+    if pr_text.count("skip-setup-trivy: true") != 3:
+        errors.append("manual pre-tag validation must use the integrity-bound Trivy installation")
+    manual_steps = (
+        "Install Trivy CLI",
+        "Generate pre-tag SPDX SBOM for Docker Scout",
+        "Install Docker Scout CLI for pre-tag validation",
+        "Login to Docker Hub for pre-tag Docker Scout",
+        "Generate pre-tag Docker Scout vulnerability reports",
+        "Docker Scout pre-tag fixable critical and high gate",
+        "Generate pre-tag Trivy vulnerability report",
+        "Trivy pre-tag fixable critical and high gate",
+        "Validate pre-tag Trivy fixable critical and high findings",
+        "Collect pre-tag architecture evidence",
+        "Upload pre-tag architecture evidence",
+        "Enforce pre-tag scanner gates",
+    )
+    for step_name in manual_steps:
+        condition = re.compile(
+            rf"- name: {re.escape(step_name)}\n"
+            rf"(?:\s+id: [^\n]+\n)?"
+            rf"\s+if: (?:always\(\) && )?github\.event_name == 'workflow_dispatch'"
+        )
+        if not condition.search(pr_text):
+            errors.append(f"pr-validation.yml must limit {step_name!r} to manual runs")
 
     return errors
 

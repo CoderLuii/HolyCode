@@ -24,7 +24,7 @@ HolyCode does not modify OpenCode's source code.
 
 Optional OpenCode plugin that bridges Claude Code OAuth credentials into
 OpenCode. Not installed by default. Enabled via ENABLE_CLAUDE_AUTH=true
-environment variable. HolyCode includes the exact `2.1.5` npm payload in the
+environment variable. HolyCode includes the exact `2.1.6` npm payload in the
 image after registry-integrity verification, then installs it offline at
 container startup when enabled. HolyCode does not modify this plugin.
 
@@ -64,6 +64,32 @@ distribute or modify this plugin in v1.1.4.
 - Source: https://github.com/npm/cli
 - Version: 12.0.2
 
+### npm bundled ip-address 10.3.1 replacement
+
+- License: MIT
+- Source: https://github.com/beaugunderson/ip-address
+- Version: 10.3.1
+
+HolyCode replaces npm's nested `ip-address` package with the unmodified,
+integrity-verified 10.3.1 npm payload. npm's bundled `socks` dependency range
+already accepts this version.
+
+## PM2
+
+- License: AGPL-3.0
+- Source: https://github.com/Unitech/pm2
+- Version: 7.0.3
+
+### PM2 bundled js-yaml 4.3.1 replacement
+
+- License: MIT
+- Source: https://github.com/nodeca/js-yaml
+- Version: 4.3.1
+
+HolyCode replaces PM2's nested `js-yaml` package with the unmodified,
+integrity-verified 4.3.1 npm payload and updates PM2's installed dependency
+declaration to that exact version.
+
 ## Debian GNU/Linux
 
 - License: Multiple free-software licenses by package
@@ -95,9 +121,9 @@ permits the namespace syscalls required by Chromium's sandbox.
 
 - License: SEE LICENSE IN README.md
 - npm: https://www.npmjs.com/package/@anthropic-ai/claude-code
-- Version: 2.1.220
+- Version: 2.1.228
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.220`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.228`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -120,32 +146,32 @@ an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 - License: MIT
 - Copyright: GitHub, Inc.
 - Source: https://github.com/cli/cli
-- Version: 2.96.0 (`b300f2ec7ec9dc9addc39b2ad88c54097ded7ca0`)
+- Version: 2.97.0 (`55dbb4dc6b7edb10b48e3d7fc5bccd32318d1b55`)
 
 Built from the exact upstream tag with Go 1.26.5 and reviewed module updates
-for gRPC 1.82.1, klauspost/compress 1.18.7, and x/text 0.39.0.
+for gRPC 1.82.1, klauspost/compress 1.19.1, and x/text 0.40.0.
 
 ## lazygit
 
 - License: MIT
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
-- Version: 0.63.1
+- Version: 0.64.0
 
-Built from the exact upstream tag with the reviewed x/text 0.39.0 module
+Built from the exact upstream tag with the reviewed x/text 0.40.0 module
 update.
 
 ## NumPy
 
 - License: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
 - Source: https://github.com/numpy/numpy
-- Version: 2.5.1
+- Version: 2.5.2
 
 ## Packaging
 
 - License: Apache-2.0 OR BSD-2-Clause
 - Source: https://github.com/pypa/packaging
-- Version: 26.2
+- Version: 26.3
 
 ## pip vendored msgpack
 
@@ -170,7 +196,7 @@ keeps the module compatible with pip's vendoring layout.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.115.0
+- Version: 4.121.0
 
 ## delta
 
@@ -201,7 +227,7 @@ keeps the module compatible with pip's vendoring layout.
 - License: MIT
 - Copyright: Junegunn Choi
 - Source: https://github.com/junegunn/fzf
-- Version: 0.74.1
+- Version: 0.74.2
 
 Built from the exact upstream tag with the reviewed x/sys 0.44.0 module
 update.

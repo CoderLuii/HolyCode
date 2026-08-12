@@ -1,6 +1,13 @@
+import hashlib
 import json
 import re
+import shutil
+import subprocess
+import tempfile
+import threading
+import time
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 
@@ -23,6 +30,11 @@ class ReleaseContractTests(unittest.TestCase):
         cls.pr_validation = (ROOT / ".github" / "workflows" / "pr-validation.yml").read_text(encoding="utf-8")
         cls.readme = (ROOT / "README.md").read_text(encoding="utf-8")
         cls.dockerhub = (ROOT / "docs" / "dockerhub-description.md").read_text(encoding="utf-8")
+        cls.changelog = (ROOT / "docs" / "CHANGELOG.md").read_text(encoding="utf-8")
+        cls.dependency_audit = (
+            ROOT / "docs" / "dependency-audit-v1.1.7.md"
+        )
+        cls.notices = (ROOT / "THIRD-PARTY-NOTICES").read_text(encoding="utf-8")
         cls.gitattributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
         cls.python_lock = (ROOT / "config" / "python-requirements.lock").read_text(encoding="utf-8")
         cls.python_seed_lock = (
@@ -291,6 +303,182 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("expected_npm_tar", self.smoke)
         self.assertIn("cursor_cloud_api_key_missing", self.smoke)
 
+    def test_npm_ip_address_overlay_is_integrity_bound_and_exercised(self):
+        self.assertIn("ARG NPM_IP_ADDRESS_VERSION=10.3.1", self.dockerfile)
+        self.assertIn(
+            "sha512-1e9d3kb97NHJTIJDZW9rKqW2h6+dFa50Dy0fpPSMQp2ADje5gvKsXmdiK6dwY5t76TaTt5+P5N1Y/LoToIxP6g==",
+            self.dockerfile,
+        )
+        self.assertIn(
+            "/usr/local/lib/node_modules/npm/node_modules/ip-address",
+            self.dockerfile,
+        )
+        self.assertIn(
+            "/usr/local/lib/node_modules/npm/node_modules/socks/package.json",
+            self.dockerfile,
+        )
+        owner_assertion = (
+            'if(pkg.version!=="2.8.9" || '
+            'pkg.dependencies["ip-address"]!=="^10.1.1")'
+        )
+        self.assertIn(owner_assertion, self.dockerfile)
+        self.assertIn("npm ls ip-address --all", self.dockerfile)
+        self.assertIn("io.holycode.version.npm-ip-address", self.dockerfile)
+        self.assertIn("expected_npm_ip_address", self.smoke)
+        self.assertIn("EXPECTED_NPM_IP_ADDRESS", self.smoke)
+        smoke_owner_assertion = (
+            'if(pkg.version!==\\"2.8.9\\" || '
+            'pkg.dependencies[\\"ip-address\\"]!==\\"^10.1.1\\")'
+        )
+        self.assertIn(smoke_owner_assertion, self.smoke)
+        self.assertIn("npm ls ip-address --all", self.smoke)
+        runtime_assertion = 'test "$(npm prefix -g)" = "/usr/local"'
+        self.assertIn(runtime_assertion, self.dockerfile)
+        self.assertIn(runtime_assertion, self.smoke)
+        self.assertNotIn("npm --help >/dev/null", self.dockerfile)
+        self.assertNotIn("npm --help >/dev/null", self.smoke)
+
+    def test_pm2_js_yaml_overlay_updates_its_owner_and_is_exercised(self):
+        self.assertIn("ARG PM2_JS_YAML_VERSION=4.3.1", self.dockerfile)
+        self.assertIn(
+            "sha512-CY6crGq313MX8GkwvB7tzgp99vjQxY1++5y10/BKN/GUfHqWaOGQMNZkBvqSzsZKWk/ijwHlWzzkLulsGHhjWQ==",
+            self.dockerfile,
+        )
+        self.assertIn(
+            "/usr/local/lib/node_modules/pm2/node_modules/js-yaml",
+            self.dockerfile,
+        )
+        self.assertIn(
+            "/usr/local/lib/node_modules/pm2/package.json",
+            self.dockerfile,
+        )
+        self.assertIn('dependencies["js-yaml"]', self.dockerfile)
+        self.assertIn("npm ls js-yaml --all", self.dockerfile)
+        self.assertIn("io.holycode.version.pm2-js-yaml", self.dockerfile)
+        self.assertIn("expected_pm2_js_yaml", self.smoke)
+        self.assertIn("EXPECTED_PM2_JS_YAML", self.smoke)
+        self.assertIn("npm ls js-yaml --all", self.smoke)
+        self.assertIn("PM2_HOME=/tmp/holycode-smoke-pm2", self.smoke)
+
+    def test_checksum_bound_external_downloads_have_bounded_retry_window(self):
+        curl = shutil.which("curl")
+        self.assertIsNotNone(curl)
+
+        def exercise_retry_policy(failures, retry_max_time, payload=b"retry recovered\n", truncate=False):
+            request_times = []
+
+            class Handler(BaseHTTPRequestHandler):
+                def do_GET(self):
+                    request_times.append(time.monotonic())
+                    if truncate:
+                        partial = b"partial"
+                        self.send_response(200)
+                        self.send_header("Content-Length", str(len(partial) + 32))
+                        self.end_headers()
+                        self.wfile.write(partial)
+                        self.close_connection = True
+                        return
+                    if len(request_times) <= failures:
+                        self.send_response(503)
+                        self.send_header("Content-Length", "0")
+                        self.end_headers()
+                        return
+                    self.send_response(200)
+                    self.send_header("Content-Length", str(len(payload)))
+                    self.end_headers()
+                    self.wfile.write(payload)
+
+                def log_message(self, _format, *_args):
+                    return
+
+            server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    output = Path(temp_dir) / "asset"
+                    started = time.monotonic()
+                    result = subprocess.run(
+                        [
+                            curl,
+                            "--disable",
+                            "--retry",
+                            "8",
+                            "--retry-all-errors",
+                            "--retry-max-time",
+                            str(retry_max_time),
+                            "--remove-on-error",
+                            "--noproxy",
+                            "*",
+                            "--connect-timeout",
+                            "1",
+                            "--max-time",
+                            "1",
+                            "-fsSL",
+                            "-o",
+                            str(output),
+                            f"http://127.0.0.1:{server.server_port}/asset",
+                        ],
+                        capture_output=True,
+                        check=False,
+                        text=True,
+                    )
+                    elapsed = time.monotonic() - started
+                    output_exists = output.exists()
+                    downloaded = output.read_bytes() if output_exists else b""
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+            return result, request_times, elapsed, output_exists, downloaded
+
+        recovered, request_times, elapsed, output_exists, payload = exercise_retry_policy(2, 10)
+        self.assertEqual(recovered.returncode, 0, recovered.stderr)
+        self.assertTrue(output_exists)
+        self.assertEqual(payload, b"retry recovered\n")
+        self.assertEqual(len(request_times), 3)
+        self.assertGreaterEqual(request_times[1] - request_times[0], 0.8)
+        self.assertGreaterEqual(request_times[2] - request_times[1], 1.8)
+        self.assertLess(elapsed, 8)
+
+        exhausted, request_times, elapsed, output_exists, _payload = exercise_retry_policy(
+            0, 3, truncate=True
+        )
+        self.assertNotEqual(exhausted.returncode, 0)
+        self.assertFalse(output_exists)
+        self.assertGreaterEqual(len(request_times), 2)
+        self.assertLessEqual(len(request_times), 3)
+        self.assertGreaterEqual(elapsed, 2.8)
+        self.assertLess(elapsed, 5)
+
+        expected_sha256 = hashlib.sha256(b"expected\n").hexdigest()
+        wrong, request_times, _elapsed, output_exists, payload = exercise_retry_policy(
+            0, 10, payload=b"wrong\n"
+        )
+        self.assertEqual(wrong.returncode, 0, wrong.stderr)
+        self.assertTrue(output_exists)
+        checksum_matches = hashlib.sha256(payload).hexdigest() == expected_sha256
+        self.assertFalse(checksum_matches)
+        self.assertEqual(len(request_times), 1)
+
+        retry_flags = (
+            "curl --disable --retry 8 --retry-all-errors --retry-max-time 300 "
+            "--remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/"
+        )
+        self.assertEqual(self.dockerfile.count(retry_flags), 6)
+        self.assertNotIn("--retry-delay", self.dockerfile)
+        self.assertNotIn("curl -fsSL -o /tmp/", self.dockerfile)
+        for checksum in (
+            "5379750ed30a84bbd2e2dd74847ba6b5bd29cd0b2e3ea2ec58049b57eb2eda12",
+            "${S6_ARCH_SHA256}",
+            "${DELTA_SHA256}",
+            "${EZA_SHA256}",
+            "${PIP_VENDOR_MSGPACK_SHA256}",
+            "${PIP_VENDOR_PKG_RESOURCES_SHA256}",
+        ):
+            with self.subTest(checksum=checksum):
+                self.assertIn(f'{checksum}  /tmp/', self.dockerfile)
+
     def test_claude_auth_is_installed_from_verified_offline_payload(self):
         self.assertIn("ARG CLAUDE_AUTH_PLUGIN_VERSION=2.1.6", self.dockerfile)
         self.assertNotIn("opencode-claude-auth@2.1.5", self.plugin_modes)
@@ -355,9 +543,9 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("chromium-sandbox", self.dockerfile)
         self.assertIn("test -u /usr/lib/chromium/chrome-sandbox", self.dockerfile)
 
-    def test_release_workflow_uses_v1_1_5_predecessor(self):
-        self.assertIn("RELEASE_VERSION: v1.1.6", self.protected)
-        self.assertIn("PREVIOUS_VERSION: v1.1.5", self.protected)
+    def test_v1_1_7_uses_git_predecessor_but_keeps_last_published_image(self):
+        self.assertIn("RELEASE_VERSION: v1.1.7", self.protected)
+        self.assertIn("PREVIOUS_VERSION: v1.1.6", self.protected)
         self.assertIn(
             "coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8",
             self.protected,
@@ -368,6 +556,25 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertNotIn("event=workflow_dispatch", self.publish)
         self.assertEqual(self.publish.count("docker/build-push-action"), 1)
         self.assertNotIn("config/security-exceptions-v1.1.4.json", self.protected)
+
+    def test_v1_1_7_recovery_metadata_is_documented(self):
+        self.assertIn("## [1.1.7] - 08/12/2026", self.changelog)
+        self.assertTrue(self.dependency_audit.is_file())
+        audit = self.dependency_audit.read_text(encoding="utf-8")
+        self.assertIn(
+            "`8d7c87c29d678fc8726605438444608e6b0b3c0f`",
+            audit,
+        )
+        self.assertIn("Git predecessor `v1.1.6`", audit)
+        self.assertIn(
+            "`coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8`",
+            audit,
+        )
+        self.assertIn("v1.1.7 release pins", self.readme)
+        self.assertIn("dependency-audit-v1.1.7.md", self.readme)
+        self.assertIn("v1.1.7", self.dockerhub)
+        self.assertIn("js-yaml 4.3.1", self.notices)
+        self.assertIn("ip-address 10.3.1", self.notices)
 
     def test_upgrade_fixture_covers_stateful_paperclip_paths(self):
         expected = (
@@ -463,6 +670,135 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("platform: linux/arm64", self.pr_validation)
         self.assertIn("bash scripts/smoke_image.sh", self.pr_validation)
         self.assertIn("bash scripts/test_plugin_modes.sh", self.pr_validation)
+
+    def test_manual_pre_tag_validation_runs_native_scanners_and_uploads_evidence(self):
+        for value in (
+            "scout_arch: amd64",
+            "scout_arch: arm64",
+            "scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b",
+            "scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58",
+            "SCOUT_VERSION: 1.24.0",
+            'docker-scout cves "sbom://$SCOUT_SBOM"',
+            "--scanner scout",
+            "--scanner trivy",
+            "version: v0.73.0",
+            "scanners: vuln,secret",
+            "ignore-unfixed: true",
+            "holycode-pretag-${{ github.sha }}-${{ matrix.suffix }}-evidence",
+            "holycode-${{ matrix.suffix }}.commit-sha.txt",
+            "holycode-${{ matrix.suffix }}.dpkg-inventory.txt",
+            "holycode-${{ matrix.suffix }}.image-id.txt",
+            "holycode-${{ matrix.suffix }}.scout-fixable.sarif",
+            "holycode-${{ matrix.suffix }}.trivy-fixable.json",
+        ):
+            with self.subTest(value=value):
+                self.assertIn(value, self.pr_validation)
+
+        manual_steps = (
+            "Install Trivy CLI",
+            "Generate pre-tag SPDX SBOM for Docker Scout",
+            "Install Docker Scout CLI for pre-tag validation",
+            "Login to Docker Hub for pre-tag Docker Scout",
+            "Generate pre-tag Docker Scout vulnerability reports",
+            "Docker Scout pre-tag fixable critical and high gate",
+            "Generate pre-tag Trivy vulnerability report",
+            "Trivy pre-tag fixable critical and high gate",
+            "Validate pre-tag Trivy fixable critical and high findings",
+            "Collect pre-tag architecture evidence",
+            "Upload pre-tag architecture evidence",
+        )
+        for name in manual_steps:
+            with self.subTest(step=name):
+                self.assertRegex(
+                    self.pr_validation,
+                    rf"- name: {re.escape(name)}\n"
+                    rf"(?:\s+id: [^\n]+\n)?"
+                    rf"\s+if: (?:always\(\) && )?github\.event_name == 'workflow_dispatch'",
+                )
+
+    def test_scanner_cli_downloads_have_bounded_retry_and_integrity_gates(self):
+        retry_flags = (
+            "curl --disable --proto '=https' --tlsv1.2 --retry 8 --retry-all-errors "
+            "--retry-max-time 300 --remove-on-error"
+        )
+        workflows = (
+            (
+                self.pr_validation,
+                "Generate pre-tag SPDX SBOM for Docker Scout",
+                "Install Docker Scout CLI for pre-tag validation",
+            ),
+            (self.protected, "Generate SPDX SBOM for Docker Scout", "Install Docker Scout CLI"),
+        )
+        for workflow, trivy_next_step, scout_step_name in workflows:
+            for step_name, next_step_name in (
+                ("Install Trivy CLI", trivy_next_step),
+                (scout_step_name, "Login to Docker Hub"),
+            ):
+                with self.subTest(step=step_name):
+                    step = re.search(
+                        rf"- name: {re.escape(step_name)}\n(?P<body>.*?)"
+                        rf"\n      - name: {re.escape(next_step_name)}",
+                        workflow,
+                        re.DOTALL,
+                    )
+                    self.assertIsNotNone(step)
+                    body = step.group("body")
+                    normalized_body = re.sub(r"\s+", " ", body.replace("\\\n", " "))
+                    self.assertIn(retry_flags, normalized_body)
+                    self.assertIn("--connect-timeout 15 --max-time 300", normalized_body)
+                    self.assertNotIn("--retry-delay", normalized_body)
+                    self.assertLess(
+                        body.index("curl --disable"),
+                        body.index("sha256sum --check --strict"),
+                    )
+                    self.assertLess(
+                        body.index("sha256sum --check --strict"), body.index("tar -xzf")
+                    )
+
+        for workflow in (self.pr_validation, self.protected):
+            for value in (
+                "trivy_arch: 64bit",
+                "trivy_sha256: 2edd39da482bb4e9831962487b68f68e3928ec3137794757f54d00383d79547b",
+                "trivy_arch: ARM64",
+                "trivy_sha256: 13833d97e8a1a5367471c372a173180157f593bece570e20d5d925fef552f5dd",
+                "TRIVY_VERSION: 0.73.0",
+                "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
+            ):
+                with self.subTest(value=value):
+                    self.assertIn(value, workflow)
+        self.assertEqual(self.pr_validation.count("skip-setup-trivy: true"), 3)
+        self.assertEqual(self.protected.count("skip-setup-trivy: true"), 3)
+
+    def test_manual_scanner_failures_preserve_both_reports_before_failing(self):
+        for step_name, step_id in (
+            ("Docker Scout pre-tag fixable critical and high gate", "scout_gate"),
+            ("Validate pre-tag Trivy fixable critical and high findings", "trivy_gate"),
+        ):
+            with self.subTest(step=step_name):
+                self.assertRegex(
+                    self.pr_validation,
+                    rf"- name: {re.escape(step_name)}\n"
+                    rf"\s+id: {step_id}\n"
+                    rf"\s+if: github\.event_name == 'workflow_dispatch'\n"
+                    rf"\s+continue-on-error: true",
+                )
+
+        for step_name in (
+            "Collect pre-tag architecture evidence",
+            "Upload pre-tag architecture evidence",
+            "Enforce pre-tag scanner gates",
+        ):
+            with self.subTest(step=step_name):
+                self.assertRegex(
+                    self.pr_validation,
+                    rf"- name: {re.escape(step_name)}\n"
+                    rf"\s+if: always\(\) && github\.event_name == 'workflow_dispatch'",
+                )
+
+        self.assertIn("SCOUT_GATE_OUTCOME: ${{ steps.scout_gate.outcome }}", self.pr_validation)
+        self.assertIn("TRIVY_GATE_OUTCOME: ${{ steps.trivy_gate.outcome }}", self.pr_validation)
+        self.assertIn('test "$SCOUT_GATE_OUTCOME" = "success"', self.pr_validation)
+        self.assertIn('test "$TRIVY_GATE_OUTCOME" = "success"', self.pr_validation)
 
     def test_renovate_regenerates_the_hash_locked_python_requirements(self):
         self.assertIn("pip-compile", self.renovate["enabledManagers"])

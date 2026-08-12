@@ -472,11 +472,13 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 </details>
 
 <details>
-<summary><strong>v1.1.6 release pins</strong></summary>
+<summary><strong>v1.1.7 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
 | OpenCode | 1.18.16 |
+| npm | 12.0.2 with integrity-verified `ip-address` 10.3.1 replacement |
+| PM2 | 7.0.3 with integrity-verified `js-yaml` 4.3.1 replacement |
 | Paperclip | 2026.722.0 with reviewed Undici 6.28.0 replacement |
 | Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
@@ -503,9 +505,9 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | opencode-claude-auth default | 2.1.6, integrity-verified and installed from the image |
 | oh-my-openagent | HolyCode-managed installation suspended; legacy active entry disabled once while settings, skills, and cache remain |
 
-Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. HolyCode also publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
+Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. Manual main-branch validation also runs Docker Scout and Trivy natively on AMD64 and ARM64 before a tag is created. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
 
-The dated adoption, hold, removal, exception, and scanner decisions are in the [v1.1.6 dependency audit](docs/dependency-audit-v1.1.6.md).
+The dated adoption, hold, removal, exception, and scanner decisions are in the [v1.1.7 dependency audit](docs/dependency-audit-v1.1.7.md).
 
 </details>
 

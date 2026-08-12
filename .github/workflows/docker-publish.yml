@@ -15,8 +15,8 @@ env:
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
   PREVIOUS_IMAGE: coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8
-  PREVIOUS_VERSION: v1.1.5
-  RELEASE_VERSION: v1.1.6
+  PREVIOUS_VERSION: v1.1.6
+  RELEASE_VERSION: v1.1.7
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -152,11 +152,15 @@ jobs:
             runner: ubuntu-24.04
             scout_arch: amd64
             scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b
+            trivy_arch: 64bit
+            trivy_sha256: 2edd39da482bb4e9831962487b68f68e3928ec3137794757f54d00383d79547b
           - platform: linux/arm64
             suffix: arm64
             runner: ubuntu-24.04-arm
             scout_arch: arm64
             scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58
+            trivy_arch: ARM64
+            trivy_sha256: 13833d97e8a1a5367471c372a173180157f593bece570e20d5d925fef552f5dd
     permissions:
       contents: read
       packages: read
@@ -199,10 +203,31 @@ jobs:
           bash scripts/test_upgrade_rollback.sh "$CURRENT_IMAGE" "$PREVIOUS_IMAGE" "$PLATFORM" |
             tee "holycode-${{ matrix.suffix }}.upgrade-rollback.txt"
 
+      - name: Install Trivy CLI
+        env:
+          TRIVY_SHA256: ${{ matrix.trivy_sha256 }}
+          TRIVY_VERSION: 0.73.0
+        run: |
+          set -euo pipefail
+
+          archive="$RUNNER_TEMP/trivy_${TRIVY_VERSION}_Linux-${{ matrix.trivy_arch }}.tar.gz"
+          bin_dir="$RUNNER_TEMP/trivy-bin"
+          curl --disable --proto '=https' --tlsv1.2 --retry 8 --retry-all-errors \
+            --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 \
+            --fail --silent --show-error --location --output "$archive" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-${{ matrix.trivy_arch }}.tar.gz"
+          printf '%s  %s\n' "$TRIVY_SHA256" "$archive" | sha256sum --check --strict
+          mkdir -p "$bin_dir"
+          tar -xzf "$archive" -C "$bin_dir" trivy
+          chmod 0755 "$bin_dir/trivy"
+          echo "$bin_dir" >> "$GITHUB_PATH"
+          "$bin_dir/trivy" --version
+
       - name: Generate SPDX SBOM for Docker Scout
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.73.0
+          skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: spdx-json
           output: holycode-${{ matrix.suffix }}.spdx.json
@@ -216,8 +241,9 @@ jobs:
 
           archive="$RUNNER_TEMP/docker-scout_${SCOUT_VERSION}_linux_${{ matrix.scout_arch }}.tar.gz"
           bin_dir="$RUNNER_TEMP/docker-scout-bin"
-          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location \
-            --output "$archive" \
+          curl --disable --proto '=https' --tlsv1.2 --retry 8 --retry-all-errors \
+            --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 \
+            --fail --silent --show-error --location --output "$archive" \
             "https://github.com/docker/scout-cli/releases/download/v${SCOUT_VERSION}/docker-scout_${SCOUT_VERSION}_linux_${{ matrix.scout_arch }}.tar.gz"
           printf '%s  %s\n' "$SCOUT_SHA256" "$archive" | sha256sum --check --strict
           mkdir -p "$bin_dir"
@@ -283,6 +309,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.73.0
+          skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret
@@ -294,6 +321,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.73.0
+          skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret

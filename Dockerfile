@@ -122,6 +122,10 @@ ARG NPM_VERSION=12.0.2
 ARG NPM_BRACE_EXPANSION_VERSION=5.0.9
 # renovate: datasource=npm depName=tar
 ARG NPM_TAR_VERSION=7.5.22
+# renovate: datasource=npm depName=ip-address
+ARG NPM_IP_ADDRESS_VERSION=10.3.1
+# renovate: datasource=npm depName=js-yaml
+ARG PM2_JS_YAML_VERSION=4.3.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.12
 # renovate: datasource=npm depName=pnpm
@@ -150,7 +154,7 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=80.9.0
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-08-11
+ARG RELEASE_APT_REFRESH=2026-08-12
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -162,6 +166,8 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.npm=${NPM_VERSION} \
     io.holycode.version.npm-brace-expansion=${NPM_BRACE_EXPANSION_VERSION} \
     io.holycode.version.npm-tar=${NPM_TAR_VERSION} \
+    io.holycode.version.npm-ip-address=${NPM_IP_ADDRESS_VERSION} \
+    io.holycode.version.pm2-js-yaml=${PM2_JS_YAML_VERSION} \
     io.holycode.version.pip-vendor-msgpack=${PIP_VENDOR_MSGPACK_VERSION} \
     io.holycode.version.pip-vendor-pkg-resources=${PIP_VENDOR_PKG_RESOURCES_VERSION} \
     io.holycode.version.typescript=${TYPESCRIPT_VERSION} \
@@ -197,9 +203,9 @@ RUN S6_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; e
       arm64) echo "b17f17a82e7a515c682a91edaf2ffdabb73f891981b6c1fd712115693a2f8b4c";; \
       *) echo "e6befcc96a437a3831386ecfc51808c5d3e939dc5fe3c02ae9284599e8aa2408";; \
     esac) && \
-    curl -fsSL -o /tmp/s6-overlay-noarch.tar.xz \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/s6-overlay-noarch.tar.xz \
       "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" && \
-    curl -fsSL -o /tmp/s6-overlay-arch.tar.xz \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/s6-overlay-arch.tar.xz \
       "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" && \
     echo "5379750ed30a84bbd2e2dd74847ba6b5bd29cd0b2e3ea2ec58049b57eb2eda12  /tmp/s6-overlay-noarch.tar.xz" | sha256sum -c - && \
     echo "${S6_ARCH_SHA256}  /tmp/s6-overlay-arch.tar.xz" | sha256sum -c - && \
@@ -271,7 +277,7 @@ RUN DELTA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64-unknown-linux-gnu";;
       arm64) echo "0bfce159a5cddd5feb3d6db4a616d883ff51253ce08ac7ec11cb1d208cfaab9e";; \
       *) echo "8e695c5f586a8c53d6c3b01be0b4a422ed218bfed2a56191caebe373a1c18ab2";; \
     esac) && \
-    curl -fsSL -o /tmp/delta.tar.gz \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/delta.tar.gz \
       "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-${DELTA_ARCH}.tar.gz" && \
     echo "${DELTA_SHA256}  /tmp/delta.tar.gz" | sha256sum -c - && \
     tar -C /tmp -xzf /tmp/delta.tar.gz && \
@@ -284,7 +290,7 @@ RUN EZA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; 
       arm64) echo "40b87ae8628aa2ff0f0d2dc24ab52f689631366385c3da630bae745671fd71ec";; \
       *) echo "35c70c5c43c29108075e58b893234c67ef585f0b53a7eaf8e9e7d4eec9f339b4";; \
     esac) && \
-    curl -fsSL -o /tmp/eza.tar.gz \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/eza.tar.gz \
       "https://github.com/eza-community/eza/releases/download/v${EZA_VERSION}/eza_${EZA_ARCH}-unknown-linux-gnu.tar.gz" && \
     echo "${EZA_SHA256}  /tmp/eza.tar.gz" | sha256sum -c - && \
     tar -C /usr/local/bin -xzf /tmp/eza.tar.gz && \
@@ -311,10 +317,10 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
 # /usr/local. pip remains available from the exact PyPI package.
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
       --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock && \
-    curl -fsSL -o /tmp/msgpack.tar.gz \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/msgpack.tar.gz \
       "https://files.pythonhosted.org/packages/31/f9/c0a1c127f9049db9155afc316952ea571720dd01833ff5e4d7e8e6352dbb/msgpack-${PIP_VENDOR_MSGPACK_VERSION}.tar.gz" && \
     echo "${PIP_VENDOR_MSGPACK_SHA256}  /tmp/msgpack.tar.gz" | sha256sum -c - && \
-    curl -fsSL -o /tmp/setuptools.tar.gz \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/setuptools.tar.gz \
       "https://files.pythonhosted.org/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-${PIP_VENDOR_PKG_RESOURCES_VERSION}.tar.gz" && \
     echo "${PIP_VENDOR_PKG_RESOURCES_SHA256}  /tmp/setuptools.tar.gz" | sha256sum -c - && \
     mkdir -p /tmp/msgpack /tmp/setuptools && \
@@ -372,6 +378,24 @@ RUN test "$(npm view "tar@${NPM_TAR_VERSION}" dist.integrity)" = \
       "${NPM_TAR_VERSION}" && \
     (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null) && \
     rm -rf /root/.npm
+# npm 12.0.2 resolves ip-address 10.2.0 through socks. Keep the compatible
+# socks range and replace that nested copy with the fixed 10.3.1 release.
+RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
+      "sha512-1e9d3kb97NHJTIJDZW9rKqW2h6+dFa50Dy0fpPSMQp2ADje5gvKsXmdiK6dwY5t76TaTt5+P5N1Y/LoToIxP6g==" && \
+    NPM_IP_ADDRESS_TARBALL=$(npm pack --silent --pack-destination /tmp \
+      "ip-address@${NPM_IP_ADDRESS_VERSION}") && \
+    NPM_IP_ADDRESS_DIR=/usr/local/lib/node_modules/npm/node_modules/ip-address && \
+    NPM_SOCKS_PACKAGE=/usr/local/lib/node_modules/npm/node_modules/socks/package.json && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!=="2.8.9" || pkg.dependencies["ip-address"]!=="^10.1.1") process.exit(1)' \
+      "$NPM_SOCKS_PACKAGE" && \
+    rm -rf "$NPM_IP_ADDRESS_DIR" && mkdir "$NPM_IP_ADDRESS_DIR" && \
+    tar -xzf "/tmp/${NPM_IP_ADDRESS_TARBALL}" -C "$NPM_IP_ADDRESS_DIR" --strip-components=1 && \
+    rm "/tmp/${NPM_IP_ADDRESS_TARBALL}" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/ip-address/package.json").version')" = \
+      "${NPM_IP_ADDRESS_VERSION}" && \
+    (cd /usr/local/lib/node_modules/npm && npm ls ip-address --all >/dev/null) && \
+    test "$(npm prefix -g)" = "/usr/local" && \
+    rm -rf /root/.npm
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
@@ -405,6 +429,29 @@ RUN npm i -g --ignore-scripts \
     test "$(node -p 'require("/usr/local/lib/node_modules/drizzle-kit/node_modules/esbuild/package.json").version')" = "0.28.1" && \
     drizzle-kit --version && \
     drizzle-kit --help >/dev/null && \
+    rm -rf /root/.npm
+
+# PM2 7.0.3 pins js-yaml 4.3.0. Replace the nested package with 4.3.1 and
+# align PM2's exact declaration so npm validates the installed tree.
+RUN test "$(npm view "js-yaml@${PM2_JS_YAML_VERSION}" dist.integrity)" = \
+      "sha512-CY6crGq313MX8GkwvB7tzgp99vjQxY1++5y10/BKN/GUfHqWaOGQMNZkBvqSzsZKWk/ijwHlWzzkLulsGHhjWQ==" && \
+    PM2_JS_YAML_TARBALL=$(npm pack --silent --pack-destination /tmp \
+      "js-yaml@${PM2_JS_YAML_VERSION}") && \
+    PM2_JS_YAML_DIR=/usr/local/lib/node_modules/pm2/node_modules/js-yaml && \
+    PM2_PACKAGE=/usr/local/lib/node_modules/pm2/package.json && \
+    rm -rf "$PM2_JS_YAML_DIR" && mkdir "$PM2_JS_YAML_DIR" && \
+    tar -xzf "/tmp/${PM2_JS_YAML_TARBALL}" -C "$PM2_JS_YAML_DIR" --strip-components=1 && \
+    rm "/tmp/${PM2_JS_YAML_TARBALL}" && \
+    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies["js-yaml"]!=="4.3.0") process.exit(1); pkg.dependencies["js-yaml"]=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
+      "$PM2_PACKAGE" "${PM2_JS_YAML_VERSION}" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json").version')" = \
+      "${PM2_JS_YAML_VERSION}" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies["js-yaml"]!==process.argv[2]) process.exit(1)' \
+      "$PM2_PACKAGE" "${PM2_JS_YAML_VERSION}" && \
+    (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null) && \
+    PM2_HOME=/tmp/holycode-build-pm2 pm2 --version | grep -Fx "7.0.3" && \
+    PM2_HOME=/tmp/holycode-build-pm2 pm2 kill >/dev/null && \
+    rm -rf /tmp/holycode-build-pm2 && \
     rm -rf /root/.npm
 
 RUN npm i -g --ignore-scripts \

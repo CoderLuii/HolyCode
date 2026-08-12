@@ -15,6 +15,8 @@ expected_claude_auth="$(image_label io.holycode.version.claude-auth-plugin)"
 expected_npm="$(image_label io.holycode.version.npm)"
 expected_npm_brace_expansion="$(image_label io.holycode.version.npm-brace-expansion)"
 expected_npm_tar="$(image_label io.holycode.version.npm-tar)"
+expected_npm_ip_address="$(image_label io.holycode.version.npm-ip-address)"
+expected_pm2_js_yaml="$(image_label io.holycode.version.pm2-js-yaml)"
 expected_pip_vendor_msgpack="$(image_label io.holycode.version.pip-vendor-msgpack)"
 expected_pip_vendor_pkg_resources="$(image_label io.holycode.version.pip-vendor-pkg-resources)"
 expected_typescript="$(image_label io.holycode.version.typescript)"
@@ -50,6 +52,8 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   -e EXPECTED_NPM="$expected_npm" \
   -e EXPECTED_NPM_BRACE_EXPANSION="$expected_npm_brace_expansion" \
   -e EXPECTED_NPM_TAR="$expected_npm_tar" \
+  -e EXPECTED_NPM_IP_ADDRESS="$expected_npm_ip_address" \
+  -e EXPECTED_PM2_JS_YAML="$expected_pm2_js_yaml" \
   -e EXPECTED_PIP_VENDOR_MSGPACK="$expected_pip_vendor_msgpack" \
   -e EXPECTED_PIP_VENDOR_PKG_RESOURCES="$expected_pip_vendor_pkg_resources" \
   -e EXPECTED_TYPESCRIPT="$expected_typescript" \
@@ -75,6 +79,16 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   (cd /usr/local/lib/node_modules/npm && npm ls brace-expansion --all >/dev/null)
   node -e "console.log(require(\"/usr/local/lib/node_modules/npm/node_modules/tar/package.json\").version)" | grep -Fx "$EXPECTED_NPM_TAR"
   (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null)
+  node -e "console.log(require(\"/usr/local/lib/node_modules/npm/node_modules/ip-address/package.json\").version)" | grep -Fx "$EXPECTED_NPM_IP_ADDRESS"
+  node -e "const pkg=require(\"/usr/local/lib/node_modules/npm/node_modules/socks/package.json\"); if(pkg.version!==\"2.8.9\" || pkg.dependencies[\"ip-address\"]!==\"^10.1.1\") process.exit(1)"
+  (cd /usr/local/lib/node_modules/npm && npm ls ip-address --all >/dev/null)
+  test "$(npm prefix -g)" = "/usr/local"
+  node -e "console.log(require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json\").version)" | grep -Fx "$EXPECTED_PM2_JS_YAML"
+  node -e "const pkg=require(\"/usr/local/lib/node_modules/pm2/package.json\"); if(pkg.dependencies[\"js-yaml\"]!==process.env.EXPECTED_PM2_JS_YAML) process.exit(1)"
+  (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null)
+  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 --version | grep -Fx "7.0.3"
+  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 kill >/dev/null
+  rm -rf /tmp/holycode-smoke-pm2
   opencode --version | grep -Fx "$EXPECTED_OPENCODE"
   test -d "/package/admin/s6-overlay-$EXPECTED_S6"
   fzf --version | grep -E "^$EXPECTED_FZF([[:space:]]|$)"

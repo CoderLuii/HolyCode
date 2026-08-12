@@ -4,6 +4,17 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.7] - 08/12/2026
+
+### Fixed
+
+- Replace npm's nested `ip-address` 10.2.0 with integrity-verified 10.3.1 and validate the compatible `socks` declaration, installed tree, and npm runtime
+- Replace PM2's nested `js-yaml` 4.3.0 with integrity-verified 4.3.1, align PM2's exact dependency declaration, and validate the installed tree and PM2 runtime
+
+### Security
+
+- Run Docker Scout 1.24.0 and Trivy 0.73.0 on both native architectures during manual main-branch validation, then upload commit-bound SBOM and scanner evidence before a release tag is created
+
 ## [1.1.6] - 08/11/2026
 
 ### Changed

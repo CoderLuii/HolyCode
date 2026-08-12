@@ -4,7 +4,7 @@
 
 OpenCode AI coding agent with built-in web UI, Claude subscription support, 50+ dev tools, a sandboxed headless browser, optional Paperclip, and external CLIProxyAPI endpoint support. Use your existing Claude Max/Pro plan. No separate API key needed.
 
-v1.1.6 refreshes Node.js 24.19.0, OpenCode 1.18.16, Claude Code 2.1.228, Claude Auth 2.1.6, and the compatible development toolchain. Native AMD64 and ARM64 pull-request jobs build and smoke-test the image.
+v1.1.7 keeps the v1.1.6 toolchain and replaces npm's nested `ip-address` with 10.3.1 and PM2's nested `js-yaml` with 4.3.1. Native AMD64 and ARM64 manual checks now run Docker Scout and Trivy before a release tag is created.
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/coderluii/holycode?style=flat-square&logo=docker)](https://hub.docker.com/r/coderluii/holycode)
 [![GitHub Stars](https://img.shields.io/github/stars/coderluii/holycode?style=flat-square&logo=github)](https://github.com/CoderLuii/HolyCode)
