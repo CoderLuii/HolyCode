@@ -4,17 +4,17 @@
 # ==============================================================================
 
 # renovate: datasource=github-releases depName=cli/cli
-ARG GITHUB_CLI_VERSION=2.97.0
-ARG GITHUB_CLI_REF=55dbb4dc6b7edb10b48e3d7fc5bccd32318d1b55
+ARG GITHUB_CLI_VERSION=2.98.0
+ARG GITHUB_CLI_REF=a255baf71d13fe5947a4eb7ad521ffd412d64cee
 # renovate: datasource=github-releases depName=junegunn/fzf
-ARG FZF_VERSION=0.74.2
-ARG FZF_REF=3337be9d450cd349e99273a2d3985ceaf5f3753f
+ARG FZF_VERSION=0.74.3
+ARG FZF_REF=15f64c492a08f0840b81540c7d1de35737448086
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.64.0
-ARG LAZYGIT_REF=aee0e40ec1235476e9328678f0f3e2462576b9ae
+ARG LAZYGIT_VERSION=0.64.1
+ARG LAZYGIT_REF=fbe2379fa5831b1ce1a8a836a604652ffc14844f
 
 # Rebuild exact release sources with reviewed dependency fixes.
-FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:98988b42f3293b627bf07c884ff17181a59501769cd8c06c7ba901e0ce2c9853 AS github-cli-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.0-trixie@sha256:df98008ecd2b0ecc9f0a94d1b07e3564a9c92b555369b33d9b5f60d0765b2db7 AS github-cli-builder
 ARG GITHUB_CLI_VERSION
 ARG GITHUB_CLI_REF
 ARG TARGETARCH
@@ -23,9 +23,12 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
     cd /src && \
     test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}" && \
     test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
-    test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.82.1" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.40.0" && \
-    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.19.1" && \
+    test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.83.0" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.41.0" && \
+    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.19.2" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.38.0" && \
+    go get golang.org/x/mod@v0.40.0 && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.40.0" && \
     go mod verify && \
     mkdir -p /tmp/gh-test && \
     chown -R nobody:nogroup /src /tmp/gh-test && \
@@ -37,11 +40,12 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
       GH_VERSION="${GITHUB_CLI_VERSION}" go run ./script/build.go bin/gh \
       GOOS=linux GOARCH="${GH_GOARCH}" CGO_ENABLED=0 && \
     install -D -m 0755 bin/gh /out/gh && \
-    go version -m /out/gh | grep -F "go1.26.5" && \
-    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.19\.1' && \
-    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.40\.0'
+    go version -m /out/gh | grep -F "go1.27.0" && \
+    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.19\.2' && \
+    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
+    go version -m /out/gh | grep -E 'golang.org/x/mod[[:space:]]+v0\.40\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:98988b42f3293b627bf07c884ff17181a59501769cd8c06c7ba901e0ce2c9853 AS fzf-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.0-trixie@sha256:df98008ecd2b0ecc9f0a94d1b07e3564a9c92b555369b33d9b5f60d0765b2db7 AS fzf-builder
 ARG FZF_VERSION
 ARG FZF_REF
 ARG TARGETARCH
@@ -54,6 +58,11 @@ RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
     git apply --check /tmp/fzf-x-sys-0.44.0.patch && \
     git apply /tmp/fzf-x-sys-0.44.0.patch && \
     test "$(go list -m -f '{{.Version}}' golang.org/x/sys)" = "v0.44.0" && \
+    for attempt in 1 2 3; do \
+      if go mod download; then break; fi; \
+      test "$attempt" -lt 3; \
+      sleep 2; \
+    done && \
     go mod verify && \
     SHELL=/bin/sh go test \
       github.com/junegunn/fzf/src \
@@ -67,7 +76,7 @@ RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
       -o /out/fzf && \
     go version -m /out/fzf | grep -E 'golang.org/x/sys[[:space:]]+v0\.44\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:98988b42f3293b627bf07c884ff17181a59501769cd8c06c7ba901e0ce2c9853 AS lazygit-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.0-trixie@sha256:df98008ecd2b0ecc9f0a94d1b07e3564a9c92b555369b33d9b5f60d0765b2db7 AS lazygit-builder
 ARG LAZYGIT_VERSION
 ARG LAZYGIT_REF
 ARG TARGETARCH
@@ -92,7 +101,7 @@ RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
       -o /out/lazygit && \
     go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.40\.0'
 
-FROM node:24.19.0-trixie-slim@sha256:0711b541c1c33a8a530ac4f0d391baa9a15b3d804695b1b24a47daa5fb60e74d
+FROM node:24.20.0-trixie-slim@sha256:50c3b2f6988dfc307b86e5301d69611af31f4789bdf232863b07d3b02fe55ae0
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -105,11 +114,13 @@ ARG DELTA_VERSION=0.19.2
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.16
+ARG OPENCODE_VERSION=1.18.25
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.228
+ARG CLAUDE_CODE_VERSION=2.1.252
 # renovate: datasource=npm depName=paperclipai
-ARG PAPERCLIP_VERSION=2026.722.0
+ARG PAPERCLIP_VERSION=2026.824.1
+# renovate: datasource=npm depName=@fission-ai/openspec
+ARG OPENSPEC_VERSION=1.11.0
 # renovate: datasource=npm depName=undici
 ARG PAPERCLIP_UNDICI_VERSION=6.28.0
 # renovate: datasource=npm depName=opencode-claude-auth
@@ -123,25 +134,29 @@ ARG NPM_BRACE_EXPANSION_VERSION=5.0.9
 # renovate: datasource=npm depName=tar
 ARG NPM_TAR_VERSION=7.5.22
 # renovate: datasource=npm depName=ip-address
-ARG NPM_IP_ADDRESS_VERSION=10.3.1
+ARG NPM_IP_ADDRESS_VERSION=10.7.0
 # renovate: datasource=npm depName=js-yaml
 ARG PM2_JS_YAML_VERSION=4.3.1
 # renovate: datasource=npm depName=tsx
-ARG TSX_VERSION=4.23.12
+ARG TSX_VERSION=4.23.13
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=11.21.0
+ARG PNPM_VERSION=11.25.0
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.2.1
+ARG VITE_VERSION=8.2.2
 # renovate: datasource=npm depName=prettier
 ARG PRETTIER_VERSION=3.9.6
 # renovate: datasource=npm depName=prisma
-ARG PRISMA_VERSION=7.9.1
+ARG PRISMA_VERSION=7.10.0
+# renovate: datasource=npm depName=deepmerge-ts
+ARG PRISMA_DEEPMERGE_VERSION=8.0.0
+# renovate: datasource=npm depName=mysql2
+ARG PRISMA_MYSQL2_VERSION=3.22.0
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.121.0
+ARG WRANGLER_VERSION=4.127.1
 # renovate: datasource=npm depName=eslint
-ARG ESLINT_VERSION=10.8.1
+ARG ESLINT_VERSION=10.9.1
 # renovate: datasource=pypi depName=numpy
 ARG NUMPY_VERSION=2.5.2
 # renovate: datasource=pypi depName=pip
@@ -149,12 +164,12 @@ ARG PIP_VERSION=26.2.1
 # renovate: datasource=pypi depName=msgpack
 ARG PIP_VENDOR_MSGPACK_VERSION=1.2.1
 ARG PIP_VENDOR_MSGPACK_SHA256=04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647
-# pkg_resources was removed in setuptools 81; keep its last fixed source.
-ARG PIP_VENDOR_PKG_RESOURCES_VERSION=80.9.0
-ARG PIP_VENDOR_PKG_RESOURCES_SHA256=f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c
+# pip 26.2.1 vendors pkg_resources from vulnerable setuptools 70.3.0.
+ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
+ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-08-12
+ARG RELEASE_APT_REFRESH=2026-09-01
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -162,6 +177,7 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.opencode=${OPENCODE_VERSION} \
     io.holycode.version.claude-code=${CLAUDE_CODE_VERSION} \
     io.holycode.version.paperclip=${PAPERCLIP_VERSION} \
+    io.holycode.version.openspec=${OPENSPEC_VERSION} \
     io.holycode.version.claude-auth-plugin=${CLAUDE_AUTH_PLUGIN_VERSION} \
     io.holycode.version.npm=${NPM_VERSION} \
     io.holycode.version.npm-brace-expansion=${NPM_BRACE_EXPANSION_VERSION} \
@@ -176,6 +192,8 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.vite=${VITE_VERSION} \
     io.holycode.version.prettier=${PRETTIER_VERSION} \
     io.holycode.version.prisma=${PRISMA_VERSION} \
+    io.holycode.version.prisma-deepmerge-ts=${PRISMA_DEEPMERGE_VERSION} \
+    io.holycode.version.prisma-mysql2=${PRISMA_MYSQL2_VERSION} \
     io.holycode.version.lighthouse=${LIGHTHOUSE_VERSION} \
     io.holycode.version.s6-overlay=${S6_OVERLAY_VERSION} \
     io.holycode.version.fzf=${FZF_VERSION} \
@@ -193,6 +211,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     CHROMIUM_FLAGS="--disable-gpu --disable-dev-shm-usage" \
     OPENCODE_DISABLE_AUTOUPDATE=true \
     OPENCODE_DISABLE_TERMINAL_TITLE=true
+ENV OPENSPEC_TELEMETRY=0
 
 # ---------- s6-overlay v3 (multi-arch) ----------
 RUN test -n "${RELEASE_APT_REFRESH}" && apt-get update && apt-get upgrade -y && \
@@ -256,7 +275,7 @@ COPY --from=fzf-builder /out/fzf /usr/local/bin/fzf
 
 # ---------- Python 3 (for user projects) ----------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip python3-venv \
+    python3 python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -309,8 +328,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ---------- Python packages ----------
 COPY config/python-requirements.lock /usr/local/share/holycode/python-requirements.lock
 COPY config/python-seed-requirements.lock /usr/local/share/holycode/python-seed-requirements.lock
-COPY patches/pip-vendored-pkg-resources-80.9.0.patch /tmp/pip-vendored-pkg-resources.patch
-RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
+COPY patches/pip-vendored-pkg-resources-78.1.1.patch /tmp/pip-vendored-pkg-resources.patch
+RUN python3 -m venv /tmp/holycode-pip-bootstrap && \
+    /tmp/holycode-pip-bootstrap/bin/python -m pip install --no-cache-dir --upgrade \
+      --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock && \
+    /tmp/holycode-pip-bootstrap/bin/python -m pip install --no-cache-dir --upgrade \
+      --target /usr/local/lib/python3.13/dist-packages \
+      --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock && \
+    install -m 0755 /tmp/holycode-pip-bootstrap/bin/pip /usr/local/bin/pip && \
+    sed -i '1c#!/usr/bin/python3' /usr/local/bin/pip && \
+    ln -sf pip /usr/local/bin/pip3 && \
+    ln -sf pip /usr/local/bin/pip3.13 && \
+    rm -rf /tmp/holycode-pip-bootstrap && \
+    test "$(dpkg-query -W -f='${db:Status-Status}' python3-pip 2>/dev/null || true)" != installed && \
+    test "$(dpkg-query -W -f='${db:Status-Status}' python3-setuptools 2>/dev/null || true)" != installed && \
+    python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
       --require-hashes -r /usr/local/share/holycode/python-requirements.lock
 
 # Replace Debian's vulnerable wheel metadata after installing fixed copies in
@@ -321,7 +353,7 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
       "https://files.pythonhosted.org/packages/31/f9/c0a1c127f9049db9155afc316952ea571720dd01833ff5e4d7e8e6352dbb/msgpack-${PIP_VENDOR_MSGPACK_VERSION}.tar.gz" && \
     echo "${PIP_VENDOR_MSGPACK_SHA256}  /tmp/msgpack.tar.gz" | sha256sum -c - && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/setuptools.tar.gz \
-      "https://files.pythonhosted.org/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-${PIP_VENDOR_PKG_RESOURCES_VERSION}.tar.gz" && \
+      "https://files.pythonhosted.org/packages/81/9c/42314ee079a3e9c24b27515f9fbc7a3c1d29992c33451779011c74488375/setuptools-${PIP_VENDOR_PKG_RESOURCES_VERSION}.tar.gz" && \
     echo "${PIP_VENDOR_PKG_RESOURCES_SHA256}  /tmp/setuptools.tar.gz" | sha256sum -c - && \
     mkdir -p /tmp/msgpack /tmp/setuptools && \
     tar -xzf /tmp/msgpack.tar.gz -C /tmp/msgpack --strip-components=1 && \
@@ -339,10 +371,8 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
       "$PIP_VENDOR_DIR/vendor.txt" && \
     python3 -c 'import json,pathlib,sys; path=pathlib.Path(sys.argv[1]); data=json.loads(path.read_text()); versions={"msgpack":sys.argv[2],"setuptools":sys.argv[3]}; [(component.update(version=versions[component["name"]],purl="pkg:pypi/{0}@{1}".format(component["name"],versions[component["name"]])) if component.get("name") in versions else None) for component in data.get("components",[])]; path.write_text(json.dumps(data,indent=2)+"\n")' \
       "$PIP_VENDOR_DIR/bom.cdx.json" "$PIP_VENDOR_MSGPACK_VERSION" "$PIP_VENDOR_PKG_RESOURCES_VERSION" && \
-    rm -rf \
-      /tmp/msgpack /tmp/setuptools /tmp/msgpack.tar.gz /tmp/setuptools.tar.gz \
+    rm -rf /tmp/msgpack /tmp/setuptools /tmp/msgpack.tar.gz /tmp/setuptools.tar.gz \
       /tmp/pip-vendored-pkg-resources.patch && \
-    apt-get purge -y python3-pip python3-wheel && \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip --version | grep -F "pip ${PIP_VERSION}" && \
     python3 -c 'import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == "1.2.1"; import pip._vendor.pkg_resources' && \
@@ -379,9 +409,9 @@ RUN test "$(npm view "tar@${NPM_TAR_VERSION}" dist.integrity)" = \
     (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null) && \
     rm -rf /root/.npm
 # npm 12.0.2 resolves ip-address 10.2.0 through socks. Keep the compatible
-# socks range and replace that nested copy with the fixed 10.3.1 release.
+# socks range and replace that nested copy with the fixed 10.7.0 release.
 RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
-      "sha512-1e9d3kb97NHJTIJDZW9rKqW2h6+dFa50Dy0fpPSMQp2ADje5gvKsXmdiK6dwY5t76TaTt5+P5N1Y/LoToIxP6g==" && \
+      "sha512-BGFsyJd5mpXp3rK6jIdADLNgpJUK1jnjzvYF8lK+VyDab9JAmqN0YOKDdP17HlgKb2+ehPgDc8EtnRLbGCAMhA==" && \
     NPM_IP_ADDRESS_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "ip-address@${NPM_IP_ADDRESS_VERSION}") && \
     NPM_IP_ADDRESS_DIR=/usr/local/lib/node_modules/npm/node_modules/ip-address && \
@@ -399,7 +429,8 @@ RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
 
 # ---------- OpenCode (AI coding agent) ----------
 # Installed via npm as root (global install needs write access to /usr/local/lib)
-RUN npm i -g --ignore-scripts "opencode-ai@${OPENCODE_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && \
+RUN npm i -g --ignore-scripts "opencode-ai@${OPENCODE_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
+      "@fission-ai/openspec@${OPENSPEC_VERSION}" && \
     rm -rf /root/.npm
 ENV PATH="/home/opencode/.local/bin:${PATH}"
 
@@ -408,17 +439,17 @@ ENV PATH="/home/opencode/.local/bin:${PATH}"
 RUN npm i -g --ignore-scripts \
     "typescript@${TYPESCRIPT_VERSION}" "tsx@${TSX_VERSION}" \
     "pnpm@${PNPM_VERSION}" \
-    "vite@${VITE_VERSION}" esbuild@0.28.1 \
+    "vite@${VITE_VERSION}" esbuild@0.28.2 \
     "eslint@${ESLINT_VERSION}" "prettier@${PRETTIER_VERSION}" \
     nodemon@3.1.14 \
     dotenv-cli@11.0.0 \
     "wrangler@${WRANGLER_VERSION}" \
-    pm2@7.0.3 \
+    pm2@7.0.4 \
     "prisma@${PRISMA_VERSION}" drizzle-kit@0.31.10 \
     "lighthouse@${LIGHTHOUSE_VERSION}" \
     json-server@0.17.4 http-server@14.1.1 && \
     DRIZZLE_DIR=/usr/local/lib/node_modules/drizzle-kit && \
-    jq '.dependencies |= del(."@esbuild-kit/esm-loader") | .dependencies.esbuild = "0.28.1"' \
+    jq '.dependencies |= del(."@esbuild-kit/esm-loader") | .dependencies.esbuild = "0.28.2"' \
       "$DRIZZLE_DIR/package.json" > "$DRIZZLE_DIR/package.json.tmp" && \
     mv "$DRIZZLE_DIR/package.json.tmp" "$DRIZZLE_DIR/package.json" && \
     rm -rf \
@@ -426,30 +457,58 @@ RUN npm i -g --ignore-scripts \
       "$DRIZZLE_DIR/node_modules/@esbuild" \
       "$DRIZZLE_DIR/node_modules/esbuild" && \
     ln -s ../../esbuild "$DRIZZLE_DIR/node_modules/esbuild" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/drizzle-kit/node_modules/esbuild/package.json").version')" = "0.28.1" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/drizzle-kit/node_modules/esbuild/package.json").version')" = "0.28.2" && \
     drizzle-kit --version && \
     drizzle-kit --help >/dev/null && \
     rm -rf /root/.npm
 
-# PM2 7.0.3 pins js-yaml 4.3.0. Replace the nested package with 4.3.1 and
-# align PM2's exact declaration so npm validates the installed tree.
+# Prisma 7.10.0 pins deepmerge-ts 7.1.5 and mysql2 3.15.3. Replace only those
+# nested copies with integrity-verified fixed releases and bind their owners.
+RUN test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)" = \
+      "sha512-ICNjaP0ML+eSdEpJYQC46XiAn/UjAdwbEl0dE8p85ZTeNDinN4Kd4+9jS4OSAuH7st6eC7rQhsqTF5zIDaUm2g==" && \
+    test "$(npm view "mysql2@${PRISMA_MYSQL2_VERSION}" dist.integrity)" = \
+      "sha512-4jaJYBObj7FhD3lnZhqX1yDMuZN4mQNz+IolDySDXT7fbozMBpeGQNcuWXKUqo4ahkAEfkjUHPjnwuDI0/6VKw==" && \
+    test "$(npm view "@prisma/config@${PRISMA_VERSION}" dependencies.deepmerge-ts)" = "7.1.5" && \
+    test "$(npm view "prisma@${PRISMA_VERSION}" dependencies.mysql2)" = "3.15.3" && \
+    PRISMA_DEEPMERGE_TARBALL=$(npm pack --silent --pack-destination /tmp \
+      "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}") && \
+    PRISMA_MYSQL2_TARBALL=$(npm pack --silent --pack-destination /tmp \
+      "mysql2@${PRISMA_MYSQL2_VERSION}") && \
+    PRISMA_DEEPMERGE_DIR=/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts && \
+    PRISMA_MYSQL2_DIR=/usr/local/lib/node_modules/prisma/node_modules/mysql2 && \
+    PRISMA_PACKAGE=/usr/local/lib/node_modules/prisma/package.json && \
+    PRISMA_CONFIG_PACKAGE=/usr/local/lib/node_modules/prisma/node_modules/@prisma/config/package.json && \
+    rm -rf "$PRISMA_DEEPMERGE_DIR" && mkdir "$PRISMA_DEEPMERGE_DIR" && \
+    tar -xzf "/tmp/${PRISMA_DEEPMERGE_TARBALL}" -C "$PRISMA_DEEPMERGE_DIR" --strip-components=1 && \
+    rm -rf "$PRISMA_MYSQL2_DIR" && mkdir "$PRISMA_MYSQL2_DIR" && \
+    tar -xzf "/tmp/${PRISMA_MYSQL2_TARBALL}" -C "$PRISMA_MYSQL2_DIR" --strip-components=1 && \
+    npm install --prefix "$PRISMA_MYSQL2_DIR" --ignore-scripts --package-lock=false --omit=dev && \
+    rm "/tmp/${PRISMA_DEEPMERGE_TARBALL}" "/tmp/${PRISMA_MYSQL2_TARBALL}" && \
+    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies["deepmerge-ts"]!=="7.1.5") process.exit(1); pkg.dependencies["deepmerge-ts"]=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
+      "$PRISMA_CONFIG_PACKAGE" "${PRISMA_DEEPMERGE_VERSION}" && \
+    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies.mysql2!=="3.15.3") process.exit(1); pkg.dependencies.mysql2=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
+      "$PRISMA_PACKAGE" "${PRISMA_MYSQL2_VERSION}" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts/package.json").version')" = \
+      "${PRISMA_DEEPMERGE_VERSION}" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json").version')" = \
+      "${PRISMA_MYSQL2_VERSION}" && \
+    (cd /usr/local/lib/node_modules/prisma && npm ls deepmerge-ts mysql2 --all >/dev/null) && \
+    node -e 'const mysql=require("/usr/local/lib/node_modules/prisma/node_modules/mysql2"); if(typeof mysql.createConnection!=="function") process.exit(1)' && \
+    prisma --version >/dev/null && \
+    rm -rf /root/.npm
+
+# PM2 7.0.4 directly pins js-yaml 4.3.1. Validate the registry declaration,
+# installed package, dependency tree, and runtime without rewriting PM2.
 RUN test "$(npm view "js-yaml@${PM2_JS_YAML_VERSION}" dist.integrity)" = \
       "sha512-CY6crGq313MX8GkwvB7tzgp99vjQxY1++5y10/BKN/GUfHqWaOGQMNZkBvqSzsZKWk/ijwHlWzzkLulsGHhjWQ==" && \
-    PM2_JS_YAML_TARBALL=$(npm pack --silent --pack-destination /tmp \
-      "js-yaml@${PM2_JS_YAML_VERSION}") && \
-    PM2_JS_YAML_DIR=/usr/local/lib/node_modules/pm2/node_modules/js-yaml && \
+    test "$(npm view pm2@7.0.4 dependencies.js-yaml)" = "${PM2_JS_YAML_VERSION}" && \
     PM2_PACKAGE=/usr/local/lib/node_modules/pm2/package.json && \
-    rm -rf "$PM2_JS_YAML_DIR" && mkdir "$PM2_JS_YAML_DIR" && \
-    tar -xzf "/tmp/${PM2_JS_YAML_TARBALL}" -C "$PM2_JS_YAML_DIR" --strip-components=1 && \
-    rm "/tmp/${PM2_JS_YAML_TARBALL}" && \
-    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies["js-yaml"]!=="4.3.0") process.exit(1); pkg.dependencies["js-yaml"]=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
-      "$PM2_PACKAGE" "${PM2_JS_YAML_VERSION}" && \
     test "$(node -p 'require("/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json").version')" = \
       "${PM2_JS_YAML_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies["js-yaml"]!==process.argv[2]) process.exit(1)' \
       "$PM2_PACKAGE" "${PM2_JS_YAML_VERSION}" && \
     (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null) && \
-    PM2_HOME=/tmp/holycode-build-pm2 pm2 --version | grep -Fx "7.0.3" && \
+    PM2_HOME=/tmp/holycode-build-pm2 pm2 --version | grep -Fx "7.0.4" && \
     PM2_HOME=/tmp/holycode-build-pm2 pm2 kill >/dev/null && \
     rm -rf /tmp/holycode-build-pm2 && \
     rm -rf /root/.npm
@@ -513,7 +572,7 @@ RUN python3 /usr/local/bin/validate-npm-script-policy \
       "$POSTGRES_PACKAGE" && \
     opencode --version | grep -Fx "${OPENCODE_VERSION}" && \
     claude --version | grep -F "${CLAUDE_CODE_VERSION}" && \
-    esbuild --version | grep -Fx "0.28.1" && \
+    esbuild --version | grep -Fx "0.28.2" && \
     prisma --version >/dev/null && \
     wrangler --version | grep -F "${WRANGLER_VERSION}" && \
     ! command -v vercel && ! command -v sharp && ! command -v concurrently && \

@@ -68,6 +68,7 @@
       "description": "Require manual review for runtime, service, TypeScript, and plugin pins",
       "matchPackageNames": [
         "@anthropic-ai/claude-code",
+        "@fission-ai/openspec",
         "cli/cli",
         "coderluii/holycode",
         "dandavison/delta",

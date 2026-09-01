@@ -10,7 +10,7 @@
  
  # capture these to bypass sandboxing
  from os import open as os_open, utime  # isort: skip
-@@ -82,28 +79,19 @@
+@@ -82,13 +79,13 @@
      # no write support, probably under GAE
      WRITE_SUPPORT = False
  
@@ -31,22 +31,7 @@
  
  if TYPE_CHECKING:
      from _typeshed import BytesPath, StrOrBytesPath, StrPath
-     from _typeshed.importlib import LoaderProtocol
-     from typing_extensions import Self, TypeAlias
- 
--warnings.warn(
--    "pkg_resources is deprecated as an API. "
--    "See https://setuptools.pypa.io/en/latest/pkg_resources.html. "
--    "The pkg_resources package is slated for removal as early as "
--    "2025-11-30. Refrain from using this package or pin to "
--    "Setuptools<81.",
--    UserWarning,
--    stacklevel=2,
--)
- 
- _T = TypeVar("_T")
- _DistributionT = TypeVar("_DistributionT", bound="Distribution")
-@@ -141,7 +129,7 @@
+@@ -112,6 +109,6 @@
      """
  
  
@@ -54,8 +39,7 @@
 +parse_version = _packaging_version.Version
  
  _state_vars: dict[str, str] = {}
- 
-@@ -797,7 +785,7 @@
+@@ -768,7 +765,7 @@
              return
  
          self.by_key[dist.key] = dist
@@ -64,7 +48,7 @@
          self.normalized_to_canonical_keys[normalized_name] = dist.key
          if dist.key not in keys:
              keys.append(dist.key)
-@@ -1566,8 +1554,8 @@
+@@ -1537,7 +1534,7 @@
      """
      try:
          # normalize the version
@@ -74,8 +58,7 @@
 +    except _packaging_version.InvalidVersion:
          version = version.replace(' ', '.')
          return re.sub('[^A-Za-z0-9.]+', '-', version)
- 
-@@ -1644,9 +1632,9 @@
+@@ -1615,7 +1612,7 @@
      This implementation uses the 'pyparsing' module.
      """
      try:
@@ -85,9 +68,7 @@
 -    except packaging.markers.InvalidMarker as e:
 +    except _packaging_markers.InvalidMarker as e:
          raise SyntaxError(e) from e
- 
- 
-@@ -3007,12 +2995,12 @@
+@@ -2978,11 +2975,11 @@
          if not hasattr(self, "_parsed_version"):
              try:
                  self._parsed_version = parse_version(self.version)
@@ -101,8 +82,7 @@
 +                raise _packaging_version.InvalidVersion(f"{str(ex)} {info}") from None
  
          return self._parsed_version
- 
-@@ -3020,7 +3008,7 @@
+@@ -2991,7 +2988,7 @@
      def _forgiving_parsed_version(self):
          try:
              return self.parsed_version
@@ -111,7 +91,7 @@
              self._parsed_version = parse_version(_forgiving_version(self.version))
  
              notes = "\n".join(getattr(ex, "__notes__", []))  # PEP 678
-@@ -3192,7 +3180,7 @@
+@@ -3163,7 +3160,7 @@
  
      def as_requirement(self):
          """Return a ``Requirement`` that matches this distribution exactly"""
@@ -120,7 +100,7 @@
              spec = f"{self.project_name}=={self.parsed_version}"
          else:
              spec = f"{self.project_name}==={self.parsed_version}"
-@@ -3450,13 +3438,13 @@
+@@ -3421,13 +3418,13 @@
      return map(Requirement, join_continuation(map(drop_comment, yield_lines(strs))))
  
  
@@ -137,7 +117,7 @@
      extras: tuple[str, ...]  # type: ignore[assignment]
  
      def __init__(self, requirement_string: str) -> None:
-@@ -3483,7 +3471,7 @@
+@@ -3454,7 +3451,7 @@
          return not self == other
  
      def __contains__(

@@ -19,6 +19,7 @@ class ReleaseContractTests(unittest.TestCase):
     def setUpClass(cls):
         cls.dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         cls.entrypoint = (ROOT / "scripts" / "entrypoint.sh").read_text(encoding="utf-8")
+        cls.bootstrap = (ROOT / "scripts" / "bootstrap.sh").read_text(encoding="utf-8")
         cls.smoke = (ROOT / "scripts" / "smoke_image.sh").read_text(encoding="utf-8")
         cls.claude_auth = (ROOT / "scripts" / "test_claude_auth.sh").read_text(encoding="utf-8")
         cls.plugin_modes = (ROOT / "scripts" / "test_plugin_modes.sh").read_text(encoding="utf-8")
@@ -32,7 +33,7 @@ class ReleaseContractTests(unittest.TestCase):
         cls.dockerhub = (ROOT / "docs" / "dockerhub-description.md").read_text(encoding="utf-8")
         cls.changelog = (ROOT / "docs" / "CHANGELOG.md").read_text(encoding="utf-8")
         cls.dependency_audit = (
-            ROOT / "docs" / "dependency-audit-v1.1.7.md"
+            ROOT / "docs" / "dependency-audit-v1.1.8.md"
         )
         cls.notices = (ROOT / "THIRD-PARTY-NOTICES").read_text(encoding="utf-8")
         cls.gitattributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
@@ -40,7 +41,15 @@ class ReleaseContractTests(unittest.TestCase):
         cls.python_seed_lock = (
             ROOT / "config" / "python-seed-requirements.lock"
         ).read_text(encoding="utf-8")
+        cls.pip_pkg_resources_patch = (
+            ROOT / "patches" / "pip-vendored-pkg-resources-78.1.1.patch"
+        ).read_text(encoding="utf-8")
         cls.renovate = json.loads((ROOT / "renovate.json").read_text(encoding="utf-8"))
+        cls.s6 = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (ROOT / "s6-overlay").rglob("*")
+            if path.is_file()
+        )
 
     def test_executable_scripts_use_lf_shebangs(self):
         scripts = [
@@ -64,28 +73,31 @@ class ReleaseContractTests(unittest.TestCase):
     def test_release_dependency_pins(self):
         expected = (
             "ARG S6_OVERLAY_VERSION=3.2.3.2",
-            "ARG GITHUB_CLI_VERSION=2.97.0",
-            "ARG FZF_VERSION=0.74.2",
-            "ARG LAZYGIT_VERSION=0.64.0",
-            "ARG OPENCODE_VERSION=1.18.16",
-            "ARG CLAUDE_CODE_VERSION=2.1.228",
-            "ARG PAPERCLIP_VERSION=2026.722.0",
+            "ARG GITHUB_CLI_VERSION=2.98.0",
+            "ARG FZF_VERSION=0.74.3",
+            "ARG LAZYGIT_VERSION=0.64.1",
+            "ARG OPENCODE_VERSION=1.18.25",
+            "ARG CLAUDE_CODE_VERSION=2.1.252",
+            "ARG PAPERCLIP_VERSION=2026.824.1",
+            "ARG OPENSPEC_VERSION=1.11.0",
             "ARG PAPERCLIP_UNDICI_VERSION=6.28.0",
             "ARG CLAUDE_AUTH_PLUGIN_VERSION=2.1.6",
             "ARG NPM_VERSION=12.0.2",
             "ARG NPM_BRACE_EXPANSION_VERSION=5.0.9",
             "ARG NPM_TAR_VERSION=7.5.22",
             "ARG PIP_VENDOR_MSGPACK_VERSION=1.2.1",
-            "ARG PIP_VENDOR_PKG_RESOURCES_VERSION=80.9.0",
+            "ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1",
             "ARG SETUPTOOLS_VERSION=84.0.0",
-            "ARG TSX_VERSION=4.23.12",
-            "ARG PNPM_VERSION=11.21.0",
-            "ARG VITE_VERSION=8.2.1",
+            "ARG TSX_VERSION=4.23.13",
+            "ARG PNPM_VERSION=11.25.0",
+            "ARG VITE_VERSION=8.2.2",
             "ARG PRETTIER_VERSION=3.9.6",
-            "ARG PRISMA_VERSION=7.9.1",
+            "ARG PRISMA_VERSION=7.10.0",
+            "ARG PRISMA_DEEPMERGE_VERSION=8.0.0",
+            "ARG PRISMA_MYSQL2_VERSION=3.22.0",
             "ARG LIGHTHOUSE_VERSION=13.4.1",
-            "ARG WRANGLER_VERSION=4.121.0",
-            "ARG ESLINT_VERSION=10.8.1",
+            "ARG WRANGLER_VERSION=4.127.1",
+            "ARG ESLINT_VERSION=10.9.1",
             "requests==2.34.2",
             "pillow==12.3.0",
             "postgresql-client-17 redis-tools sqlite3",
@@ -94,12 +106,12 @@ class ReleaseContractTests(unittest.TestCase):
             "tqdm==4.70.0",
             "fastapi==0.141.1",
             "playwright==1.62.0",
-            "uvicorn==0.52.1",
+            "uvicorn==0.52.4",
             "packaging==26.3",
             "setuptools==84.0.0",
             "numpy==2.5.2",
             "markdown==3.10.3",
-            "wheel==0.47.0",
+            "wheel==0.48.0",
             "rich==15.0.0",
         )
         for value in expected:
@@ -111,16 +123,16 @@ class ReleaseContractTests(unittest.TestCase):
             "04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647",
             self.dockerfile,
         )
-        self.assertIn(
-            "f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c",
-            self.dockerfile,
-        )
         self.assertIn("bom.cdx.json", self.dockerfile)
         self.assertIn("msgpack==${PIP_VENDOR_MSGPACK_VERSION}", self.dockerfile)
+        self.assertIn("PIP_VENDOR_PKG_RESOURCES", self.dockerfile)
+        self.assertIn("pip-vendored-pkg-resources-78.1.1.patch", self.dockerfile)
         self.assertIn(
-            "setuptools==${PIP_VENDOR_PKG_RESOURCES_VERSION}",
+            "fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d",
             self.dockerfile,
         )
+        self.assertIn("setuptools==$EXPECTED_PIP_VENDOR_PKG_RESOURCES", self.smoke)
+        self.assertIn("import pip._vendor.pkg_resources", self.smoke)
         self.assertIn(
             "node -e 'const ssh2=require("
             '"/usr/local/lib/node_modules/paperclipai/node_modules/ssh2"'
@@ -154,32 +166,46 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_github_cli_is_rebuilt_with_fixed_go_toolchain(self):
         self.assertIn(
-            "FROM --platform=$BUILDPLATFORM golang:1.26.5-trixie@sha256:"
-            "98988b42f3293b627bf07c884ff17181a59501769cd8c06c7ba901e0ce2c9853 "
+            "FROM --platform=$BUILDPLATFORM golang:1.27.0-trixie@sha256:"
+            "df98008ecd2b0ecc9f0a94d1b07e3564a9c92b555369b33d9b5f60d0765b2db7 "
             "AS github-cli-builder",
             self.dockerfile,
         )
-        self.assertIn("ARG GITHUB_CLI_VERSION=2.97.0", self.dockerfile)
+        self.assertIn("ARG GITHUB_CLI_VERSION=2.98.0", self.dockerfile)
         self.assertIn(
-            "ARG GITHUB_CLI_REF=55dbb4dc6b7edb10b48e3d7fc5bccd32318d1b55",
+            "ARG GITHUB_CLI_REF=a255baf71d13fe5947a4eb7ad521ffd412d64cee",
             self.dockerfile,
         )
         self.assertIn('test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}"', self.dockerfile)
-        self.assertIn('go version -m /out/gh | grep -F "go1.26.5"', self.dockerfile)
+        self.assertIn('go version -m /out/gh | grep -F "go1.27.0"', self.dockerfile)
         self.assertIn(
-            "go version -m /out/gh | grep -E "
-            "'github.com/klauspost/compress[[:space:]]+v1\\.19\\.1'",
+            'test "$(go list -m -f \'{{.Version}}\' golang.org/x/mod)" = "v0.38.0"',
+            self.dockerfile,
+        )
+        self.assertIn("go get golang.org/x/mod@v0.40.0", self.dockerfile)
+        self.assertIn(
+            'test "$(go list -m -f \'{{.Version}}\' golang.org/x/mod)" = "v0.40.0"',
             self.dockerfile,
         )
         self.assertIn(
             "go version -m /out/gh | grep -E "
-            "'golang.org/x/text[[:space:]]+v0\\.40\\.0'",
+            "'github.com/klauspost/compress[[:space:]]+v1\\.19\\.2'",
+            self.dockerfile,
+        )
+        self.assertIn(
+            "go version -m /out/gh | grep -E "
+            "'golang.org/x/text[[:space:]]+v0\\.41\\.0'",
+            self.dockerfile,
+        )
+        self.assertIn(
+            "go version -m /out/gh | grep -E "
+            "'golang.org/x/mod[[:space:]]+v0\\.40\\.0'",
             self.dockerfile,
         )
         self.assertNotIn("github-cli-modules.patch", self.dockerfile)
         self.assertIn(
-            "FROM node:24.19.0-trixie-slim@sha256:"
-            "0711b541c1c33a8a530ac4f0d391baa9a15b3d804695b1b24a47daa5fb60e74d",
+            "FROM node:24.20.0-trixie-slim@sha256:"
+            "50c3b2f6988dfc307b86e5301d69611af31f4789bdf232863b07d3b02fe55ae0",
             self.dockerfile,
         )
         self.assertIn("COPY --from=github-cli-builder /out/gh /usr/local/bin/gh", self.dockerfile)
@@ -191,11 +217,11 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_fzf_and_lazygit_are_rebuilt_from_exact_release_sources(self):
         self.assertIn(
-            "ARG FZF_REF=3337be9d450cd349e99273a2d3985ceaf5f3753f",
+            "ARG FZF_REF=15f64c492a08f0840b81540c7d1de35737448086",
             self.dockerfile,
         )
         self.assertIn(
-            "ARG LAZYGIT_REF=aee0e40ec1235476e9328678f0f3e2462576b9ae",
+            "ARG LAZYGIT_REF=fbe2379fa5831b1ce1a8a836a604652ffc14844f",
             self.dockerfile,
         )
         self.assertIn(
@@ -255,25 +281,68 @@ class ReleaseContractTests(unittest.TestCase):
             "04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647",
             self.dockerfile,
         )
-        self.assertIn("ARG PIP_VENDOR_PKG_RESOURCES_VERSION=80.9.0", self.dockerfile)
+        self.assertIn("ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1", self.dockerfile)
+        self.assertIn("pip-vendored-pkg-resources-78.1.1.patch", self.dockerfile)
         self.assertIn(
-            "ARG PIP_VENDOR_PKG_RESOURCES_SHA256="
-            "f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c",
+            "fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d",
             self.dockerfile,
         )
-        self.assertIn(
-            "COPY patches/pip-vendored-pkg-resources-80.9.0.patch",
-            self.dockerfile,
-        )
+        self.assertIn("setuptools==$EXPECTED_PIP_VENDOR_PKG_RESOURCES", self.smoke)
+        self.assertIn("import pip._vendor.pkg_resources", self.smoke)
+        self.assertEqual(self.pr_validation.count("timeout: 15m"), 2)
+        self.assertEqual(self.publish.count("timeout: 15m"), 2)
+        hunk_header = re.compile(r"^@@ -(\d+),(\d+) \+(\d+),(\d+) @@")
+        lines = self.pip_pkg_resources_patch.splitlines()
+        headers = [index for index, line in enumerate(lines) if line.startswith("@@ ")]
+        self.assertGreater(len(headers), 2)
+        for position, index in enumerate(headers):
+            match = hunk_header.match(lines[index])
+            self.assertIsNotNone(match, lines[index])
+            end = headers[position + 1] if position + 1 < len(headers) else len(lines)
+            body = lines[index + 1 : end]
+            old_count = sum(line.startswith((" ", "-")) for line in body)
+            new_count = sum(line.startswith((" ", "+")) for line in body)
+            self.assertEqual(old_count, int(match.group(2)), lines[index])
+            self.assertEqual(new_count, int(match.group(4)), lines[index])
         self.assertIn("bom.cdx.json", self.dockerfile)
         self.assertIn("ARG PAPERCLIP_UNDICI_VERSION=6.28.0", self.dockerfile)
         self.assertIn("ARG NPM_TAR_VERSION=7.5.22", self.dockerfile)
-        self.assertIn("python3-pip python3-wheel", self.dockerfile)
+        self.assertNotIn("python3 python3-pip python3-venv", self.dockerfile)
+        self.assertIn("python3 python3-venv", self.dockerfile)
+        self.assertIn("python3 -m venv /tmp/holycode-pip-bootstrap", self.dockerfile)
+        self.assertIn("--target /usr/local/lib/python3.13/dist-packages", self.dockerfile)
+        self.assertIn("${db:Status-Status}' python3-pip", self.dockerfile)
+        self.assertIn("${db:Status-Status}' python3-setuptools", self.dockerfile)
+        self.assertIn('pip --version | grep -F "pip 26.2.1"', self.smoke)
+        self.assertIn("-f=\\${db:Status-Status} python3-pip", self.smoke)
+        self.assertIn("-f=\\${db:Status-Status} python3-setuptools", self.smoke)
+        self.assertIn("for attempt in 1 2 3", self.dockerfile)
+        self.assertIn("if go mod download; then break; fi", self.dockerfile)
+        self.assertIn("ARG PRISMA_DEEPMERGE_VERSION=8.0.0", self.dockerfile)
+        self.assertIn("io.holycode.version.prisma-deepmerge-ts", self.dockerfile)
+        self.assertIn("io.holycode.version.prisma-mysql2", self.dockerfile)
+        self.assertIn(
+            "sha512-ICNjaP0ML+eSdEpJYQC46XiAn/UjAdwbEl0dE8p85ZTeNDinN4Kd4+9jS4OSAuH7st6eC7rQhsqTF5zIDaUm2g==",
+            self.dockerfile,
+        )
+        self.assertIn(
+            'test "$(npm view "@prisma/config@${PRISMA_VERSION}" dependencies.deepmerge-ts)" = "7.1.5"',
+            self.dockerfile,
+        )
+        self.assertIn("PRISMA_CONFIG_PACKAGE", self.dockerfile)
+        self.assertIn('test "$(npm view "prisma@${PRISMA_VERSION}" dependencies.mysql2)" = "3.15.3"', self.dockerfile)
+        self.assertIn("sha512-4jaJYBObj7FhD3lnZhqX1yDMuZN4mQNz+IolDySDXT7fbozMBpeGQNcuWXKUqo4ahkAEfkjUHPjnwuDI0/6VKw==", self.dockerfile)
+        self.assertIn('npm install --prefix "$PRISMA_MYSQL2_DIR" --ignore-scripts --package-lock=false --omit=dev', self.dockerfile)
+        self.assertIn("npm ls deepmerge-ts mysql2 --all", self.dockerfile)
+        self.assertIn("expected_prisma_deepmerge", self.smoke)
+        self.assertIn("EXPECTED_PRISMA_DEEPMERGE", self.smoke)
+        self.assertIn("expected_prisma_mysql2", self.smoke)
+        self.assertIn("EXPECTED_PRISMA_MYSQL2", self.smoke)
         self.assertIn(
             "--require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock",
             self.dockerfile,
         )
-        for package in ("pip==26.2.1", "setuptools==84.0.0", "packaging==26.3", "wheel==0.47.0"):
+        for package in ("pip==26.2.1", "setuptools==84.0.0", "packaging==26.3", "wheel==0.48.0"):
             with self.subTest(package=package):
                 self.assertIn(package, self.python_seed_lock)
         self.assertIn(
@@ -281,7 +350,7 @@ class ReleaseContractTests(unittest.TestCase):
             self.dockerfile,
         )
         for assertion in (
-            'assert metadata.version("uvicorn") == "0.52.1"',
+            'assert metadata.version("uvicorn") == "0.52.4"',
             'assert metadata.version("packaging") == "26.3"',
             'assert metadata.version("pip") == "26.2.1"',
             'assert metadata.version("setuptools") == "84.0.0"',
@@ -304,9 +373,9 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("cursor_cloud_api_key_missing", self.smoke)
 
     def test_npm_ip_address_overlay_is_integrity_bound_and_exercised(self):
-        self.assertIn("ARG NPM_IP_ADDRESS_VERSION=10.3.1", self.dockerfile)
+        self.assertIn("ARG NPM_IP_ADDRESS_VERSION=10.7.0", self.dockerfile)
         self.assertIn(
-            "sha512-1e9d3kb97NHJTIJDZW9rKqW2h6+dFa50Dy0fpPSMQp2ADje5gvKsXmdiK6dwY5t76TaTt5+P5N1Y/LoToIxP6g==",
+            "sha512-BGFsyJd5mpXp3rK6jIdADLNgpJUK1jnjzvYF8lK+VyDab9JAmqN0YOKDdP17HlgKb2+ehPgDc8EtnRLbGCAMhA==",
             self.dockerfile,
         )
         self.assertIn(
@@ -338,7 +407,7 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertNotIn("npm --help >/dev/null", self.dockerfile)
         self.assertNotIn("npm --help >/dev/null", self.smoke)
 
-    def test_pm2_js_yaml_overlay_updates_its_owner_and_is_exercised(self):
+    def test_pm2_js_yaml_owner_and_runtime_are_validated_without_rewrite(self):
         self.assertIn("ARG PM2_JS_YAML_VERSION=4.3.1", self.dockerfile)
         self.assertIn(
             "sha512-CY6crGq313MX8GkwvB7tzgp99vjQxY1++5y10/BKN/GUfHqWaOGQMNZkBvqSzsZKWk/ijwHlWzzkLulsGHhjWQ==",
@@ -352,8 +421,15 @@ class ReleaseContractTests(unittest.TestCase):
             "/usr/local/lib/node_modules/pm2/package.json",
             self.dockerfile,
         )
+        self.assertIn(
+            'npm view pm2@7.0.4 dependencies.js-yaml)" = "${PM2_JS_YAML_VERSION}',
+            self.dockerfile,
+        )
         self.assertIn('dependencies["js-yaml"]', self.dockerfile)
         self.assertIn("npm ls js-yaml --all", self.dockerfile)
+        self.assertNotIn('dependencies["js-yaml"]!=="4.3.0"', self.dockerfile)
+        self.assertNotIn("PM2_JS_YAML_TARBALL", self.dockerfile)
+        self.assertNotIn('rm -rf "$PM2_JS_YAML_DIR"', self.dockerfile)
         self.assertIn("io.holycode.version.pm2-js-yaml", self.dockerfile)
         self.assertIn("expected_pm2_js_yaml", self.smoke)
         self.assertIn("EXPECTED_PM2_JS_YAML", self.smoke)
@@ -543,11 +619,11 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("chromium-sandbox", self.dockerfile)
         self.assertIn("test -u /usr/lib/chromium/chrome-sandbox", self.dockerfile)
 
-    def test_v1_1_7_uses_git_predecessor_but_keeps_last_published_image(self):
-        self.assertIn("RELEASE_VERSION: v1.1.7", self.protected)
-        self.assertIn("PREVIOUS_VERSION: v1.1.6", self.protected)
+    def test_v1_1_8_uses_v1_1_7_as_its_git_predecessor(self):
+        self.assertIn("RELEASE_VERSION: v1.1.8", self.protected)
+        self.assertIn("PREVIOUS_VERSION: v1.1.7", self.protected)
         self.assertIn(
-            "coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8",
+            "coderluii/holycode:1.1.7@sha256:4e20d9eac20afb4e779b98037a923201027008f0acee5617fe10cbf90f1a4a41",
             self.protected,
         )
         self.assertIn("needs: protected-validation", self.publish)
@@ -557,24 +633,120 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertEqual(self.publish.count("docker/build-push-action"), 1)
         self.assertNotIn("config/security-exceptions-v1.1.4.json", self.protected)
 
-    def test_v1_1_7_recovery_metadata_is_documented(self):
-        self.assertIn("## [1.1.7] - 08/12/2026", self.changelog)
+    def test_v1_1_8_release_metadata_is_documented(self):
+        self.assertRegex(self.changelog, r"(?m)^## \[1\.1\.8\] - \d{2}/\d{2}/\d{4}$")
         self.assertTrue(self.dependency_audit.is_file())
         audit = self.dependency_audit.read_text(encoding="utf-8")
+        self.assertIn("Git predecessor `v1.1.7`", audit)
         self.assertIn(
-            "`8d7c87c29d678fc8726605438444608e6b0b3c0f`",
+            "`coderluii/holycode:1.1.7@sha256:4e20d9eac20afb4e779b98037a923201027008f0acee5617fe10cbf90f1a4a41`",
             audit,
         )
-        self.assertIn("Git predecessor `v1.1.6`", audit)
-        self.assertIn(
-            "`coderluii/holycode:1.1.5@sha256:804ec668b97466dba9a26ded8af258fabc2d778047b7c8aebdaab7bccd9a3ae8`",
-            audit,
-        )
-        self.assertIn("v1.1.7 release pins", self.readme)
-        self.assertIn("dependency-audit-v1.1.7.md", self.readme)
-        self.assertIn("v1.1.7", self.dockerhub)
+        self.assertIn("v1.1.8 release pins", self.readme)
+        self.assertIn("dependency-audit-v1.1.8.md", self.readme)
+        self.assertIn("v1.1.8", self.dockerhub)
         self.assertIn("js-yaml 4.3.1", self.notices)
-        self.assertIn("ip-address 10.3.1", self.notices)
+        self.assertIn("ip-address 10.7.0", self.notices)
+
+    def test_openspec_is_pinned_installed_and_telemetry_disabled(self):
+        self.assertIn(
+            "# renovate: datasource=npm depName=@fission-ai/openspec\n"
+            "ARG OPENSPEC_VERSION=1.11.0",
+            self.dockerfile,
+        )
+        self.assertIn(
+            "io.holycode.version.openspec=${OPENSPEC_VERSION}",
+            self.dockerfile,
+        )
+        self.assertIn("ENV OPENSPEC_TELEMETRY=0", self.dockerfile)
+        self.assertRegex(
+            self.dockerfile,
+            r'RUN npm (?:i|install) -g --ignore-scripts[^\n]*(?:\\\n[^\n]*)*'
+            r'"@fission-ai/openspec@\$\{OPENSPEC_VERSION\}"',
+        )
+
+    def test_openspec_smoke_checks_exact_binary_and_package_versions(self):
+        self.assertIn(
+            'expected_openspec="$(image_label io.holycode.version.openspec)"',
+            self.smoke,
+        )
+        self.assertIn('-e EXPECTED_OPENSPEC="$expected_openspec"', self.smoke)
+        self.assertIn(
+            'test "$(openspec --version)" = "$EXPECTED_OPENSPEC"',
+            self.smoke,
+        )
+        self.assertIn(
+            'npm ls -g --depth=0 "@fission-ai/openspec@$EXPECTED_OPENSPEC"',
+            self.smoke,
+        )
+
+    def test_openspec_is_never_initialized_automatically_at_startup(self):
+        for name, source in (
+            ("Dockerfile", self.dockerfile),
+            ("entrypoint", self.entrypoint),
+            ("bootstrap", self.bootstrap),
+            ("s6", self.s6),
+        ):
+            with self.subTest(source=name):
+                self.assertNotRegex(source, r"\bopenspec\s+init\b")
+
+    def test_openspec_smoke_covers_explicit_safe_initialization(self):
+        self.assertIn("openspec init", self.smoke)
+        self.assertIn("--tools opencode", self.smoke)
+        self.assertIn("--network none", self.smoke)
+        self.assertIn("--user 1000:1000", self.smoke)
+        self.assertIn("cleanup_openspec_workspace()", self.smoke)
+        self.assertIn("--network none --user 0:0 --entrypoint sh", self.smoke)
+        self.assertIn("find /workspace -mindepth 1 -delete", self.smoke)
+        self.assertIn("trap cleanup_openspec_workspace EXIT", self.smoke)
+        self.assertIn("openspec list --json", self.smoke)
+        self.assertGreaterEqual(self.smoke.count("openspec init --tools opencode"), 2)
+        self.assertIn("snapshot_openspec_workspace", self.smoke)
+        self.assertIn("openspec_snapshot_before", self.smoke)
+        self.assertIn("openspec_snapshot_after", self.smoke)
+        self.assertIn(
+            'test "$openspec_snapshot_before" = "$openspec_snapshot_after"',
+            self.smoke,
+        )
+        self.assertRegex(
+            self.smoke,
+            r'docker run[^\n]*(?:\\\n[^\n]*)*--network none'
+            r'(?:[^\n]*\\\n)*[^\n]*--user 1000:1000'
+            r'[\s\S]*?openspec init --tools opencode'
+            r'[\s\S]*?openspec list --json'
+            r'[\s\S]*?openspec init --tools opencode',
+        )
+
+    def test_openspec_upgrade_fixture_proves_startup_does_not_mutate_projects(self):
+        self.assertIn("openspec_startup_no_mutation=true", self.upgrade)
+        self.assertIn("--user 2345:2345", self.upgrade)
+        self.assertIn("--user 0:0", self.upgrade)
+        self.assertIn('chown 2345:2345 /workspace', self.upgrade)
+        self.assertIn('install -o 2345 -g 2345 -m 0644 /dev/null /workspace/.holycode-openspec-fixture', self.upgrade)
+        self.assertIn('rm -f /workspace/.holycode-openspec-fixture', self.upgrade)
+        self.assertGreaterEqual(self.upgrade.count('chmod 0755 /workspace'), 1)
+        self.assertIn('test -w /workspace', self.upgrade)
+        self.assertIn('OpenSpec fixture is not writable by 2345:2345', self.upgrade)
+        self.assertIn("openspec_before", self.upgrade)
+        self.assertIn("openspec_after", self.upgrade)
+        self.assertIn('find /workspace -xdev -printf "%P|%y|%m|%U:%G', self.upgrade)
+        self.assertIn('find /workspace -xdev -type f -print0', self.upgrade)
+        self.assertRegex(
+            self.upgrade,
+            r'start_stack "\$baseline_name"[^\n]*\n'
+            r'[\s\S]*?openspec_before=.*(?:snapshot_openspec_volume|sha256sum|tar)[^\n]*\n'
+            r'[\s\S]*?start_stack "\$upgrade_name"[^\n]*\n'
+            r'[\s\S]*?openspec_after=.*(?:snapshot_openspec_volume|sha256sum|tar)[^\n]*\n'
+            r'[\s\S]*?\[ "\$openspec_before" = "\$openspec_after" \]',
+        )
+
+    def test_openspec_is_documented_and_attributed(self):
+        self.assertIn("OpenSpec", self.readme)
+        self.assertIn("@fission-ai/openspec", self.dependency_audit.read_text(encoding="utf-8"))
+        self.assertIn("OpenSpec", self.dockerhub)
+        self.assertIn("OpenSpec", self.changelog)
+        self.assertIn("OpenSpec", self.notices)
+        self.assertIn("https://github.com/Fission-AI/OpenSpec", self.notices)
 
     def test_upgrade_fixture_covers_stateful_paperclip_paths(self):
         expected = (
@@ -634,11 +806,11 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn(checkout, self.protected)
         self.assertIn(checkout, self.pr_validation)
         self.assertIn(
-            "bash scripts/validate_renovate_extraction.sh 44.24.2",
+            "bash scripts/validate_renovate_extraction.sh 44.56.0",
             self.pr_validation,
         )
         self.assertIn(
-            "bash scripts/validate_renovate_extraction.sh 44.24.2",
+            "bash scripts/validate_renovate_extraction.sh 44.56.0",
             self.protected,
         )
         setup_node = (
@@ -646,8 +818,8 @@ class ReleaseContractTests(unittest.TestCase):
         )
         self.assertIn(setup_node, self.pr_validation)
         self.assertIn(setup_node, self.protected)
-        self.assertIn("node-version: 24.19.0", self.pr_validation)
-        self.assertIn("node-version: 24.19.0", self.protected)
+        self.assertIn("node-version: 24.20.0", self.pr_validation)
+        self.assertIn("node-version: 24.20.0", self.protected)
         self.assertIn(
             "docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0",
             self.publish,
@@ -681,7 +853,7 @@ class ReleaseContractTests(unittest.TestCase):
             'docker-scout cves "sbom://$SCOUT_SBOM"',
             "--scanner scout",
             "--scanner trivy",
-            "version: v0.73.0",
+            "version: v0.74.0",
             "scanners: vuln,secret",
             "ignore-unfixed: true",
             "holycode-pretag-${{ github.sha }}-${{ matrix.suffix }}-evidence",
@@ -758,10 +930,10 @@ class ReleaseContractTests(unittest.TestCase):
         for workflow in (self.pr_validation, self.protected):
             for value in (
                 "trivy_arch: 64bit",
-                "trivy_sha256: 2edd39da482bb4e9831962487b68f68e3928ec3137794757f54d00383d79547b",
+                "trivy_sha256: 2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a",
                 "trivy_arch: ARM64",
-                "trivy_sha256: 13833d97e8a1a5367471c372a173180157f593bece570e20d5d925fef552f5dd",
-                "TRIVY_VERSION: 0.73.0",
+                "trivy_sha256: b94ce1976bbf3c15b514b605ee88be7c6d94a29be2302847ff01cb794d47aad5",
+                "TRIVY_VERSION: 0.74.0",
                 "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
             ):
                 with self.subTest(value=value):
@@ -817,11 +989,17 @@ class ReleaseContractTests(unittest.TestCase):
     def test_lifecycle_policy_matches_release(self):
         policy = json.loads((ROOT / "config" / "npm-global-script-policy.json").read_text(encoding="utf-8"))
         self.assertEqual(policy["npmVersion"], "12.0.2")
-        self.assertIn("@anthropic-ai/claude-code@2.1.228", policy["allowScripts"])
-        self.assertIn("opencode-ai@1.18.16", policy["allowScripts"])
-        self.assertIn("workerd@1.20260804.1", policy["blockedScripts"])
-        self.assertIn("prisma@7.9.1", policy["blockedScripts"])
-        self.assertIn("@prisma/engines@7.9.1", policy["blockedScripts"])
+        self.assertIn("@anthropic-ai/claude-code@2.1.252", policy["allowScripts"])
+        self.assertIn("opencode-ai@1.18.25", policy["allowScripts"])
+        self.assertEqual(
+            policy["blockedScripts"]["esbuild@0.28.1"]["integrity"],
+            "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
+        )
+        self.assertIn("Wrangler 4.127.1", policy["blockedScripts"]["esbuild@0.28.1"]["reason"])
+        self.assertIn("esbuild@0.28.2", policy["blockedScripts"])
+        self.assertIn("workerd@1.20260828.1", policy["blockedScripts"])
+        self.assertIn("prisma@7.10.0", policy["blockedScripts"])
+        self.assertIn("@prisma/engines@7.10.0", policy["blockedScripts"])
         self.assertNotIn("netlify-cli@26.2.0", policy["blockedScripts"])
         for decision in ("allowScripts", "blockedScripts"):
             for package_id, entry in policy[decision].items():

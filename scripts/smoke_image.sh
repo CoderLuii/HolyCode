@@ -11,6 +11,7 @@ image_label() {
 expected_opencode="$(image_label io.holycode.version.opencode)"
 expected_claude="$(image_label io.holycode.version.claude-code)"
 expected_paperclip="$(image_label io.holycode.version.paperclip)"
+expected_openspec="$(image_label io.holycode.version.openspec)"
 expected_claude_auth="$(image_label io.holycode.version.claude-auth-plugin)"
 expected_npm="$(image_label io.holycode.version.npm)"
 expected_npm_brace_expansion="$(image_label io.holycode.version.npm-brace-expansion)"
@@ -27,6 +28,8 @@ expected_wrangler="$(image_label io.holycode.version.wrangler)"
 expected_vite="$(image_label io.holycode.version.vite)"
 expected_prettier="$(image_label io.holycode.version.prettier)"
 expected_prisma="$(image_label io.holycode.version.prisma)"
+expected_prisma_deepmerge="$(image_label io.holycode.version.prisma-deepmerge-ts)"
+expected_prisma_mysql2="$(image_label io.holycode.version.prisma-mysql2)"
 expected_lighthouse="$(image_label io.holycode.version.lighthouse)"
 expected_s6="$(image_label io.holycode.version.s6-overlay)"
 expected_fzf="$(image_label io.holycode.version.fzf)"
@@ -48,6 +51,7 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   -e EXPECTED_OPENCODE="$expected_opencode" \
   -e EXPECTED_CLAUDE="$expected_claude" \
   -e EXPECTED_PAPERCLIP="$expected_paperclip" \
+  -e EXPECTED_OPENSPEC="$expected_openspec" \
   -e EXPECTED_CLAUDE_AUTH="$expected_claude_auth" \
   -e EXPECTED_NPM="$expected_npm" \
   -e EXPECTED_NPM_BRACE_EXPANSION="$expected_npm_brace_expansion" \
@@ -64,6 +68,8 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   -e EXPECTED_VITE="$expected_vite" \
   -e EXPECTED_PRETTIER="$expected_prettier" \
   -e EXPECTED_PRISMA="$expected_prisma" \
+  -e EXPECTED_PRISMA_DEEPMERGE="$expected_prisma_deepmerge" \
+  -e EXPECTED_PRISMA_MYSQL2="$expected_prisma_mysql2" \
   -e EXPECTED_LIGHTHOUSE="$expected_lighthouse" \
   -e EXPECTED_S6="$expected_s6" \
   -e EXPECTED_FZF="$expected_fzf" \
@@ -86,7 +92,7 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   node -e "console.log(require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json\").version)" | grep -Fx "$EXPECTED_PM2_JS_YAML"
   node -e "const pkg=require(\"/usr/local/lib/node_modules/pm2/package.json\"); if(pkg.dependencies[\"js-yaml\"]!==process.env.EXPECTED_PM2_JS_YAML) process.exit(1)"
   (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null)
-  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 --version | grep -Fx "7.0.3"
+  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 --version | grep -Fx "7.0.4"
   PM2_HOME=/tmp/holycode-smoke-pm2 pm2 kill >/dev/null
   rm -rf /tmp/holycode-smoke-pm2
   opencode --version | grep -Fx "$EXPECTED_OPENCODE"
@@ -111,12 +117,17 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   grep -Fx "VERSION_ID=\"13\"" /etc/os-release
   python3 --version | grep -E "^Python 3\.13\."
   python3 -m pip --version
+  pip --version | grep -F "pip 26.2.1"
+  test "$(dpkg-query -W -f=\${db:Status-Status} python3-pip 2>/dev/null || true)" != installed
+  test "$(dpkg-query -W -f=\${db:Status-Status} python3-setuptools 2>/dev/null || true)" != installed
   python3 -m pip check
-  python3 -c "import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == \"$EXPECTED_PIP_VENDOR_MSGPACK\"; import pip._vendor.pkg_resources"
-  _PIP_USE_IMPORTLIB_METADATA=0 python3 -m pip list --format=json >/dev/null
+  python3 -c "import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == \"$EXPECTED_PIP_VENDOR_MSGPACK\""
   grep -Fx "msgpack==$EXPECTED_PIP_VENDOR_MSGPACK" /usr/local/lib/python3.13/dist-packages/pip/_vendor/vendor.txt
   grep -Fx "setuptools==$EXPECTED_PIP_VENDOR_PKG_RESOURCES" /usr/local/lib/python3.13/dist-packages/pip/_vendor/vendor.txt
-  python3 -c "import json; components={item[\"name\"]:item[\"version\"] for item in json.load(open(\"/usr/local/lib/python3.13/dist-packages/pip/_vendor/bom.cdx.json\"))[\"components\"] if item.get(\"name\") in {\"msgpack\",\"setuptools\"}}; assert components[\"msgpack\"] == \"$EXPECTED_PIP_VENDOR_MSGPACK\"; assert components[\"setuptools\"] == \"$EXPECTED_PIP_VENDOR_PKG_RESOURCES\""
+  python3 -c "import json; components={item[\"name\"]:item[\"version\"] for item in json.load(open(\"/usr/local/lib/python3.13/dist-packages/pip/_vendor/bom.cdx.json\"))[\"components\"] if item.get(\"name\")==\"msgpack\"}; assert components[\"msgpack\"] == \"$EXPECTED_PIP_VENDOR_MSGPACK\""
+  python3 -c "import json; components={item[\"name\"]:item[\"version\"] for item in json.load(open(\"/usr/local/lib/python3.13/dist-packages/pip/_vendor/bom.cdx.json\"))[\"components\"] if item.get(\"name\")==\"setuptools\"}; assert components[\"setuptools\"] == \"$EXPECTED_PIP_VENDOR_PKG_RESOURCES\""
+  python3 -c "import pip._vendor.pkg_resources"
+  _PIP_USE_IMPORTLIB_METADATA=0 python3 -m pip list --format=json >/dev/null
   psql --version | grep -F "psql (PostgreSQL) 17."
   ! dpkg-query -W postgresql-client >/dev/null 2>&1
   python3 - <<PY
@@ -128,9 +139,9 @@ assert metadata.version("pandas") == "3.0.5"
 assert metadata.version("matplotlib") == "3.11.1"
 assert metadata.version("tqdm") == "4.70.0"
 assert metadata.version("fastapi") == "0.141.1"
-assert metadata.version("uvicorn") == "0.52.1"
+assert metadata.version("uvicorn") == "0.52.4"
 assert metadata.version("packaging") == "26.3"
-assert metadata.version("wheel") == "0.47.0"
+assert metadata.version("wheel") == "0.48.0"
 assert metadata.version("pip") == "26.2.1"
 assert metadata.version("rich") == "15.0.0"
 assert metadata.version("setuptools") == "84.0.0"
@@ -144,13 +155,13 @@ PY
   python3 -m venv /tmp/holycode-python-seed
   /tmp/holycode-python-seed/bin/python -m pip install --no-index \
     --find-links /usr/local/share/holycode/python-seed \
-    pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.47.0
+    pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.48.0
   /tmp/holycode-python-seed/bin/python - <<PY
 import importlib.metadata as metadata
 assert metadata.version("pip") == "26.2.1"
 assert metadata.version("setuptools") == "84.0.0"
 assert metadata.version("packaging") == "26.3"
-assert metadata.version("wheel") == "0.47.0"
+assert metadata.version("wheel") == "0.48.0"
 PY
 
   command -v claude
@@ -176,6 +187,13 @@ PY
   vite --version | grep -F "vite/$EXPECTED_VITE"
   prettier --version | grep -Fx "$EXPECTED_PRETTIER"
   prisma --version | grep -E "^prisma[[:space:]]+:[[:space:]]+$EXPECTED_PRISMA$"
+  node -e "console.log(require(\"/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts/package.json\").version)" | grep -Fx "$EXPECTED_PRISMA_DEEPMERGE"
+  node -e "const pkg=require(\"/usr/local/lib/node_modules/prisma/node_modules/@prisma/config/package.json\"); if(pkg.dependencies[\"deepmerge-ts\"]!==process.env.EXPECTED_PRISMA_DEEPMERGE) process.exit(1)"
+  (cd /usr/local/lib/node_modules/prisma && npm ls deepmerge-ts --all >/dev/null)
+  node -e "console.log(require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json\").version)" | grep -Fx "$EXPECTED_PRISMA_MYSQL2"
+  node -e "const pkg=require(\"/usr/local/lib/node_modules/prisma/package.json\"); if(pkg.dependencies.mysql2!==process.env.EXPECTED_PRISMA_MYSQL2) process.exit(1)"
+  (cd /usr/local/lib/node_modules/prisma && npm ls mysql2 --all >/dev/null)
+  node -e "const mysql=require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2\"); if(typeof mysql.createConnection!==\"function\") process.exit(1)"
   lighthouse --version | grep -Fx "$EXPECTED_LIGHTHOUSE"
   ! command -v vercel
   ! command -v sharp
@@ -183,7 +201,7 @@ PY
   ! command -v lhci
   ! command -v netlify
   ! command -v serve
-  esbuild --version | grep -Fx "0.28.1"
+  esbuild --version | grep -Fx "0.28.2"
   prisma --version >/dev/null
   workerd_bin="$(find /usr/local/lib/node_modules/wrangler -path "*/workerd/bin/workerd" -type f -print -quit)"
   test -n "$workerd_bin"
@@ -236,4 +254,39 @@ EOF
       *) echo "runtime contains non-empty secret-like environment variable: $line" >&2; exit 1 ;;
     esac
   done
+'
+
+openspec_workspace="$(mktemp -d)"
+cleanup_openspec_workspace() {
+  docker run --rm --network none --user 0:0 --entrypoint sh \
+    -v "$openspec_workspace:/workspace" \
+    "$image" -c 'find /workspace -mindepth 1 -delete' >/dev/null 2>&1 || true
+  rm -rf "$openspec_workspace"
+}
+trap cleanup_openspec_workspace EXIT
+chmod 0777 "$openspec_workspace"
+docker run --rm --network none --user 1000:1000 --entrypoint sh \
+  -e EXPECTED_OPENSPEC="$expected_openspec" \
+  -e OPENSPEC_TELEMETRY=0 \
+  -v "$openspec_workspace:/workspace" \
+  -w /workspace \
+  "$image" -lc '
+  set -eu
+  test "$(openspec --version)" = "$EXPECTED_OPENSPEC"
+  npm ls -g --depth=0 "@fission-ai/openspec@$EXPECTED_OPENSPEC"
+  openspec init --tools opencode
+  test -d openspec
+  openspec list --json >/tmp/openspec-list.json
+  snapshot_openspec_workspace() {
+    {
+      find . -xdev -printf "%P|%y|%m|%U:%G\n" | LC_ALL=C sort
+      find . -xdev -type l -printf "%P|%l\n" | LC_ALL=C sort
+      find . -xdev -type f -print0 | LC_ALL=C sort -z | xargs -0r sha256sum
+    } | sha256sum
+  }
+  openspec_snapshot_before="$(snapshot_openspec_workspace)"
+  openspec init --tools opencode
+  test -d openspec
+  openspec_snapshot_after="$(snapshot_openspec_workspace)"
+  test "$openspec_snapshot_before" = "$openspec_snapshot_after"
 '

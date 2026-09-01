@@ -4,6 +4,21 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.8] - 09/01/2026
+
+### Added
+
+- Add OpenSpec 1.11.0 for explicit, offline spec-driven project initialization with OpenCode
+
+### Changed
+
+- Refresh Node.js, Go, GitHub CLI, fzf, lazygit, OpenCode, Claude Code, Paperclip, pnpm, tsx, Vite, Wrangler, Prisma, ESLint, PM2, Trivy, GitHub Actions, and the compatible Python package set
+- Replace pip's vulnerable vendored pkg_resources source with checksum-bound setuptools 78.1.1 while retaining pip's supported importlib metadata backend
+
+### Security
+
+- Rebuild GitHub CLI with `golang.org/x/mod` 0.40.0, replace Prisma's vulnerable nested `deepmerge-ts` and `mysql2` packages with 8.0.0 and 3.22.0, and avoid Debian's superseded `python3-setuptools` bootstrap package before native scanner validation
+
 ## [1.1.7] - 08/12/2026
 
 ### Fixed

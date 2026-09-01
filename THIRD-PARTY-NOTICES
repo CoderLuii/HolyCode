@@ -58,27 +58,37 @@ distribute or modify this plugin in v1.1.4.
 - License: MIT
 - Source: https://github.com/nodejs/node
 
+## OpenSpec
+
+- License: MIT
+- Source: https://github.com/Fission-AI/OpenSpec
+- npm: https://www.npmjs.com/package/@fission-ai/openspec
+- Version: 1.11.0
+
+Installed as the pinned global CLI. Telemetry is disabled in the image, and
+project initialization occurs only when you explicitly run `openspec init`.
+
 ## npm CLI
 
 - License: Artistic-2.0
 - Source: https://github.com/npm/cli
 - Version: 12.0.2
 
-### npm bundled ip-address 10.3.1 replacement
+### npm bundled ip-address 10.7.0 replacement
 
 - License: MIT
 - Source: https://github.com/beaugunderson/ip-address
-- Version: 10.3.1
+- Version: 10.7.0
 
 HolyCode replaces npm's nested `ip-address` package with the unmodified,
-integrity-verified 10.3.1 npm payload. npm's bundled `socks` dependency range
+integrity-verified 10.7.0 npm payload. npm's bundled `socks` dependency range
 already accepts this version.
 
 ## PM2
 
 - License: AGPL-3.0
 - Source: https://github.com/Unitech/pm2
-- Version: 7.0.3
+- Version: 7.0.4
 
 ### PM2 bundled js-yaml 4.3.1 replacement
 
@@ -88,6 +98,32 @@ already accepts this version.
 
 HolyCode replaces PM2's nested `js-yaml` package with the unmodified,
 integrity-verified 4.3.1 npm payload and updates PM2's installed dependency
+declaration to that exact version.
+
+## Prisma
+
+- License: Apache-2.0
+- Source: https://github.com/prisma/prisma
+- Version: 7.10.0
+
+### Prisma bundled deepmerge-ts 8.0.0 replacement
+
+- License: MIT
+- Source: https://github.com/RebeccaStevens/deepmerge-ts
+- Version: 8.0.0
+
+HolyCode replaces Prisma's nested `deepmerge-ts` package with the unmodified,
+integrity-verified 8.0.0 npm payload and updates the installed `@prisma/config`
+dependency declaration to that exact version.
+
+### Prisma bundled mysql2 3.22.0 replacement
+
+- License: MIT
+- Source: https://github.com/sidorares/node-mysql2
+- Version: 3.22.0
+
+HolyCode replaces Prisma's nested `mysql2` package with the unmodified,
+integrity-verified 3.22.0 npm payload and updates Prisma's installed dependency
 declaration to that exact version.
 
 ## Debian GNU/Linux
@@ -121,9 +157,9 @@ permits the namespace syscalls required by Chromium's sandbox.
 
 - License: SEE LICENSE IN README.md
 - npm: https://www.npmjs.com/package/@anthropic-ai/claude-code
-- Version: 2.1.228
+- Version: 2.1.252
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.228`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.252`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -134,7 +170,7 @@ ENABLE_CLAUDE_AUTH=true.
 - npm: https://www.npmjs.com/package/paperclipai
 - Catalog npm: https://www.npmjs.com/package/@paperclipai/skills-catalog
 
-Installed via npm as the global package `paperclipai@2026.722.0`. Paperclip includes
+Installed via npm as the global package `paperclipai@2026.824.1`. Paperclip includes
 @paperclipai/skills-catalog through its published package set, which HolyCode
 uses for the Skills page. HolyCode validates the package version, integrity,
 architecture, and lifecycle-script body before running the exact embedded PostgreSQL
@@ -146,17 +182,16 @@ an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 - License: MIT
 - Copyright: GitHub, Inc.
 - Source: https://github.com/cli/cli
-- Version: 2.97.0 (`55dbb4dc6b7edb10b48e3d7fc5bccd32318d1b55`)
+- Version: 2.98.0 (`a255baf71d13fe5947a4eb7ad521ffd412d64cee`)
 
-Built from the exact upstream tag with Go 1.26.5 and reviewed module updates
-for gRPC 1.82.1, klauspost/compress 1.19.1, and x/text 0.40.0.
+Built from the exact upstream tag with Go 1.27.0 and its verified module graph.
 
 ## lazygit
 
 - License: MIT
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
-- Version: 0.64.0
+- Version: 0.64.1
 
 Built from the exact upstream tag with the reviewed x/text 0.40.0 module
 update.
@@ -186,17 +221,16 @@ official PyPI source. The replacement remains under pip's vendored namespace.
 
 - License: MIT
 - Source: https://github.com/pypa/setuptools
-- Version: 80.9.0
+- Version: 78.1.1
 
-HolyCode replaces pip 26.2's internal pkg_resources copy with the
-hash-verified official setuptools source. A reviewed namespace-import patch
-keeps the module compatible with pip's vendoring layout.
+HolyCode replaces pip's vendored `pkg_resources` source with the
+checksum-verified setuptools 78.1.1 source and keeps pip's vendoring imports.
 
 ## Wrangler
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.121.0
+- Version: 4.127.1
 
 ## delta
 
@@ -227,7 +261,7 @@ keeps the module compatible with pip's vendoring layout.
 - License: MIT
 - Copyright: Junegunn Choi
 - Source: https://github.com/junegunn/fzf
-- Version: 0.74.2
+- Version: 0.74.3
 
 Built from the exact upstream tag with the reviewed x/sys 0.44.0 module
 update.

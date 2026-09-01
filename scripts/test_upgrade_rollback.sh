@@ -23,10 +23,12 @@ current_paperclip_version="$(docker run --rm --platform "$platform" --entrypoint
 previous_paperclip_version="$(docker run --rm --platform "$platform" --entrypoint node "$previous_image" \
   -p 'require("/usr/local/lib/node_modules/paperclipai/package.json").version')"
 
-[ "$current_paperclip_version" = "2026.722.0" ]
+[ "$current_paperclip_version" = "2026.824.1" ]
 paperclip_migration=false
 if [ "$previous_paperclip_version" = "2026.707.0" ]; then
   paperclip_migration=true
+elif [ "$previous_paperclip_version" = "2026.722.0" ]; then
+  paperclip_migration=false
 elif [ "$previous_paperclip_version" != "$current_paperclip_version" ]; then
   echo "unsupported Paperclip upgrade: $previous_paperclip_version -> $current_paperclip_version" >&2
   exit 1
@@ -104,6 +106,54 @@ start_stack() {
     -e CLIPROXYAPI_API_KEY=holycode-upgrade-provider-key \
     "$image" >/dev/null
   wait_for_services "$name" "$enable_hermes"
+}
+
+initialize_openspec_fixture() {
+  local workspace_volume="$1"
+
+  docker run --rm --platform "$platform" --network none --entrypoint sh \
+    --user 0:0 \
+    -v "$workspace_volume:/workspace" \
+    "$current_image" -lc '
+      chown 2345:2345 /workspace
+      chmod 0755 /workspace
+      install -o 2345 -g 2345 -m 0644 /dev/null /workspace/.holycode-openspec-fixture
+    '
+  docker run --rm --platform "$platform" --network none --entrypoint sh \
+    --user 2345:2345 \
+    -e OPENSPEC_TELEMETRY=0 \
+    -v "$workspace_volume:/workspace" \
+    -w /workspace \
+    "$current_image" -lc '
+      if ! test -w /workspace; then
+        stat -c "%A %u:%g %n" /workspace >&2
+        echo "OpenSpec fixture is not writable by 2345:2345" >&2
+        exit 1
+      fi
+      openspec init --tools opencode >/dev/null
+    '
+  docker run --rm --platform "$platform" --network none --entrypoint sh \
+    --user 0:0 \
+    -v "$workspace_volume:/workspace" \
+    "$current_image" -lc '
+      rm -f /workspace/.holycode-openspec-fixture
+      chown 2345:2345 /workspace
+      chmod 0755 /workspace
+    '
+}
+
+snapshot_openspec_volume() {
+  local workspace_volume="$1"
+
+  docker run --rm --platform "$platform" --network none --entrypoint sh \
+    -v "$workspace_volume:/workspace:ro" \
+    "$current_image" -lc '
+      {
+        find /workspace -xdev -printf "%P|%y|%m|%U:%G\n" | LC_ALL=C sort
+        find /workspace -xdev -type l -printf "%P|%l\n" | LC_ALL=C sort
+        find /workspace -xdev -type f -print0 | LC_ALL=C sort -z | xargs -0r sha256sum
+      } | sha256sum
+    '
 }
 
 clone_volume() {
@@ -759,6 +809,7 @@ docker pull --platform "$platform" "$previous_image" >/dev/null
 docker volume create "$baseline_home" >/dev/null
 docker volume create "$baseline_workspace" >/dev/null
 
+initialize_openspec_fixture "$baseline_workspace"
 start_stack "$baseline_name" "$previous_image" "$baseline_home" "$baseline_workspace" false
 seed_paperclip_state "$baseline_name"
 docker exec -u opencode "$baseline_name" sh -lc '
@@ -769,12 +820,16 @@ docker exec -u opencode "$baseline_name" sh -lc '
   touch /workspace/holycode-upgrade-marker
 '
 assert_persisted_state "$baseline_name" baseline
+openspec_before="$(snapshot_openspec_volume "$baseline_workspace")"
 docker rm -f "$baseline_name" >/dev/null
 
 clone_volume "$baseline_home" "$upgrade_home"
 clone_volume "$baseline_workspace" "$upgrade_workspace"
 
 start_stack "$upgrade_name" "$current_image" "$upgrade_home" "$upgrade_workspace" false
+openspec_after="$(snapshot_openspec_volume "$upgrade_workspace")"
+[ "$openspec_before" = "$openspec_after" ]
+openspec_startup_no_mutation=true
 assert_persisted_state "$upgrade_name" upgraded
 if [ "$paperclip_migration" = "true" ]; then
   seed_post_upgrade_connections "$upgrade_name"
@@ -786,6 +841,9 @@ fi
 docker exec "$upgrade_name" node --version | grep -Fx "$current_node_version"
 docker restart "$upgrade_name" >/dev/null
 wait_for_services "$upgrade_name" false
+openspec_after="$(snapshot_openspec_volume "$upgrade_workspace")"
+[ "$openspec_before" = "$openspec_after" ]
+test "$openspec_startup_no_mutation" = true
 assert_persisted_state "$upgrade_name" upgraded
 if [ "$paperclip_migration" = "true" ]; then
   assert_post_upgrade_connections "$upgrade_name"

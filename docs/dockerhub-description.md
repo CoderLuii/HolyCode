@@ -4,7 +4,7 @@
 
 OpenCode AI coding agent with built-in web UI, Claude subscription support, 50+ dev tools, a sandboxed headless browser, optional Paperclip, and external CLIProxyAPI endpoint support. Use your existing Claude Max/Pro plan. No separate API key needed.
 
-v1.1.7 keeps the v1.1.6 toolchain and replaces npm's nested `ip-address` with 10.3.1 and PM2's nested `js-yaml` with 4.3.1. Native AMD64 and ARM64 manual checks now run Docker Scout and Trivy before a release tag is created.
+v1.1.8 adds OpenSpec 1.11.0 and refreshes the bundled runtimes, CLIs, libraries, plugins, scanners, actions, and container build inputs. Run `openspec init --tools opencode` inside a project when you want OpenSpec; HolyCode never initializes it at startup.
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/coderluii/holycode?style=flat-square&logo=docker)](https://hub.docker.com/r/coderluii/holycode)
 [![GitHub Stars](https://img.shields.io/github/stars/coderluii/holycode?style=flat-square&logo=github)](https://github.com/CoderLuii/HolyCode)
@@ -60,7 +60,7 @@ That's it. Open your browser and start building.
 
 🌐 **Headless Browser** — Chromium + Xvfb + Playwright, pre-configured for screenshots, scraping, and browser automation.
 
-🛠️ **50+ Dev Tools:** Node.js 24.18.0 LTS with npm 12.0.2, Python 3.13 on Trixie, OpenCode 1.18.9, Paperclip 2026.722.0, eza 0.23.5, fzf 0.74.1, lazygit 0.63.1, pnpm 11.18.0, tsx 4.23.1, Vite 8.1.5, ESLint 10.8.0, Prettier 3.9.6, Wrangler 4.115.0, Prisma 7.9.1, Lighthouse 13.4.1, tqdm 4.70.0, FastAPI 0.141.1, Uvicorn 0.52.0, Claude stable 2.1.220, TypeScript 6.0.3, NumPy 2.5.1, json-server 0.17.4, git, ripgrep, bat, delta, gh CLI, and more.
+🛠️ **50+ Dev Tools:** Node.js 24.20.0 LTS with npm 12.0.2, Python 3.13 on Trixie, OpenCode 1.18.25, OpenSpec 1.11.0, Paperclip 2026.824.1, eza 0.23.5, fzf 0.74.3, lazygit 0.64.1, pnpm 11.25.0, tsx 4.23.13, Vite 8.2.2, ESLint 10.9.1, Prettier 3.9.6, Wrangler 4.127.1, Prisma 7.10.0, Lighthouse 13.4.1, tqdm 4.70.0, FastAPI 0.141.1, Uvicorn 0.52.4, Claude stable 2.1.252, TypeScript 6.0.3, NumPy 2.5.2, json-server 0.17.4, git, ripgrep, bat, delta, gh CLI, and more.
 
 TypeScript stays on 6.0.3 until the 7.x programmatic API is ready for the bundled toolchains. json-server stays on its stable 0.17.4 release. Netlify CLI, `serve`, Vercel, sharp-cli, concurrently, and LHCI are not bundled. Wrangler's removed `legacy_env` mode is not supported.
 
@@ -134,7 +134,7 @@ docker compose up -d
 
 `v1.1.4` upgrades Paperclip from 2026.707.0 to 2026.722.0. Keep untouched pre-upgrade copies of your volumes until onboarding, Skills, agents, connections, and normal provider work pass. Roll back only by restoring those copies with image `1.1.3`; do not point `1.1.3` at Paperclip data already migrated by `1.1.4`.
 
-Tagged images pin direct npm, PyPI, and GitHub-release versions. Binary assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is pinned to `@anthropic-ai/claude-code@2.1.220`. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file and an offline packaging-tool seed. npm lifecycle scripts are disabled during installation and validated by exact package version, integrity, architecture, and script body before approved scripts run. Debian packages resolve from current Trixie repositories at build time. User-installed plugins remain outside the image SBOM. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without claiming byte-for-byte reproducibility, universal freshness, or zero total findings.
+Tagged images pin direct npm, PyPI, and GitHub-release versions. Binary assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is pinned to `@anthropic-ai/claude-code@2.1.252`. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file and an offline packaging-tool seed. npm lifecycle scripts are disabled during installation and validated by exact package version, integrity, architecture, and script body before approved scripts run. Debian packages resolve from current Trixie repositories at build time. User-installed plugins remain outside the image SBOM. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without claiming byte-for-byte reproducibility, universal freshness, or zero total findings.
 
 ## Links
 

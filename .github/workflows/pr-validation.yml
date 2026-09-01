@@ -28,7 +28,7 @@ jobs:
       - name: Set up Node for Renovate validation
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.19.0
+          node-version: 24.20.0
 
       - name: Python version policy tests
         run: python -m unittest discover -s tests
@@ -56,7 +56,7 @@ jobs:
           fi
 
       - name: Renovate configuration
-        run: bash scripts/validate_renovate_extraction.sh 44.24.2
+        run: bash scripts/validate_renovate_extraction.sh 44.56.0
 
   build-and-smoke-test:
     needs: static-validation
@@ -70,14 +70,14 @@ jobs:
             scout_arch: amd64
             scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b
             trivy_arch: 64bit
-            trivy_sha256: 2edd39da482bb4e9831962487b68f68e3928ec3137794757f54d00383d79547b
+            trivy_sha256: 2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
             suffix: arm64
             scout_arch: arm64
             scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58
             trivy_arch: ARM64
-            trivy_sha256: 13833d97e8a1a5367471c372a173180157f593bece570e20d5d925fef552f5dd
+            trivy_sha256: b94ce1976bbf3c15b514b605ee88be7c6d94a29be2302847ff01cb794d47aad5
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -97,7 +97,7 @@ jobs:
           docker run --rm --entrypoint sh "holycode-pr-test:${{ matrix.suffix }}" -lc '
             set -eu
             test ! -e /usr/local/lib/node_modules/drizzle-kit/node_modules/@esbuild-kit
-            jq -e ".version == \"0.28.1\"" /usr/local/lib/node_modules/drizzle-kit/node_modules/esbuild/package.json >/dev/null
+            jq -e ".version == \"0.28.2\"" /usr/local/lib/node_modules/drizzle-kit/node_modules/esbuild/package.json >/dev/null
             drizzle-kit --version
             drizzle-kit --help >/dev/null
           '
@@ -194,7 +194,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           TRIVY_SHA256: ${{ matrix.trivy_sha256 }}
-          TRIVY_VERSION: 0.73.0
+          TRIVY_VERSION: 0.74.0
         run: |
           set -euo pipefail
 
@@ -215,7 +215,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.73.0
+          version: v0.74.0
           skip-setup-trivy: true
           image-ref: holycode-pr-test:${{ matrix.suffix }}
           format: spdx-json
@@ -287,12 +287,13 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.73.0
+          version: v0.74.0
           skip-setup-trivy: true
           image-ref: holycode-pr-test:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret
           severity: CRITICAL,HIGH
+          timeout: 15m
           exit-code: 0
           output: holycode-${{ matrix.suffix }}.trivy.json
 
@@ -300,12 +301,13 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.73.0
+          version: v0.74.0
           skip-setup-trivy: true
           image-ref: holycode-pr-test:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret
           severity: CRITICAL,HIGH
+          timeout: 15m
           exit-code: 0
           ignore-unfixed: true
           output: holycode-${{ matrix.suffix }}.trivy-fixable.json
