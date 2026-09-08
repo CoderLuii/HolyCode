@@ -4,17 +4,17 @@
 # ==============================================================================
 
 # renovate: datasource=github-releases depName=cli/cli
-ARG GITHUB_CLI_VERSION=2.98.0
-ARG GITHUB_CLI_REF=a255baf71d13fe5947a4eb7ad521ffd412d64cee
+ARG GITHUB_CLI_VERSION=2.100.0
+ARG GITHUB_CLI_REF=45437bc7eeeb3359bbfddd1742f79de7652fd3e2
 # renovate: datasource=github-releases depName=junegunn/fzf
 ARG FZF_VERSION=0.74.3
 ARG FZF_REF=15f64c492a08f0840b81540c7d1de35737448086
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.64.1
-ARG LAZYGIT_REF=fbe2379fa5831b1ce1a8a836a604652ffc14844f
+ARG LAZYGIT_VERSION=0.65.0
+ARG LAZYGIT_REF=c07f4d381b90419583b7ce04f87379654d983ebc
 
 # Rebuild exact release sources with reviewed dependency fixes.
-FROM --platform=$BUILDPLATFORM golang:1.27.0-trixie@sha256:df98008ecd2b0ecc9f0a94d1b07e3564a9c92b555369b33d9b5f60d0765b2db7 AS github-cli-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS github-cli-builder
 ARG GITHUB_CLI_VERSION
 ARG GITHUB_CLI_REF
 ARG TARGETARCH
@@ -23,10 +23,10 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
     cd /src && \
     test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}" && \
     test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
-    test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.83.0" && \
+    test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.83.2" && \
     test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.41.0" && \
     test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.19.2" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.38.0" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.39.0" && \
     go get golang.org/x/mod@v0.40.0 && \
     test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.40.0" && \
     go mod verify && \
@@ -40,12 +40,12 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
       GH_VERSION="${GITHUB_CLI_VERSION}" go run ./script/build.go bin/gh \
       GOOS=linux GOARCH="${GH_GOARCH}" CGO_ENABLED=0 && \
     install -D -m 0755 bin/gh /out/gh && \
-    go version -m /out/gh | grep -F "go1.27.0" && \
+    go version -m /out/gh | grep -F "go1.27.1" && \
     go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.19\.2' && \
     go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
     go version -m /out/gh | grep -E 'golang.org/x/mod[[:space:]]+v0\.40\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.27.0-trixie@sha256:df98008ecd2b0ecc9f0a94d1b07e3564a9c92b555369b33d9b5f60d0765b2db7 AS fzf-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS fzf-builder
 ARG FZF_VERSION
 ARG FZF_REF
 ARG TARGETARCH
@@ -76,7 +76,7 @@ RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
       -o /out/fzf && \
     go version -m /out/fzf | grep -E 'golang.org/x/sys[[:space:]]+v0\.44\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.27.0-trixie@sha256:df98008ecd2b0ecc9f0a94d1b07e3564a9c92b555369b33d9b5f60d0765b2db7 AS lazygit-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS lazygit-builder
 ARG LAZYGIT_VERSION
 ARG LAZYGIT_REF
 ARG TARGETARCH
@@ -86,7 +86,8 @@ RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
     test "$(git rev-parse HEAD)" = "${LAZYGIT_REF}" && \
     test "$(git describe --tags --exact-match HEAD)" = "v${LAZYGIT_VERSION}" && \
     export GOFLAGS=-mod=mod && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.40.0" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.41.0" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/sys)" = "v0.47.0" && \
     go mod verify && \
     LAZYGIT_MODULE_FILES_SHA256="$(sha256sum go.mod go.sum)" && \
     go mod vendor && \
@@ -99,7 +100,8 @@ RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
     GOOS=linux GOARCH="${LAZYGIT_GOARCH}" CGO_ENABLED=0 go build -trimpath \
       -ldflags "-s -w -X main.version=${LAZYGIT_VERSION} -X main.commit=${LAZYGIT_REF} -X main.date=${BUILD_DATE} -X main.buildSource=binaryRelease" \
       -o /out/lazygit && \
-    go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.40\.0'
+    go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
+    go version -m /out/lazygit | grep -E 'golang.org/x/sys[[:space:]]+v0\.47\.0'
 
 FROM node:24.20.0-trixie-slim@sha256:50c3b2f6988dfc307b86e5301d69611af31f4789bdf232863b07d3b02fe55ae0
 
@@ -114,17 +116,17 @@ ARG DELTA_VERSION=0.19.2
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.25
+ARG OPENCODE_VERSION=1.18.29
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.252
+ARG CLAUDE_CODE_VERSION=2.1.265
 # renovate: datasource=npm depName=paperclipai
-ARG PAPERCLIP_VERSION=2026.824.1
+ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.11.0
+ARG OPENSPEC_VERSION=1.12.0
 # renovate: datasource=npm depName=undici
-ARG PAPERCLIP_UNDICI_VERSION=6.28.0
+ARG PAPERCLIP_UNDICI_VERSION=6.28.1
 # renovate: datasource=npm depName=opencode-claude-auth
-ARG CLAUDE_AUTH_PLUGIN_VERSION=2.1.6
+ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.0
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
@@ -136,11 +138,11 @@ ARG NPM_TAR_VERSION=7.5.22
 # renovate: datasource=npm depName=ip-address
 ARG NPM_IP_ADDRESS_VERSION=10.7.0
 # renovate: datasource=npm depName=js-yaml
-ARG PM2_JS_YAML_VERSION=4.3.1
+ARG PM2_JS_YAML_VERSION=4.3.2
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.13
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=11.25.0
+ARG PNPM_VERSION=12.4.0
 # renovate: datasource=npm depName=vite
 ARG VITE_VERSION=8.2.2
 # renovate: datasource=npm depName=prettier
@@ -148,17 +150,23 @@ ARG PRETTIER_VERSION=3.9.6
 # renovate: datasource=npm depName=prisma
 ARG PRISMA_VERSION=7.10.0
 # renovate: datasource=npm depName=deepmerge-ts
-ARG PRISMA_DEEPMERGE_VERSION=8.0.0
+ARG PRISMA_DEEPMERGE_VERSION=8.0.2
 # renovate: datasource=npm depName=mysql2
-ARG PRISMA_MYSQL2_VERSION=3.22.0
+ARG PRISMA_MYSQL2_VERSION=3.24.4
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.127.1
+ARG WRANGLER_VERSION=4.130.0
+# renovate: datasource=npm depName=miniflare
+ARG WRANGLER_MINIFLARE_VERSION=5.20260908.0-alpha
+# renovate: datasource=npm depName=sharp
+ARG WRANGLER_SHARP_VERSION=0.35.4
+# renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
+ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3
 # renovate: datasource=npm depName=eslint
-ARG ESLINT_VERSION=10.9.1
+ARG ESLINT_VERSION=10.10.0
 # renovate: datasource=pypi depName=numpy
-ARG NUMPY_VERSION=2.5.2
+ARG NUMPY_VERSION=2.5.3
 # renovate: datasource=pypi depName=pip
 ARG PIP_VERSION=26.2.1
 # renovate: datasource=pypi depName=msgpack
@@ -169,7 +177,7 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-09-01
+ARG RELEASE_APT_REFRESH=2026-09-08
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -198,6 +206,9 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.s6-overlay=${S6_OVERLAY_VERSION} \
     io.holycode.version.fzf=${FZF_VERSION} \
     io.holycode.version.wrangler=${WRANGLER_VERSION} \
+    io.holycode.version.wrangler-miniflare=${WRANGLER_MINIFLARE_VERSION} \
+    io.holycode.version.wrangler-sharp=${WRANGLER_SHARP_VERSION} \
+    io.holycode.version.wrangler-sharp-libvips=${WRANGLER_SHARP_LIBVIPS_VERSION} \
     io.holycode.version.numpy=${NUMPY_VERSION}
 
 # ---------- Environment ----------
@@ -465,9 +476,9 @@ RUN npm i -g --ignore-scripts \
 # Prisma 7.10.0 pins deepmerge-ts 7.1.5 and mysql2 3.15.3. Replace only those
 # nested copies with integrity-verified fixed releases and bind their owners.
 RUN test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)" = \
-      "sha512-ICNjaP0ML+eSdEpJYQC46XiAn/UjAdwbEl0dE8p85ZTeNDinN4Kd4+9jS4OSAuH7st6eC7rQhsqTF5zIDaUm2g==" && \
+      "sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==" && \
     test "$(npm view "mysql2@${PRISMA_MYSQL2_VERSION}" dist.integrity)" = \
-      "sha512-4jaJYBObj7FhD3lnZhqX1yDMuZN4mQNz+IolDySDXT7fbozMBpeGQNcuWXKUqo4ahkAEfkjUHPjnwuDI0/6VKw==" && \
+      "sha512-A2olluVlj0mvgyIRRISMEzXc51m+21mRtcMVjJyIpt2GG98+XrC9m9HzsqcMsX2LcnfccJvY5NB22g8fENBnOA==" && \
     test "$(npm view "@prisma/config@${PRISMA_VERSION}" dependencies.deepmerge-ts)" = "7.1.5" && \
     test "$(npm view "prisma@${PRISMA_VERSION}" dependencies.mysql2)" = "3.15.3" && \
     PRISMA_DEEPMERGE_TARBALL=$(npm pack --silent --pack-destination /tmp \
@@ -497,20 +508,116 @@ RUN test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)"
     prisma --version >/dev/null && \
     rm -rf /root/.npm
 
-# PM2 7.0.4 directly pins js-yaml 4.3.1. Validate the registry declaration,
-# installed package, dependency tree, and runtime without rewriting PM2.
-RUN test "$(npm view "js-yaml@${PM2_JS_YAML_VERSION}" dist.integrity)" = \
-      "sha512-CY6crGq313MX8GkwvB7tzgp99vjQxY1++5y10/BKN/GUfHqWaOGQMNZkBvqSzsZKWk/ijwHlWzzkLulsGHhjWQ==" && \
-    test "$(npm view pm2@7.0.4 dependencies.js-yaml)" = "${PM2_JS_YAML_VERSION}" && \
+# PM2 7.0.4 directly pins vulnerable js-yaml 4.3.1. Replace only that nested
+# package and bind the owner's exact dependency declaration to the fixed v4 release.
+RUN PM2_JS_YAML_INTEGRITY="sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==" && \
+    test "$(npm view "js-yaml@${PM2_JS_YAML_VERSION}" dist.integrity)" = "$PM2_JS_YAML_INTEGRITY" && \
+    test "$(npm view pm2@7.0.4 dependencies.js-yaml)" = "4.3.1" && \
     PM2_PACKAGE=/usr/local/lib/node_modules/pm2/package.json && \
+    PM2_JS_YAML_DIR=/usr/local/lib/node_modules/pm2/node_modules/js-yaml && \
+    test "$(node -p 'require(process.argv[1]).version' "$PM2_PACKAGE")" = "7.0.4" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json").version')" = \
+      "4.3.1" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies["js-yaml"]!=="4.3.1") process.exit(1)' \
+      "$PM2_PACKAGE" && \
+    PM2_JS_YAML_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp \
+      "js-yaml@${PM2_JS_YAML_VERSION}") && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
+      "/tmp/${PM2_JS_YAML_TARBALL}" "$PM2_JS_YAML_INTEGRITY" && \
+    rm -rf "$PM2_JS_YAML_DIR" && mkdir "$PM2_JS_YAML_DIR" && \
+    tar -xzf "/tmp/${PM2_JS_YAML_TARBALL}" -C "$PM2_JS_YAML_DIR" --strip-components=1 && \
+    rm "/tmp/${PM2_JS_YAML_TARBALL}" && \
+    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies["js-yaml"]!=="4.3.1") process.exit(1); pkg.dependencies["js-yaml"]=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
+      "$PM2_PACKAGE" "${PM2_JS_YAML_VERSION}" && \
     test "$(node -p 'require("/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json").version')" = \
       "${PM2_JS_YAML_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies["js-yaml"]!==process.argv[2]) process.exit(1)' \
       "$PM2_PACKAGE" "${PM2_JS_YAML_VERSION}" && \
     (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null) && \
+    node -e 'const yaml=require("/usr/local/lib/node_modules/pm2/node_modules/js-yaml"); const parsed=yaml.load("service:\n  enabled: true\n"); if(parsed.service.enabled!==true) process.exit(1)' && \
+    PM2_APP=/tmp/holycode-build-pm2-app.js && \
+    printf 'setInterval(() => {}, 60000);\n' > "$PM2_APP" && \
+    PM2_HOME=/tmp/holycode-build-pm2 pm2 start "$PM2_APP" --name holycode-build-pm2 --no-autorestart >/dev/null && \
     PM2_HOME=/tmp/holycode-build-pm2 pm2 --version | grep -Fx "7.0.4" && \
+    PM2_HOME=/tmp/holycode-build-pm2 pm2 stop holycode-build-pm2 >/dev/null && \
     PM2_HOME=/tmp/holycode-build-pm2 pm2 kill >/dev/null && \
-    rm -rf /tmp/holycode-build-pm2 && \
+    rm -rf /tmp/holycode-build-pm2 "$PM2_APP" && \
+    rm -rf /root/.npm
+
+# Wrangler 4.130.0 owns Miniflare 5.20260908.0-alpha, which directly pins
+# vulnerable Sharp 0.35.2. Overlay only that hoisted package and its exact native
+# payload for the target architecture, then bind Miniflare to the fixed release.
+RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
+    test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "0.35.2" && \
+    WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
+    WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
+    WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
+    WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2]) process.exit(1)' \
+      "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!=="0.35.2") process.exit(1)' \
+      "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = "0.35.2" && \
+    case "${TARGETARCH}" in \
+      amd64) WRANGLER_SHARP_ARCH=x64; \
+        WRANGLER_SHARP_NATIVE_INTEGRITY="sha512-9qvvEAuk8k89TfWUoX2htWjbAMX8p+NxCppjpcg5k6xMsjhBQPTsoIh36h9Qde4WRuGpJeYnOjdosDn/cnv+OA=="; \
+        WRANGLER_SHARP_LIBVIPS_INTEGRITY="sha512-4vKmvAst9nrowcqquKFAyZJUDolUaIp8uRiN0mWFguJ1IplC9/pitXtlnnlU4aa/eJw3J7i67V+pwUL+wZGdsA==";; \
+      arm64) WRANGLER_SHARP_ARCH=arm64; \
+        WRANGLER_SHARP_NATIVE_INTEGRITY="sha512-De4jpEnAU8Hd5oT0j1G3uL4ZvTuipVMn7YC6vPaJhy6/7EwEae0SVAoBrUMYQbkLGDm85taVWwuPc1a44LTzCQ=="; \
+        WRANGLER_SHARP_LIBVIPS_INTEGRITY="sha512-0DaL0A6Xu6sQSQFwe4iVCrKWU2cCTItnRsYsCdxAMm9NF6twAA9BKnoqy4hqz4+azQ0JHuA26qiUKsf1XJ/v5A==";; \
+      *) echo "unsupported Sharp target architecture: ${TARGETARCH}" >&2; exit 1;; \
+    esac && \
+    WRANGLER_SHARP_NATIVE_PACKAGE="@img/sharp-linux-${WRANGLER_SHARP_ARCH}" && \
+    WRANGLER_SHARP_LIBVIPS_PACKAGE="@img/sharp-libvips-linux-${WRANGLER_SHARP_ARCH}" && \
+    WRANGLER_SHARP_NATIVE_DIR="$WRANGLER_NODE_MODULES/@img/sharp-linux-${WRANGLER_SHARP_ARCH}" && \
+    WRANGLER_SHARP_LIBVIPS_DIR="$WRANGLER_NODE_MODULES/@img/sharp-libvips-linux-${WRANGLER_SHARP_ARCH}" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!=="0.35.2" || pkg.optionalDependencies[process.argv[2]]!=="1.3.1") process.exit(1)' \
+      "$WRANGLER_SHARP_NATIVE_DIR/package.json" "$WRANGLER_SHARP_LIBVIPS_PACKAGE" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_LIBVIPS_DIR/package.json")" = "1.3.1" && \
+    test "$(npm view "${WRANGLER_SHARP_NATIVE_PACKAGE}@${WRANGLER_SHARP_VERSION}" dist.integrity)" = \
+      "$WRANGLER_SHARP_NATIVE_INTEGRITY" && \
+    test "$(npm view "${WRANGLER_SHARP_LIBVIPS_PACKAGE}@${WRANGLER_SHARP_LIBVIPS_VERSION}" dist.integrity)" = \
+      "$WRANGLER_SHARP_LIBVIPS_INTEGRITY" && \
+    WRANGLER_SHARP_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp \
+      "sharp@${WRANGLER_SHARP_VERSION}") && \
+    WRANGLER_SHARP_NATIVE_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp \
+      "${WRANGLER_SHARP_NATIVE_PACKAGE}@${WRANGLER_SHARP_VERSION}") && \
+    WRANGLER_SHARP_LIBVIPS_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp \
+      "${WRANGLER_SHARP_LIBVIPS_PACKAGE}@${WRANGLER_SHARP_LIBVIPS_VERSION}") && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
+      "/tmp/${WRANGLER_SHARP_TARBALL}" "$WRANGLER_SHARP_INTEGRITY" && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
+      "/tmp/${WRANGLER_SHARP_NATIVE_TARBALL}" "$WRANGLER_SHARP_NATIVE_INTEGRITY" && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
+      "/tmp/${WRANGLER_SHARP_LIBVIPS_TARBALL}" "$WRANGLER_SHARP_LIBVIPS_INTEGRITY" && \
+    rm -rf "$WRANGLER_SHARP_DIR" "$WRANGLER_SHARP_NATIVE_DIR" "$WRANGLER_SHARP_LIBVIPS_DIR" && \
+    mkdir "$WRANGLER_SHARP_DIR" "$WRANGLER_SHARP_NATIVE_DIR" "$WRANGLER_SHARP_LIBVIPS_DIR" && \
+    tar -xzf "/tmp/${WRANGLER_SHARP_TARBALL}" -C "$WRANGLER_SHARP_DIR" --strip-components=1 && \
+    tar -xzf "/tmp/${WRANGLER_SHARP_NATIVE_TARBALL}" -C "$WRANGLER_SHARP_NATIVE_DIR" --strip-components=1 && \
+    tar -xzf "/tmp/${WRANGLER_SHARP_LIBVIPS_TARBALL}" -C "$WRANGLER_SHARP_LIBVIPS_DIR" --strip-components=1 && \
+    rm "/tmp/${WRANGLER_SHARP_TARBALL}" "/tmp/${WRANGLER_SHARP_NATIVE_TARBALL}" \
+      "/tmp/${WRANGLER_SHARP_LIBVIPS_TARBALL}" && \
+    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies.sharp!=="0.35.2") process.exit(1); pkg.dependencies.sharp=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
+      "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_SHARP_VERSION}" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
+      "${WRANGLER_SHARP_VERSION}" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.sharp!==process.argv[2]) process.exit(1)' \
+      "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_SHARP_VERSION}" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.optionalDependencies[process.argv[3]]!==process.argv[4]) process.exit(1)' \
+      "$WRANGLER_SHARP_NATIVE_DIR/package.json" "${WRANGLER_SHARP_VERSION}" \
+      "$WRANGLER_SHARP_LIBVIPS_PACKAGE" "${WRANGLER_SHARP_LIBVIPS_VERSION}" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_LIBVIPS_DIR/package.json")" = \
+      "${WRANGLER_SHARP_LIBVIPS_VERSION}" && \
+    test "$(find /usr/local/lib/node_modules/wrangler -path '*/sharp/package.json' -type f | wc -l)" -eq 1 && \
+    test "$(find /usr/local/lib/node_modules/wrangler -path "*/@img/sharp-linux-${WRANGLER_SHARP_ARCH}/package.json" -type f | wc -l)" -eq 1 && \
+    test "$(find /usr/local/lib/node_modules/wrangler -path "*/@img/sharp-libvips-linux-${WRANGLER_SHARP_ARCH}/package.json" -type f | wc -l)" -eq 1 && \
+    (cd /usr/local/lib/node_modules/wrangler && npm ls sharp --all >/dev/null) && \
+    node -e 'const sharp=require(process.argv[1]); if(sharp.versions.sharp!==process.argv[2] || sharp.versions.heif!=="1.23.2") process.exit(1); sharp({create:{width:2,height:2,channels:4,background:{r:220,g:30,b:30,alpha:1}}}).avif().toBuffer().then(buffer=>sharp(buffer).raw().toBuffer({resolveWithObject:true})).then(({data,info})=>{if(info.width!==2 || info.height!==2 || info.channels!==4 || data.length!==16) process.exit(1)}).catch(error=>{console.error(error);process.exit(1)})' \
+      "$WRANGLER_SHARP_DIR" "${WRANGLER_SHARP_VERSION}" && \
+    ! command -v sharp && \
     rm -rf /root/.npm
 
 RUN npm i -g --ignore-scripts \
@@ -520,7 +627,7 @@ RUN npm i -g --ignore-scripts \
 # Keep Paperclip stable while replacing that HTTP client with the first fixed
 # 6.x release; remove this reviewed compatibility patch when Paperclip updates Connect.
 RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
-      "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==" && \
+      "sha512-zWpdTVD54H48CIybL0rWQ3ukpb9d23wM7eH5RtfdmeP70cWHNjtfo7P4vZX+5CoDcO53J4Pu5uXp7lNfjc6DRA==" && \
     UNDICI_TARBALL=$(npm pack --silent --pack-destination /tmp "undici@${PAPERCLIP_UNDICI_VERSION}") && \
     UNDICI_DIR=/usr/local/lib/node_modules/paperclipai/node_modules/undici && \
     CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
@@ -536,7 +643,7 @@ RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
     rm -rf /root/.npm
 # Package the supported Claude Auth plugin for network-free startup.
 RUN test "$(npm view "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}" dist.integrity)" = \
-      "sha512-PVHMBoGms/e2cRDXi1gMx4N8UK4ZSBaviNO7UfheXm5mEW+PnFe7H1brXK5pDjvm1naGn9AntWUNIhOeJnyhvA==" && \
+      "sha512-EYU6hbP9edKQABn5zKMXPdxT5KZLf/0qII7AgahCW2w/FGgJnSE5bbWU5bTGmlHZTAJXixdy94/3WpBgIlHMaA==" && \
     CLAUDE_AUTH_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}") && \
     CLAUDE_AUTH_DIR=/usr/local/share/holycode/plugins/opencode-claude-auth && \
@@ -594,6 +701,7 @@ RUN mkdir -p /usr/local/share/holycode && \
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/bootstrap.sh /usr/local/bin/bootstrap.sh
 COPY config/opencode.json /usr/local/share/holycode/opencode.json
+COPY THIRD-PARTY-NOTICES /usr/local/share/holycode/THIRD-PARTY-NOTICES
 RUN install -d -m 0755 /usr/local/share/holycode/skills \
     && chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/bootstrap.sh
 

@@ -375,18 +375,18 @@ services:
 | `PAPERCLIP_PORT` | `3100` | 覆盖 Paperclip 使用的容器端口 |
 | `PAPERCLIP_INSTANCE_ID` | `default` | 用于隔离状态的本地 Paperclip 实例名称 |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
-| `ENABLE_HERMES` | （无） | 旧设置；在 Hermes 未捆绑期间，v1.1.4 会显示迁移提示并停止启动 |
+| `ENABLE_HERMES` | （无） | 旧设置；在 Hermes 未捆绑期间，HolyCode 会显示迁移提示并停止启动 |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | 插件更新模式：`manual`（只安装缺失项并保留用户版本）或 `auto`（启动时同步已声明的 pin） |
 
-> `ENABLE_CLAUDE_AUTH` 在容器重启时生效。`ENABLE_OH_MY_OPENAGENT` 现在是旧设置，v1.1.4 会显示迁移提示并停止启动。
+> `ENABLE_CLAUDE_AUTH` 在容器重启时生效。`ENABLE_OH_MY_OPENAGENT` 现在是旧设置，当前会显示迁移提示并停止启动。
 
 > `HOLYCODE_PLUGIN_UPDATE` 控制插件包更新。`manual`（默认）仅在插件缺失时安装已启用的插件并保留用户版本。`auto` 安装缺失的插件并在每次启动时同步已声明的 pin。这与 `OPENCODE_DISABLE_AUTOUPDATE` 不同，后者只影响 OpenCode 本身。
 
-> HolyCode 不会在 v1.1.4 中安装 oh-my-openagent。如果旧安装中仍有 `ENABLE_OH_MY_OPENAGENT=true`，容器会停止启动且不更改插件状态。移除该设置后的首次成功启动会停用之前的活动条目，同时保留设置、Skills 和软件包缓存。
+> HolyCode 当前不会安装 oh-my-openagent。如果旧安装中仍有 `ENABLE_OH_MY_OPENAGENT=true`，容器会停止启动且不更改插件状态。移除该设置后的首次成功启动会停用之前的活动条目，同时保留设置、Skills 和软件包缓存。
 
 > `ENABLE_PAPERCLIP=true` 在容器内的端口 `3100` 上启动 Paperclip。打开仪表板，创建公司，然后在那里雇用 OpenCode 支持的代理。Paperclip 自动持久化到 `~/.paperclip`。
 
-> Hermes 在 v1.1.4 中仍不可用。如果旧安装中仍有 `ENABLE_HERMES=true`，HolyCode 会显示简短的迁移提示并停止启动。`/home/opencode/.hermes` 会保持不变，以便将来恢复集成或还原之前的快照。
+> Hermes 在当前镜像中仍不可用。如果旧安装中仍有 `ENABLE_HERMES=true`，HolyCode 会显示简短的迁移提示并停止启动。`/home/opencode/.hermes` 会保持不变，以便将来恢复集成或还原之前的快照。
 
 > `GIT_USER_NAME` 和 `GIT_USER_EMAIL` 仅在首次启动时应用。要重新应用，删除哨兵文件并重启：`docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` 然后 `docker compose restart`。
 
@@ -426,14 +426,14 @@ services:
 
 | 运行时 | 版本 |
 |---------|---------|
-| Node.js | 24.18.0 (LTS) |
+| Node.js | 24.20.0 (LTS) |
 | npm | 12.0.2 |
 | Python | 3.13（Trixie） |
 | pip | 随 Python 3.13 捆绑 |
 
 > 发布标签严格使用 `vX.Y.Z`。Docker 镜像标签会去掉 `v`。`v1.0.9` 之后使用 `v1.1.0`，`v1.1.9` 之后使用 `v1.2.0`，`v1.9.9` 之后使用 `v2.0.0`。`v1.0.10` 到 `v1.0.13` 保持不可变。
 
-> v1.1.4 使用 OpenCode 1.18.9、Claude Code 2.1.220、Paperclip 2026.722.0、npm 12.0.2、pnpm 11.18.0、ESLint 10.8.0、Wrangler 4.115.0 和 Prisma 7.9.1。Python 包含 tqdm 4.70.0、FastAPI 0.141.1 和 Uvicorn 0.52.0。`opencode-claude-auth` 2.1.5 已放入镜像，并在启动时离线安装。Netlify CLI 和 npm 包 `serve` 已移除。HolyCode 管理的 oh-my-openagent 安装已暂停，Hermes 仍不可用，外部管理的 CLIProxyAPI endpoint 继续受支持。
+> v1.1.9 使用 OpenCode 1.18.29、Claude Code 2.1.265、带 Undici 6.28.1 的 Paperclip 2026.831.1、npm 12.0.2、pnpm 12.4.0、ESLint 10.10.0、Wrangler 4.130.0、Prisma 7.10.0、TypeScript 6.0.3 和 json-server 0.17.4。Python 包含 tqdm 4.70.0、FastAPI 0.141.1、Uvicorn 0.52.4 和 NumPy 2.5.3。`opencode-claude-auth` 2.2.0 已放入镜像，并在启动时离线安装。Netlify CLI 和 npm 包 `serve` 仍未包含。HolyCode 管理的 oh-my-openagent 安装已暂停，Hermes 仍不可用，外部管理的 CLIProxyAPI endpoint 继续受支持。
 
 </details>
 
@@ -505,9 +505,9 @@ Paperclip 继续作为 OpenCode 之上的可选服务捆绑。CLIProxyAPI 集成
 
 ### Hermes Agent（暂时不捆绑）
 
-Hermes 在 v1.1.4 中仍不可用，因为其当前依赖项尚未兼容所需的安全修复。HolyCode 不会启动 Hermes 进程，也不会发布其端口。
+Hermes 目前仍未包含在镜像中。HolyCode 不会启动 Hermes 进程，也不会发布其端口。
 
-`/home/opencode/.hermes` 中的现有数据不会被删除或迁移。请从旧配置中移除 `ENABLE_HERMES=true`，让 v1.1.4 正常启动。保留该目录，以便将来恢复集成或还原未被修改的旧快照。
+`/home/opencode/.hermes` 中的现有数据不会被删除或迁移。请从旧配置中移除 `ENABLE_HERMES=true`，再启动当前镜像。保留该目录，以便将来恢复集成或还原未被修改的旧快照。
 
 ### Paperclip
 
@@ -680,18 +680,19 @@ environment:
 
 ## ⬆️ 升级
 
-拉取最新镜像并重新创建容器。你的数据保持不变。
+拉取最新镜像前先停止容器，并备份 home 和 workspace 卷。
 
 如果从 `v1.1.3` 之前的版本升级，请下载上面的 seccomp 配置文件，并在重新创建容器前把 `security_opt` 添加到 `holycode` 服务中。
+
+v1.1.9 通过迁移 `0223`–`0230` 将 Paperclip 从 2026.824.1 升级到 2026.831.1。已弃用的 `brandColor` 和 `attachmentMaxBytes` 字段会被移除，进行中的登录会话会被重置；升级后请重新登录。回滚时必须把未改动的备份还原到镜像 `1.1.8`。不要用 `1.1.8` 启动已由 v1.1.9 迁移的数据库。
 
 v1.1.4 会把 Paperclip 从 2026.707.0 迁移到 2026.722.0。回滚时必须使用镜像 `1.1.3` 和升级到 v1.1.4 前未改动的卷。不要用镜像 `1.1.3` 启动已经由 v1.1.4 迁移过的 Paperclip 数据。
 
 ```bash
+docker compose stop
 docker compose pull
 docker compose up -d
 ```
-
-就这样。一条命令。你的会话、设置和配置在绑定挂载中，不会丢失任何内容。
 
 <p align="right">
   <a href="#top">返回顶部</a>

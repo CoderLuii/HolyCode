@@ -4,6 +4,24 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.9] - 09/08/2026
+
+### Added
+
+- Copy `THIRD-PARTY-NOTICES` into the image at `/usr/local/share/holycode/THIRD-PARTY-NOTICES`
+- Validate Paperclip migrations `0223` through `0230`, including account issuer backfills, retired company fields, transient login-session resets, restart persistence, and backup-based rollback
+
+### Changed
+
+- Refresh Go, GitHub CLI, lazygit, OpenCode, Claude Code, Paperclip, OpenSpec, Claude Auth, pnpm, ESLint, Wrangler, NumPy, lxml, and the compatible Python package set
+- Keep TypeScript 6.0.3 for its `tsserver` and stable API contract, Prisma 7.10.0 and json-server 0.17.4 on stable releases, and Paperclip's Undici replacement on compatible 6.28.1
+- Update the protected release baseline to `v1.1.8` and Renovate to 44.69.12
+
+### Fixed
+
+- Replace PM2's nested `js-yaml` with 4.3.2 and Miniflare's nested Sharp stack with Sharp 0.35.4 plus libvips 1.3.3 using exact owner and integrity guards
+- Make suspended Hermes and HolyCode-managed oh-my-openagent startup errors version-neutral while preserving the historical v1.1.4 migration marker
+
 ## [1.1.8] - 09/01/2026
 
 ### Added

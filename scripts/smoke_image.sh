@@ -25,6 +25,9 @@ expected_tsx="$(image_label io.holycode.version.tsx)"
 expected_pnpm="$(image_label io.holycode.version.pnpm)"
 expected_numpy="$(image_label io.holycode.version.numpy)"
 expected_wrangler="$(image_label io.holycode.version.wrangler)"
+expected_wrangler_miniflare="$(image_label io.holycode.version.wrangler-miniflare)"
+expected_wrangler_sharp="$(image_label io.holycode.version.wrangler-sharp)"
+expected_wrangler_sharp_libvips="$(image_label io.holycode.version.wrangler-sharp-libvips)"
 expected_vite="$(image_label io.holycode.version.vite)"
 expected_prettier="$(image_label io.holycode.version.prettier)"
 expected_prisma="$(image_label io.holycode.version.prisma)"
@@ -65,6 +68,9 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   -e EXPECTED_PNPM="$expected_pnpm" \
   -e EXPECTED_NUMPY="$expected_numpy" \
   -e EXPECTED_WRANGLER="$expected_wrangler" \
+  -e EXPECTED_WRANGLER_MINIFLARE="$expected_wrangler_miniflare" \
+  -e EXPECTED_WRANGLER_SHARP="$expected_wrangler_sharp" \
+  -e EXPECTED_WRANGLER_SHARP_LIBVIPS="$expected_wrangler_sharp_libvips" \
   -e EXPECTED_VITE="$expected_vite" \
   -e EXPECTED_PRETTIER="$expected_prettier" \
   -e EXPECTED_PRISMA="$expected_prisma" \
@@ -92,9 +98,14 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   node -e "console.log(require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json\").version)" | grep -Fx "$EXPECTED_PM2_JS_YAML"
   node -e "const pkg=require(\"/usr/local/lib/node_modules/pm2/package.json\"); if(pkg.dependencies[\"js-yaml\"]!==process.env.EXPECTED_PM2_JS_YAML) process.exit(1)"
   (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null)
+  node -e "const yaml=require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml\"); const parsed=yaml.load(\"service:\\n  enabled: true\\n\"); if(parsed.service.enabled!==true) process.exit(1)"
+  pm2_app=/tmp/holycode-smoke-pm2-app.js
+  printf "setInterval(() => {}, 60000);\n" > "$pm2_app"
+  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 start "$pm2_app" --name holycode-smoke-pm2 --no-autorestart >/dev/null
   PM2_HOME=/tmp/holycode-smoke-pm2 pm2 --version | grep -Fx "7.0.4"
+  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 stop holycode-smoke-pm2 >/dev/null
   PM2_HOME=/tmp/holycode-smoke-pm2 pm2 kill >/dev/null
-  rm -rf /tmp/holycode-smoke-pm2
+  rm -rf /tmp/holycode-smoke-pm2 "$pm2_app"
   opencode --version | grep -Fx "$EXPECTED_OPENCODE"
   test -d "/package/admin/s6-overlay-$EXPECTED_S6"
   fzf --version | grep -E "^$EXPECTED_FZF([[:space:]]|$)"
@@ -104,6 +115,9 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
 
   test -f /usr/local/lib/node_modules/paperclipai/package.json
   test -f /usr/local/share/holycode/plugins/opencode-claude-auth/package.json
+  test -r /usr/local/share/holycode/THIRD-PARTY-NOTICES && test -s /usr/local/share/holycode/THIRD-PARTY-NOTICES
+  test -r /usr/local/lib/node_modules/@anthropic-ai/claude-code/LICENSE.md && test -s /usr/local/lib/node_modules/@anthropic-ai/claude-code/LICENSE.md
+  test -r /usr/local/lib/node_modules/pm2/GNU-AGPL-3.0.txt && test -s /usr/local/lib/node_modules/pm2/GNU-AGPL-3.0.txt
   test ! -e /root/.npm
   node -e "console.log(require(\"/usr/local/share/holycode/plugins/opencode-claude-auth/package.json\").version)" | grep -Fx "$EXPECTED_CLAUDE_AUTH"
   test -f /usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/skills-catalog/generated/catalog.json
@@ -132,6 +146,13 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   ! dpkg-query -W postgresql-client >/dev/null 2>&1
   python3 - <<PY
 import importlib.metadata as metadata
+import numpy as np
+import pandas as pd
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from lxml import etree
+from pydantic import BaseModel
+
 assert metadata.version("numpy") == "$EXPECTED_NUMPY"
 assert metadata.version("requests") == "2.34.2"
 assert metadata.version("Pillow") == "12.3.0"
@@ -151,6 +172,23 @@ except metadata.PackageNotFoundError:
     pass
 else:
     raise AssertionError("hermes-agent must not be bundled")
+
+assert np.array([1, 2, 3]).sum() == 6
+assert pd.Series([1, 2, 3]).mean() == 2
+assert etree.fromstring(b"<root><value>holycode</value></root>").findtext("value") == "holycode"
+
+class Health(BaseModel):
+    status: str
+
+app = FastAPI()
+
+@app.get("/health", response_model=Health)
+def health():
+    return {"status": "ok"}
+
+response = TestClient(app).get("/health")
+assert response.status_code == 200
+assert response.json() == {"status": "ok"}
 PY
   python3 -m venv /tmp/holycode-python-seed
   /tmp/holycode-python-seed/bin/python -m pip install --no-index \
@@ -182,8 +220,59 @@ PY
 
   pnpm --version | grep -Fx "$EXPECTED_PNPM"
   tsc --version | grep -Fx "Version $EXPECTED_TYPESCRIPT"
+  command -v tsserver
+  typescript_workspace="$(mktemp -d)"
+  printf "const value: string = \047holycode\047;\n" > "$typescript_workspace/index.ts"
+  tsc --strict --noEmit "$typescript_workspace/index.ts"
+  node - "$typescript_workspace/index.ts" <<NODE
+const ts = require("/usr/local/lib/node_modules/typescript/lib/typescript.js");
+const program = ts.createProgram([process.argv[2]], { strict: true, noEmit: true });
+const diagnostics = ts.getPreEmitDiagnostics(program);
+if (diagnostics.length !== 0 || ts.version !== process.env.EXPECTED_TYPESCRIPT) process.exit(1);
+NODE
+  rm -rf "$typescript_workspace"
+
+  pnpm_workspace="$(mktemp -d)"
+  mkdir -p "$pnpm_workspace/dependency" "$pnpm_workspace/project"
+  cat > "$pnpm_workspace/dependency/package.json" <<EOF
+{"name":"holycode-local-fixture","version":"1.0.0","main":"index.cjs"}
+EOF
+  printf "module.exports = \"holycode\";\n" > "$pnpm_workspace/dependency/index.cjs"
+  (cd "$pnpm_workspace/dependency" && pnpm pack --pack-destination "$pnpm_workspace" >/dev/null)
+  cat > "$pnpm_workspace/project/package.json" <<EOF
+{"name":"holycode-offline-project","private":true,"scripts":{"verify":"node verify.cjs"},"dependencies":{"holycode-local-fixture":"file:../holycode-local-fixture-1.0.0.tgz"}}
+EOF
+  printf "if (require(\"holycode-local-fixture\") !== \"holycode\") process.exit(1);\n" > "$pnpm_workspace/project/verify.cjs"
+  (cd "$pnpm_workspace/project" && pnpm install --offline --ignore-scripts)
+  test -f "$pnpm_workspace/project/pnpm-lock.yaml"
+  (cd "$pnpm_workspace/project" && pnpm run verify)
+  rm -rf "$pnpm_workspace"
+
   tsx --version | grep -F "tsx v$EXPECTED_TSX"
   wrangler --version | grep -F "$EXPECTED_WRANGLER"
+  wrangler_package=/usr/local/lib/node_modules/wrangler/package.json
+  wrangler_node_modules=/usr/local/lib/node_modules/wrangler/node_modules
+  wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
+  wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE) process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
+  case "$(uname -m)" in
+    x86_64) wrangler_sharp_arch=x64 ;;
+    aarch64|arm64) wrangler_sharp_arch=arm64 ;;
+    *) echo "unsupported Sharp runtime architecture: $(uname -m)" >&2; exit 1 ;;
+  esac
+  wrangler_sharp_native_package="@img/sharp-linux-$wrangler_sharp_arch"
+  wrangler_sharp_libvips_package="@img/sharp-libvips-linux-$wrangler_sharp_arch"
+  wrangler_sharp_native_dir="$wrangler_node_modules/@img/sharp-linux-$wrangler_sharp_arch"
+  wrangler_sharp_libvips_dir="$wrangler_node_modules/@img/sharp-libvips-linux-$wrangler_sharp_arch"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP || pkg.optionalDependencies[process.argv[2]]!==process.env.EXPECTED_WRANGLER_SHARP_LIBVIPS) process.exit(1)" "$wrangler_sharp_native_dir/package.json" "$wrangler_sharp_libvips_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP_LIBVIPS) process.exit(1)" "$wrangler_sharp_libvips_dir/package.json"
+  test "$(find /usr/local/lib/node_modules/wrangler -path "*/sharp/package.json" -type f | wc -l)" -eq 1
+  test "$(find /usr/local/lib/node_modules/wrangler -path "*/$wrangler_sharp_native_package/package.json" -type f | wc -l)" -eq 1
+  test "$(find /usr/local/lib/node_modules/wrangler -path "*/$wrangler_sharp_libvips_package/package.json" -type f | wc -l)" -eq 1
+  (cd /usr/local/lib/node_modules/wrangler && npm ls sharp --all >/dev/null)
+  node -e "const sharp=require(process.argv[1]); if(sharp.versions.sharp!==process.env.EXPECTED_WRANGLER_SHARP || sharp.versions.heif!==\"1.23.2\") process.exit(1); sharp({create:{width:2,height:2,channels:4,background:{r:220,g:30,b:30,alpha:1}}}).avif().toBuffer().then(buffer=>sharp(buffer).raw().toBuffer({resolveWithObject:true})).then(({data,info})=>{if(info.width!==2 || info.height!==2 || info.channels!==4 || data.length!==16) process.exit(1)}).catch(error=>{console.error(error);process.exit(1)})" "$wrangler_sharp_dir"
   vite --version | grep -F "vite/$EXPECTED_VITE"
   prettier --version | grep -Fx "$EXPECTED_PRETTIER"
   prisma --version | grep -E "^prisma[[:space:]]+:[[:space:]]+$EXPECTED_PRISMA$"

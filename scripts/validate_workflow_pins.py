@@ -89,13 +89,13 @@ def collect_errors() -> list[str]:
         "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.74.0",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.1.7@sha256:4e20d9eac20afb4e779b98037a923201027008f0acee5617fe10cbf90f1a4a41",
-        "PREVIOUS_VERSION: v1.1.7",
-        "RELEASE_VERSION: v1.1.8",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.1.8@sha256:9e7748ce057082f6e8168ac9e6e5434234cf601927b412f49a09b0de992d901c",
+        "PREVIOUS_VERSION: v1.1.8",
+        "RELEASE_VERSION: v1.1.9",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
-        "bash scripts/validate_renovate_extraction.sh 44.56.0",
+        "bash scripts/validate_renovate_extraction.sh 44.69.12",
         "scripts/validate_scanner_findings.py",
         "bash scripts/test_plugin_modes.sh",
         'ref: ${{ github.sha }}',
@@ -157,7 +157,7 @@ def collect_errors() -> list[str]:
             errors.append(f"pr-validation.yml must contain {required_text!r}")
     if "github.event_name == 'pull_request' || github.ref" in pr_text:
         errors.append("pr-validation.yml must fail rejected manual refs, not skip every job")
-    if "bash scripts/validate_renovate_extraction.sh 44.56.0" not in pr_text:
+    if "bash scripts/validate_renovate_extraction.sh 44.69.12" not in pr_text:
         errors.append("pr-validation.yml must validate Renovate extraction with the audited pin")
     if pr_text.count("scanners: vuln,secret") != 2:
         errors.append("manual pre-tag validation must run both Trivy gates with vuln and secret scanners")

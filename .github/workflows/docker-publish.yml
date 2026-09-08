@@ -14,9 +14,9 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.1.7@sha256:4e20d9eac20afb4e779b98037a923201027008f0acee5617fe10cbf90f1a4a41
-  PREVIOUS_VERSION: v1.1.7
-  RELEASE_VERSION: v1.1.8
+  PREVIOUS_IMAGE: coderluii/holycode:1.1.8@sha256:9e7748ce057082f6e8168ac9e6e5434234cf601927b412f49a09b0de992d901c
+  PREVIOUS_VERSION: v1.1.8
+  RELEASE_VERSION: v1.1.9
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -87,7 +87,7 @@ jobs:
           ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
           docker compose -f docker-compose.yaml config --no-interpolate >/tmp/docker-compose.yaml
           docker compose -f docker-compose.full.yaml config --no-interpolate >/tmp/docker-compose.full.yaml
-          bash scripts/validate_renovate_extraction.sh 44.56.0
+          bash scripts/validate_renovate_extraction.sh 44.69.12
 
       - name: Free up disk space
         run: |

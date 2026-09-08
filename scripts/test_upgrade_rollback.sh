@@ -23,12 +23,15 @@ current_paperclip_version="$(docker run --rm --platform "$platform" --entrypoint
 previous_paperclip_version="$(docker run --rm --platform "$platform" --entrypoint node "$previous_image" \
   -p 'require("/usr/local/lib/node_modules/paperclipai/package.json").version')"
 
-[ "$current_paperclip_version" = "2026.824.1" ]
+[ "$current_paperclip_version" = "2026.831.1" ]
 paperclip_migration=false
+paperclip_2026_831_migration=false
 if [ "$previous_paperclip_version" = "2026.707.0" ]; then
   paperclip_migration=true
 elif [ "$previous_paperclip_version" = "2026.722.0" ]; then
   paperclip_migration=false
+elif [ "$previous_paperclip_version" = "2026.824.1" ]; then
+  paperclip_2026_831_migration=true
 elif [ "$previous_paperclip_version" != "$current_paperclip_version" ]; then
   echo "unsupported Paperclip upgrade: $previous_paperclip_version -> $current_paperclip_version" >&2
   exit 1
@@ -52,6 +55,11 @@ tool_application_id="11488888-8888-4888-8888-888888888888"
 tool_connection_id="11499999-9999-4999-8999-999999999999"
 connection_grant_id="11500000-0000-4000-8000-000000000000"
 user_id="holycode-upgrade-user"
+paperclip_2026_831_user_id="holycode-2026-831-user"
+credential_account_id="holycode-credential-account"
+oauth_account_id="holycode-oauth-account"
+adapter_auth_session_id="11511111-1111-4111-8111-111111111111"
+claude_setup_token_session_id="11522222-2222-4222-8222-222222222222"
 
 cleanup() {
   docker rm -f "$baseline_name" "$upgrade_name" "$rollback_name" >/dev/null 2>&1 || true
@@ -386,6 +394,442 @@ await sql.end();
 NODE
 }
 
+seed_paperclip_2026_831_state() {
+  local name="$1"
+
+  docker exec -i "$name" node --input-type=module - \
+    "$company_id" \
+    "$environment_id" \
+    "$paperclip_2026_831_user_id" \
+    "$credential_account_id" \
+    "$oauth_account_id" \
+    "$adapter_auth_session_id" \
+    "$claude_setup_token_session_id" <<'NODE'
+import postgres from "/usr/local/lib/node_modules/paperclipai/node_modules/postgres/src/index.js";
+
+const [
+  companyId,
+  environmentId,
+  userId,
+  credentialAccountId,
+  oauthAccountId,
+  adapterAuthSessionId,
+  claudeSetupTokenSessionId,
+] = process.argv.slice(2);
+
+const sql = postgres({
+  host: "127.0.0.1",
+  port: 54329,
+  database: "paperclip",
+  username: "paperclip",
+  password: "paperclip",
+});
+
+await sql`
+  insert into "user" (
+    id, name, email, email_verified, created_at, updated_at
+  ) values (
+    ${userId},
+    'Paperclip 2026.831 Migration User',
+    'paperclip-2026-831@holycode.invalid',
+    true,
+    now(),
+    now()
+  )
+`;
+
+await sql`
+  insert into "account" (
+    id, account_id, provider_id, user_id, password, created_at, updated_at
+  ) values (
+    ${credentialAccountId},
+    'holycode-credential-subject',
+    'credential',
+    ${userId},
+    'not-a-real-password-hash',
+    now(),
+    now()
+  )
+`;
+
+await sql`
+  insert into "account" (
+    id, account_id, provider_id, user_id, access_token, refresh_token,
+    scope, created_at, updated_at
+  ) values (
+    ${oauthAccountId},
+    'holycode-oauth-subject',
+    'holycode-oauth',
+    ${userId},
+    'not-a-real-access-token',
+    'not-a-real-refresh-token',
+    'fixture:read',
+    now(),
+    now()
+  )
+`;
+
+await sql`
+  update companies
+  set attachment_max_bytes = 424242,
+      brand_color = '#123456'
+  where id = ${companyId}::uuid
+`;
+
+await sql`
+  insert into adapter_auth_sessions (
+    id, company_id, environment_id, adapter_type, started_by_user_id,
+    provider_lease_id, status, expires_at, promotion_expires_at,
+    finished_at, failure_reason, created_at, updated_at
+  ) values (
+    ${adapterAuthSessionId}::uuid,
+    ${companyId}::uuid,
+    ${environmentId}::uuid,
+    'claude_local',
+    ${userId},
+    'holycode-fixture-provider-lease',
+    'waiting_for_user',
+    now() + interval '1 hour',
+    now() + interval '30 minutes',
+    null,
+    null,
+    now(),
+    now()
+  )
+`;
+
+await sql`
+  insert into claude_setup_token_sessions (
+    id, session_id, company_id, owner_user_id, adapter_type,
+    environment_id, lease_id, state, deadline_at, bound_at,
+    created_at, updated_at
+  ) values (
+    ${claudeSetupTokenSessionId}::uuid,
+    'holycode-claude-setup-session',
+    ${companyId}::uuid,
+    ${userId},
+    'claude_local',
+    ${environmentId}::uuid,
+    'holycode-fixture-claude-lease',
+    'awaiting_code',
+    now() + interval '1 hour',
+    null,
+    now(),
+    now()
+  )
+`;
+
+await sql.end();
+NODE
+}
+
+assert_paperclip_2026_831_state() {
+  local name="$1"
+  local phase="$2"
+
+  docker exec -i "$name" node --input-type=module - \
+    "$phase" \
+    "$company_id" \
+    "$environment_id" \
+    "$paperclip_2026_831_user_id" \
+    "$credential_account_id" \
+    "$oauth_account_id" \
+    "$adapter_auth_session_id" \
+    "$claude_setup_token_session_id" <<'NODE'
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import postgres from "/usr/local/lib/node_modules/paperclipai/node_modules/postgres/src/index.js";
+
+const [
+  phase,
+  companyId,
+  environmentId,
+  userId,
+  credentialAccountId,
+  oauthAccountId,
+  adapterAuthSessionId,
+  claudeSetupTokenSessionId,
+] = process.argv.slice(2);
+
+const sql = postgres({
+  host: "127.0.0.1",
+  port: 54329,
+  database: "paperclip",
+  username: "paperclip",
+  password: "paperclip",
+});
+
+const requireCount = async (label, query, expected = 1) => {
+  const rows = await query;
+  const actual = Number(rows[0]?.count ?? 0);
+  if (actual !== expected) {
+    throw new Error(`${label}: expected ${expected}, got ${actual}`);
+  }
+};
+
+await requireCount(
+  "Paperclip 2026.831 fixture user",
+  sql`
+    select count(*)
+    from "user"
+    where id = ${userId}
+      and email = 'paperclip-2026-831@holycode.invalid'
+  `,
+);
+
+if (phase === "baseline") {
+  await requireCount(
+    "credential account before migration 0230",
+    sql`
+      select count(*)
+      from "account"
+      where id = ${credentialAccountId}
+        and account_id = 'holycode-credential-subject'
+        and provider_id = 'credential'
+        and user_id = ${userId}
+        and password = 'not-a-real-password-hash'
+    `,
+  );
+  await requireCount(
+    "OAuth account before migration 0230",
+    sql`
+      select count(*)
+      from "account"
+      where id = ${oauthAccountId}
+        and account_id = 'holycode-oauth-subject'
+        and provider_id = 'holycode-oauth'
+        and user_id = ${userId}
+        and access_token = 'not-a-real-access-token'
+        and refresh_token = 'not-a-real-refresh-token'
+        and scope = 'fixture:read'
+    `,
+  );
+  await requireCount(
+    "account issuer absent before migration 0230",
+    sql`
+      select count(*)
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'account'
+        and column_name = 'issuer'
+    `,
+    0,
+  );
+  await requireCount(
+    "retired company fields before migration 0229",
+    sql`
+      select count(*)
+      from companies
+      where id = ${companyId}::uuid
+        and attachment_max_bytes = 424242
+        and brand_color = '#123456'
+    `,
+  );
+  await requireCount(
+    "adapter auth session before migration 0224",
+    sql`
+      select count(*)
+      from adapter_auth_sessions
+      where id = ${adapterAuthSessionId}::uuid
+        and company_id = ${companyId}::uuid
+        and environment_id = ${environmentId}::uuid
+        and adapter_type = 'claude_local'
+        and started_by_user_id = ${userId}
+        and provider_lease_id = 'holycode-fixture-provider-lease'
+        and status = 'waiting_for_user'
+    `,
+  );
+  await requireCount(
+    "Claude setup token session before migration 0225",
+    sql`
+      select count(*)
+      from claude_setup_token_sessions
+      where id = ${claudeSetupTokenSessionId}::uuid
+        and session_id = 'holycode-claude-setup-session'
+        and company_id = ${companyId}::uuid
+        and owner_user_id = ${userId}
+        and adapter_type = 'claude_local'
+        and environment_id = ${environmentId}::uuid
+        and lease_id = 'holycode-fixture-claude-lease'
+        and state = 'awaiting_code'
+    `,
+  );
+} else {
+  await requireCount(
+    "credential account issuer backfilled by migration 0230",
+    sql`
+      select count(*)
+      from "account"
+      where id = ${credentialAccountId}
+        and account_id = 'holycode-credential-subject'
+        and provider_id = 'credential'
+        and user_id = ${userId}
+        and password = 'not-a-real-password-hash'
+        and issuer = 'local:credential'
+    `,
+  );
+  await requireCount(
+    "OAuth account issuer backfilled by migration 0230",
+    sql`
+      select count(*)
+      from "account"
+      where id = ${oauthAccountId}
+        and account_id = 'holycode-oauth-subject'
+        and provider_id = 'holycode-oauth'
+        and user_id = ${userId}
+        and access_token = 'not-a-real-access-token'
+        and refresh_token = 'not-a-real-refresh-token'
+        and scope = 'fixture:read'
+        and issuer = 'local:oauth:holycode-oauth'
+    `,
+  );
+  await requireCount(
+    "adapter auth sessions reset by migration 0224",
+    sql`select count(*) from adapter_auth_sessions where id = ${adapterAuthSessionId}::uuid`,
+    0,
+  );
+  await requireCount(
+    "adapter auth session columns added by migration 0224",
+    sql`
+      select count(*)
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'adapter_auth_sessions'
+        and (
+          (
+            column_name = 'public_session_id'
+            and data_type = 'character varying'
+            and character_maximum_length = 128
+            and is_nullable = 'NO'
+          )
+          or (
+            column_name = 'bound_at'
+            and data_type = 'timestamp with time zone'
+            and is_nullable = 'YES'
+          )
+        )
+    `,
+    2,
+  );
+  await requireCount(
+    "adapter_auth_sessions_company_owner_adapter_active_uq",
+    sql`
+      select count(*)
+      from pg_indexes
+      where schemaname = 'public'
+        and tablename = 'adapter_auth_sessions'
+        and indexname = 'adapter_auth_sessions_company_owner_adapter_active_uq'
+        and indexdef like 'CREATE UNIQUE INDEX%'
+        and indexdef like '%(company_id, started_by_user_id, adapter_type)%'
+        and indexdef like '%WHERE%status%'
+    `,
+  );
+  await requireCount(
+    "adapter_auth_sessions_public_session_id_uq",
+    sql`
+      select count(*)
+      from pg_indexes
+      where schemaname = 'public'
+        and tablename = 'adapter_auth_sessions'
+        and indexname = 'adapter_auth_sessions_public_session_id_uq'
+        and indexdef like 'CREATE UNIQUE INDEX%'
+        and indexdef like '%(public_session_id)%'
+    `,
+  );
+  await requireCount(
+    "retired adapter auth active index removed by migration 0224",
+    sql`
+      select count(*)
+      from pg_indexes
+      where schemaname = 'public'
+        and tablename = 'adapter_auth_sessions'
+        and indexname = 'adapter_auth_sessions_company_adapter_active_uq'
+    `,
+    0,
+  );
+  await requireCount(
+    "claude setup token table removed by migration 0225",
+    sql`
+      select count(*)
+      from information_schema.tables
+      where table_schema = 'public'
+        and table_name = 'claude_setup_token_sessions'
+    `,
+    0,
+  );
+  await requireCount(
+    "company attachment_max_bytes removed by migration 0229",
+    sql`
+      select count(*)
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'companies'
+        and column_name = 'attachment_max_bytes'
+    `,
+    0,
+  );
+  await requireCount(
+    "company brand_color removed by migration 0229",
+    sql`
+      select count(*)
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'companies'
+        and column_name = 'brand_color'
+    `,
+    0,
+  );
+  await requireCount(
+    "account issuer column added by migration 0230",
+    sql`
+      select count(*)
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'account'
+        and column_name = 'issuer'
+        and data_type = 'text'
+        and is_nullable = 'NO'
+    `,
+  );
+  await requireCount(
+    "account_issuer_account_id_uq",
+    sql`
+      select count(*)
+      from pg_indexes
+      where schemaname = 'public'
+        and tablename = 'account'
+        and indexname = 'account_issuer_account_id_uq'
+        and indexdef like 'CREATE UNIQUE INDEX%'
+        and indexdef like '%(issuer, account_id)%'
+    `,
+  );
+
+  const migrationDir =
+    "/usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/db/dist/migrations";
+  for (const filename of [
+    "0223_robust_zaladane.sql",
+    "0224_unified_adapter_auth_sessions.sql",
+    "0225_drop_claude_setup_token_sessions.sql",
+    "0226_tan_colossus.sql",
+    "0227_modern_pandemic.sql",
+    "0228_nasty_grim_reaper.sql",
+    "0229_drop_company_brand_color_and_attachment_max_bytes.sql",
+    "0230_better_auth_account_issuer.sql",
+  ]) {
+    const hash = createHash("sha256")
+      .update(readFileSync(`${migrationDir}/${filename}`))
+      .digest("hex");
+    await requireCount(
+      `migration journal ${filename}`,
+      sql`select count(*) from drizzle.__drizzle_migrations where hash = ${hash}`,
+    );
+  }
+}
+
+await sql.end();
+NODE
+}
+
 seed_post_upgrade_connections() {
   local name="$1"
 
@@ -583,6 +1027,9 @@ print(local["id"])
 
   if [ "$paperclip_migration" = "true" ]; then
     seed_internal_paperclip_state "$name"
+  fi
+  if [ "$paperclip_2026_831_migration" = "true" ]; then
+    seed_paperclip_2026_831_state "$name"
   fi
 }
 
@@ -803,6 +1250,9 @@ assert_persisted_state() {
   if [ "$paperclip_migration" = "true" ]; then
     assert_internal_paperclip_state "$name" "$phase"
   fi
+  if [ "$paperclip_2026_831_migration" = "true" ]; then
+    assert_paperclip_2026_831_state "$name" "$phase"
+  fi
 }
 
 docker pull --platform "$platform" "$previous_image" >/dev/null
@@ -837,6 +1287,11 @@ if [ "$paperclip_migration" = "true" ]; then
   upgrade_logs="$(docker logs "$upgrade_name" 2>&1)"
   grep -Fq '0136_acpx_default_engine_migration.sql' <<<"$upgrade_logs"
   grep -Fq '0183_connection_user_authorization_state.sql' <<<"$upgrade_logs"
+fi
+if [ "$paperclip_2026_831_migration" = "true" ]; then
+  upgrade_logs="$(docker logs "$upgrade_name" 2>&1)"
+  grep -Fq '0223_robust_zaladane.sql' <<<"$upgrade_logs"
+  grep -Fq '0230_better_auth_account_issuer.sql' <<<"$upgrade_logs"
 fi
 docker exec "$upgrade_name" node --version | grep -Fx "$current_node_version"
 docker restart "$upgrade_name" >/dev/null

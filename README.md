@@ -30,13 +30,13 @@
 
 OpenCode running in a container with everything already installed. 50+ dev tools, 10+ AI providers, a sandboxed headless browser, persistent state, and Paperclip on top. Drop it on any machine and pick up exactly where you left off.
 
-**Hermes remains temporarily unbundled.** Its current releases pin vulnerable dependencies. HolyCode leaves `/home/opencode/.hermes` untouched so you can restore the service when upstream publishes compatible fixed pins.
+**Hermes remains temporarily unbundled.** HolyCode leaves `/home/opencode/.hermes` untouched so you can restore the service if managed bundling returns.
 
 **Paperclip turns HolyCode into an agent board.** You get a dashboard on port `3100` where you create a company, hire OpenCode-backed workers, wake them on heartbeat, and manage agent work from a real UI instead of hand-rolling scripts around `opencode run`.
 
 **Works with your Claude subscription.** Enable the Claude Auth plugin and use your existing Claude Max/Pro plan. No separate API key needed.
 
-**Bring your own multi-agent plugin for now.** HolyCode-managed oh-my-openagent installation remains suspended while its current dependency tree retains unresolved security findings. The first flag-free start disables the old managed plugin entry but keeps its settings, skills, and package cache.
+**Bring your own multi-agent plugin for now.** HolyCode-managed oh-my-openagent installation remains suspended. The first flag-free start disables the old managed plugin entry but keeps its settings, skills, and package cache.
 
 **You were going to spend an hour getting your environment back. Or you could just `docker compose up` and get a coding workstation and an agent board in one shot.**
 
@@ -339,7 +339,7 @@ services:
       # - ENABLE_CLAUDE_AUTH=true
 
       # --- Legacy oh-my-openagent flag ---
-      # Managed installation is unavailable in v1.1.4. Existing config is preserved.
+      # Managed installation is currently unavailable. Existing config is preserved.
       # Remove this flag before upgrading; true stops with a migration message.
       # - ENABLE_OH_MY_OPENAGENT=true
 ```
@@ -393,14 +393,14 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | `OPENCODE_SERVER_PASSWORD` | (none) | Protect the web UI with basic auth |
 | `OPENCODE_SERVER_USERNAME` | `opencode` | Username for web UI basic auth |
 | `ENABLE_CLAUDE_AUTH` | (none) | Set to `true` to use Claude subscription instead of API key |
-| `ENABLE_OH_MY_OPENAGENT` | (none) | Legacy flag; `true` stops v1.1.4 because managed installation is suspended |
+| `ENABLE_OH_MY_OPENAGENT` | (none) | Legacy flag; `true` stops startup because managed installation is suspended |
 | `ENABLE_PAPERCLIP` | (none) | Set to `true` to start the Paperclip dashboard and agent board |
 | `PAPERCLIP_PORT` | `3100` | Override the container port used by Paperclip |
 | `PAPERCLIP_INSTANCE_ID` | `default` | Local Paperclip instance name for isolated state |
 | `PAPERCLIP_DEPLOYMENT_MODE` | `authenticated` | Docker-safe Paperclip startup mode; HolyCode defaults this away from `local_trusted` |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset used on first boot; `lan` binds inside Docker on `0.0.0.0` |
 | `PAPERCLIP_ALLOWED_HOSTNAMES` | (none) | Comma-separated Paperclip remote hostnames/IPs to allow; use hostname/IP only, no scheme or port |
-| `ENABLE_HERMES` | (none) | Legacy flag; `true` stops v1.1.4 with a migration message while bundled Hermes is unavailable |
+| `ENABLE_HERMES` | (none) | Legacy flag; `true` stops startup with a migration message while bundled Hermes is unavailable |
 | `CLIPROXYAPI_ENABLED` | (none) | Set to `true` to add the optional OpenCode `cliproxyapi` provider |
 | `CLIPROXYAPI_BASE_URL` | `http://cliproxyapi:8317/v1` | Externally managed CLIProxyAPI base URL reachable from the HolyCode container |
 | `CLIPROXYAPI_API_KEY` | (none) | Optional API key for CLIProxyAPI, stored only as an OpenCode env reference when set |
@@ -412,7 +412,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 > `HOLYCODE_PLUGIN_UPDATE` controls supported plugin package updates. `manual` (default) installs Claude Auth only if it is missing and keeps a user-selected version. `auto` syncs the image's declared Claude Auth pin on boot. This is separate from `OPENCODE_DISABLE_AUTOUPDATE`, which only affects OpenCode itself.
 
-> HolyCode-managed oh-my-openagent installation is unavailable in v1.1.4. If an older deployment still sets `ENABLE_OH_MY_OPENAGENT=true`, startup stops without changing plugin state. After you remove the flag, the first successful start removes the old active entry from `opencode.json` and `tui.json`, records its original package spec in `.holycode-oh-my-openagent-migrated-v1.1.4`, and keeps the plugin settings, skills, and package cache. Add the plugin back manually only if you accept its current upstream dependency risk; HolyCode then leaves that user-managed entry alone.
+> HolyCode-managed oh-my-openagent installation is currently unavailable. If an older deployment still sets `ENABLE_OH_MY_OPENAGENT=true`, startup stops without changing plugin state. After you remove the flag, the first successful start removes the old active entry from `opencode.json` and `tui.json`, records its original package spec in `.holycode-oh-my-openagent-migrated-v1.1.4`, and keeps the plugin settings, skills, and package cache. Add the plugin back manually only after reviewing it for your environment; HolyCode then leaves that user-managed entry alone.
 
 > `ENABLE_PAPERCLIP=true` starts Paperclip on port `3100` inside the container. Open the dashboard, create a company, then hire OpenCode-backed agents there. Paperclip persists under `~/.paperclip` automatically.
 
@@ -422,7 +422,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 > `PAPERCLIP_ALLOWED_HOSTNAMES` lets Paperclip accept listed LAN/private hostnames or IPs. Use comma-separated hostname/IP values only, without `http://`, `https://`, or ports. Restart the container after changing it. The hostname guard and Paperclip authentication stay enabled.
 
-> Bundled Hermes remains unavailable in v1.1.4 because its current releases require vulnerable dependency pins. If an older deployment still sets `ENABLE_HERMES=true`, startup stops with a migration message instead of silently ignoring the flag. Your `/home/opencode/.hermes` data is not changed.
+> The bundled Hermes service is currently unavailable. If an older deployment still sets `ENABLE_HERMES=true`, startup stops with a migration message instead of silently ignoring the flag. Your `/home/opencode/.hermes` data is not changed.
 
 > `CLIPROXYAPI_ENABLED=true` adds a separate OpenCode provider named `cliproxyapi`. It does not change `ENABLE_CLAUDE_AUTH`, does not touch `/home/opencode/.claude`, and does not set global `ANTHROPIC_*` proxy variables. Set `CLIPROXYAPI_BASE_URL` to your externally managed service and keep its credentials and network exposure outside the HolyCode container.
 
@@ -472,43 +472,43 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 </details>
 
 <details>
-<summary><strong>v1.1.8 release pins</strong></summary>
+<summary><strong>v1.1.9 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
-| OpenCode | 1.18.25 |
-| OpenSpec | 1.11.0; initialize a project explicitly with `openspec init --tools opencode` |
+| OpenCode | 1.18.29 |
+| OpenSpec | 1.12.0; telemetry disabled, initialize a project explicitly with `openspec init --tools opencode` |
 | npm | 12.0.2 with integrity-verified `ip-address` 10.7.0 replacement |
-| PM2 | 7.0.4 with integrity-verified `js-yaml` 4.3.1 replacement |
-| Paperclip | 2026.824.1 with reviewed Undici 6.28.0 replacement |
+| PM2 | 7.0.4 with owner-guarded `js-yaml` 4.3.2 replacement |
+| Paperclip | 2026.831.1 with reviewed Undici 6.28.1 compatibility replacement |
 | Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
 | s6-overlay | 3.2.3.2 |
 | eza | 0.23.5 |
 | fzf | 0.74.3 |
-| lazygit | 0.64.1 |
-| pnpm | 11.25.0 |
+| lazygit | 0.65.0 |
+| pnpm | 12.4.0 |
 | Vite | 8.2.2 |
-| ESLint | 10.9.1 |
+| ESLint | 10.10.0 |
 | Prettier | 3.9.6 |
-| Wrangler | 4.127.1; legacy service environments are not supported |
+| Wrangler | 4.130.0 with owner-guarded Miniflare `sharp` 0.35.4 replacement; legacy service environments are not supported |
 | Prisma | 7.10.0 |
 | Lighthouse | 13.4.1 |
 | Netlify CLI and `serve` | Removed |
-| Hermes, Vercel, sharp-cli, concurrently, LHCI | Removed because their current dependency trees contain unresolved or fixable security findings |
+| Hermes, Vercel, sharp-cli, concurrently, LHCI | Not bundled |
 | tqdm | 4.70.0 |
 | FastAPI / Uvicorn | 0.141.1 / 0.52.4 |
-| Claude stable | 2.1.252 |
+| Claude stable | 2.1.265 |
 | tsx | 4.23.13 |
-| TypeScript | 6.0.3, held until TypeScript 7 exposes the stable toolchain APIs this image needs |
-| NumPy | 2.5.2 on Python 3.13 |
+| TypeScript | 6.0.3, held because TypeScript 7 removes the `tsserver` command and changes the stable programmatic API surface |
+| NumPy | 2.5.3 on Python 3.13 |
 | json-server | 0.17.4, held on the stable release instead of the 1.0 beta |
-| opencode-claude-auth default | 2.1.6, integrity-verified and installed from the image |
+| opencode-claude-auth default | 2.2.0, integrity-verified and installed offline from the image |
 | oh-my-openagent | HolyCode-managed installation suspended; legacy active entry disabled once while settings, skills, and cache remain |
 
 Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. Manual main-branch validation also runs Docker Scout and Trivy natively on AMD64 and ARM64 before a tag is created. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
 
-The dated adoption, hold, removal, and scanner decisions are in the [v1.1.8 dependency audit](docs/dependency-audit-v1.1.8.md).
+The dated adoption, hold, removal, and scanner decisions are in the [v1.1.9 dependency audit](docs/dependency-audit-v1.1.9.md).
 
 </details>
 
@@ -584,9 +584,9 @@ HolyCode ships with optional Paperclip on top of OpenCode, plus integration for 
 
 ### Hermes Agent
 
-Hermes remains temporarily unbundled in v1.1.4. The current Hermes release line pins vulnerable dependencies and adds unresolved findings through its optional dependency set. HolyCode removes the runtime and service instead of shipping those packages.
+Hermes remains temporarily unbundled. HolyCode does not start a Hermes runtime or publish its port.
 
-Existing state under `/home/opencode/.hermes` remains untouched. Remove `ENABLE_HERMES=true` from older Compose deployments before starting v1.1.4. The container stops with a clear migration message when that legacy flag remains set, so the missing service cannot be mistaken for a successful start.
+Existing state under `/home/opencode/.hermes` remains untouched. Remove `ENABLE_HERMES=true` from older Compose deployments before starting the current image. The container stops with a clear migration message when that legacy flag remains set, so the missing service cannot be mistaken for a successful start.
 
 ### Paperclip
 
@@ -762,7 +762,7 @@ Plugin cache is mounted separately at `./local-cache/opencode` by default so you
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 
-The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.252`. npm lifecycle scripts are disabled during installation. HolyCode validates each script package's version, integrity, architecture, and script body before running only the approved OpenCode, Claude Code, and Paperclip embedded PostgreSQL steps. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file, and new virtual environments can bootstrap audited packaging tools from the image's offline seed. Debian packages still resolve from current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. User-installed plugins remain outside the image SBOM. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising universal freshness or zero total findings.
+The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.265`. npm lifecycle scripts are disabled during installation. HolyCode validates each script package's version, integrity, architecture, and script body before running only the approved OpenCode, Claude Code, and Paperclip embedded PostgreSQL steps. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file, and new virtual environments can bootstrap audited packaging tools from the image's offline seed. Debian packages still resolve from current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. User-installed plugins remain outside the image SBOM. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising universal freshness or zero total findings.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
 
@@ -830,6 +830,10 @@ docker compose stop
 docker compose pull
 docker compose up -d
 ```
+
+`v1.1.9` upgrades Paperclip from 2026.824.1 to 2026.831.1 and applies migrations `0223` through `0230`. Migrations remove the retired `brandColor` and `attachmentMaxBytes` company fields, reset transient in-progress login sessions, and require users to restart login. Keep your untouched pre-upgrade copies until onboarding, Skills, agents, projects, workspaces, connections, and provider authentication pass your checks.
+
+To roll back this upgrade, stop the stack, select `coderluii/holycode:1.1.8`, restore the untouched pre-`v1.1.9` home/workspace copies, and start the stack again. Never run image `1.1.8` against a Paperclip database already migrated by `v1.1.9`.
 
 `v1.1.4` upgrades Paperclip from 2026.707.0 to 2026.722.0 and runs database migrations through `0183`. Keep your untouched pre-upgrade copies until onboarding, Skills, agents, connections, and normal provider work all pass.
 

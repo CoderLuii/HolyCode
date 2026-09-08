@@ -375,18 +375,18 @@ services:
 | `PAPERCLIP_PORT` | `3100` | Paperclip के लिए कंटेनर पोर्ट ओवरराइड करें |
 | `PAPERCLIP_INSTANCE_ID` | `default` | आइसोलेटेड स्टेट के लिए लोकल Paperclip इंस्टेंस नाम |
 | `PAPERCLIP_BIND` | `lan` | Paperclip reachability preset; `lan` binds inside Docker on `0.0.0.0` |
-| `ENABLE_HERMES` | (कोई नहीं) | पुरानी सेटिंग; Hermes बंडल न होने तक v1.1.4 माइग्रेशन संदेश के साथ स्टार्टअप रोकता है |
+| `ENABLE_HERMES` | (कोई नहीं) | पुरानी सेटिंग; Hermes बंडल न होने तक HolyCode माइग्रेशन संदेश के साथ स्टार्टअप रोकता है |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | प्लगइन अपडेट मोड: `manual` (सिर्फ़ जो गायब हों उन्हें इंस्टॉल करता है और उपयोगकर्ता संस्करणों को बनाए रखता है) या `auto` (स्टार्टअप पर घोषित pins को sync करता है) |
 
-> `ENABLE_CLAUDE_AUTH` कंटेनर रीस्टार्ट पर प्रभावी होता है। `ENABLE_OH_MY_OPENAGENT` अब पुरानी सेटिंग है और v1.1.4 में माइग्रेशन संदेश के साथ स्टार्टअप रोकता है।
+> `ENABLE_CLAUDE_AUTH` कंटेनर रीस्टार्ट पर प्रभावी होता है। `ENABLE_OH_MY_OPENAGENT` अब पुरानी सेटिंग है और वर्तमान में माइग्रेशन संदेश के साथ स्टार्टअप रोकता है।
 
 > `HOLYCODE_PLUGIN_UPDATE` प्लगइन पैकेज अपडेट को कंट्रोल करता है। `manual` (डिफ़ॉल्ट) इनेबल्ड प्लगइन केवल तभी इंस्टॉल करता है जब वे गायब हों और उपयोगकर्ता-इंस्टॉल्ड संस्करणों को बनाए रखता है। `auto` गायब प्लगइन इंस्टॉल करता है और स्टार्टअप पर घोषित pins को sync करता है। यह `OPENCODE_DISABLE_AUTOUPDATE` से अलग है, जो केवल OpenCode को प्रभावित करता है।
 
-> HolyCode v1.1.4 में oh-my-openagent इंस्टॉल नहीं करता। अगर किसी पुरानी इंस्टॉलेशन में `ENABLE_OH_MY_OPENAGENT=true` बचा है, तो कंटेनर प्लगइन की स्थिति बदले बिना रुक जाता है। सेटिंग हटाने के बाद पहला सफल स्टार्ट पुरानी सक्रिय एंट्री निष्क्रिय करता है और सेटिंग्स, Skills तथा पैकेज कैश सुरक्षित रखता है।
+> HolyCode अभी oh-my-openagent इंस्टॉल नहीं करता। अगर किसी पुरानी इंस्टॉलेशन में `ENABLE_OH_MY_OPENAGENT=true` बचा है, तो कंटेनर प्लगइन की स्थिति बदले बिना रुक जाता है। सेटिंग हटाने के बाद पहला सफल स्टार्ट पुरानी सक्रिय एंट्री निष्क्रिय करता है और सेटिंग्स, Skills तथा पैकेज कैश सुरक्षित रखता है।
 
 > `ENABLE_PAPERCLIP=true` कंटेनर के अंदर पोर्ट `3100` पर Paperclip शुरू करता है। डैशबोर्ड खोलें, एक कंपनी बनाएं, फिर वहाँ से OpenCode-बैक्ड एजेंट हायर करें। Paperclip ऑटोमेटिक `~/.paperclip` में परसिस्ट होता है।
 
-> v1.1.4 में Hermes अभी भी उपलब्ध नहीं है। अगर पुरानी इंस्टॉलेशन में `ENABLE_HERMES=true` बचा है, तो HolyCode एक छोटे माइग्रेशन संदेश के साथ स्टार्टअप रोक देता है। `/home/opencode/.hermes` को बिना बदलाव सुरक्षित रखा जाता है ताकि आगे इंटीग्रेशन लौटने या पुराना snapshot restore करने पर डेटा उपलब्ध रहे।
+> मौजूदा इमेज में Hermes अभी भी उपलब्ध नहीं है। अगर पुरानी इंस्टॉलेशन में `ENABLE_HERMES=true` बचा है, तो HolyCode एक छोटे माइग्रेशन संदेश के साथ स्टार्टअप रोक देता है। `/home/opencode/.hermes` को बिना बदलाव सुरक्षित रखा जाता है ताकि आगे इंटीग्रेशन लौटने या पुराना snapshot restore करने पर डेटा उपलब्ध रहे।
 
 > `GIT_USER_NAME` और `GIT_USER_EMAIL` केवल पहले बूट पर लागू होते हैं। दोबारा लागू करने के लिए, sentinel फ़ाइल हटाएं और रीस्टार्ट करें: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` फिर `docker compose restart`।
 
@@ -426,14 +426,14 @@ services:
 
 | रनटाइम | वर्शन |
 |---------|---------|
-| Node.js | 24.18.0 (LTS) |
+| Node.js | 24.20.0 (LTS) |
 | npm | 12.0.2 |
 | Python | 3.13 (Trixie) |
 | pip | Python 3.13 के साथ बंडल्ड |
 
 > Release tags ठीक `vX.Y.Z` का उपयोग करते हैं. Docker image tags से `v` हटा रहता है. `v1.0.9` के बाद `v1.1.0`, `v1.1.9` के बाद `v1.2.0`, और `v1.9.9` के बाद `v2.0.0` आता है. `v1.0.10` से `v1.0.13` तक अपरिवर्तनीय हैं.
 
-> v1.1.4 में OpenCode 1.18.9, Claude Code 2.1.220, Paperclip 2026.722.0, npm 12.0.2, pnpm 11.18.0, ESLint 10.8.0, Wrangler 4.115.0 और Prisma 7.9.1 शामिल हैं। Python में tqdm 4.70.0, FastAPI 0.141.1 और Uvicorn 0.52.0 हैं। `opencode-claude-auth` 2.1.5 image में पैक है और स्टार्टअप पर offline इंस्टॉल होता है। Netlify CLI और npm पैकेज `serve` हटा दिए गए हैं। HolyCode द्वारा मैनेज की जाने वाली oh-my-openagent इंस्टॉलेशन सस्पेंड है, Hermes अभी भी उपलब्ध नहीं है और बाहर से मैनेज किए गए CLIProxyAPI endpoint समर्थित रहते हैं।
+> v1.1.9 में OpenCode 1.18.29, Claude Code 2.1.265, Undici 6.28.1 के साथ Paperclip 2026.831.1, npm 12.0.2, pnpm 12.4.0, ESLint 10.10.0, Wrangler 4.130.0, Prisma 7.10.0, TypeScript 6.0.3 और json-server 0.17.4 शामिल हैं। Python में tqdm 4.70.0, FastAPI 0.141.1, Uvicorn 0.52.4 और NumPy 2.5.3 हैं। `opencode-claude-auth` 2.2.0 image में पैक है और स्टार्टअप पर offline इंस्टॉल होता है। Netlify CLI और npm पैकेज `serve` image में शामिल नहीं हैं। HolyCode द्वारा मैनेज की जाने वाली oh-my-openagent इंस्टॉलेशन सस्पेंड है, Hermes अभी भी उपलब्ध नहीं है और बाहर से मैनेज किए गए CLIProxyAPI endpoint समर्थित रहते हैं।
 
 </details>
 
@@ -505,9 +505,9 @@ Paperclip OpenCode के ऊपर ऑप्शनल सर्विस के
 
 ### Hermes Agent (अस्थायी रूप से बंडल नहीं)
 
-Hermes v1.1.4 में उपलब्ध नहीं है क्योंकि इसकी मौजूदा dependencies अभी जरूरी security fixes के साथ compatible नहीं हैं। HolyCode कोई Hermes process शुरू नहीं करता और उसका port publish नहीं करता।
+Hermes अभी image में शामिल नहीं है। HolyCode कोई Hermes process शुरू नहीं करता और उसका port publish नहीं करता।
 
-`/home/opencode/.hermes` में मौजूद डेटा न हटाया जाता है और न migrate किया जाता है। v1.1.4 को सामान्य रूप से शुरू करने के लिए पुरानी configuration से `ENABLE_HERMES=true` हटाएं। इस directory को आगे इंटीग्रेशन लौटने या बिना बदलाव वाला पुराना snapshot restore करने के लिए सुरक्षित रखें।
+`/home/opencode/.hermes` में मौजूद डेटा न हटाया जाता है और न migrate किया जाता है। मौजूदा image शुरू करने के लिए पुरानी configuration से `ENABLE_HERMES=true` हटाएं। इस directory को आगे इंटीग्रेशन लौटने या बिना बदलाव वाला पुराना snapshot restore करने के लिए सुरक्षित रखें।
 
 ### Paperclip
 
@@ -680,18 +680,19 @@ environment:
 
 ## ⬆️ अपग्रेड करना
 
-लेटेस्ट इमेज पुल करें और कंटेनर री-क्रिएट करें। आपका डेटा अनटच्ड रहता है।
+लेटेस्ट इमेज पुल करने से पहले कंटेनर रोकें और home/workspace volumes का backup लें।
 
 अगर आप `v1.1.3` से पहले के release से अपग्रेड कर रहे हैं, तो ऊपर दी गई seccomp प्रोफ़ाइल डाउनलोड करें और कंटेनर को री-क्रिएट करने से पहले `holycode` service में `security_opt` जोड़ें।
+
+v1.1.9 में Paperclip 2026.824.1 से 2026.831.1 पर migrations `0223`–`0230` के साथ migrate होता है। हटाए गए `brandColor` और `attachmentMaxBytes` fields निकाल दिए जाते हैं और चल रहे login sessions reset होते हैं; upgrade के बाद दोबारा login करें। Rollback के लिए untouched backup को image `1.1.8` के साथ restore करें। v1.1.9 से migrate हुए database के साथ `1.1.8` कभी शुरू न करें।
 
 v1.1.4 में Paperclip 2026.707.0 से 2026.722.0 पर migrate होता है। Rollback के लिए image `1.1.3` और v1.1.4 upgrade से पहले के बिना बदलाव वाले volumes इस्तेमाल करें। v1.1.4 से migrate हुए Paperclip डेटा के साथ image `1.1.3` कभी शुरू न करें।
 
 ```bash
+docker compose stop
 docker compose pull
 docker compose up -d
 ```
-
-बस। एक कमांड। आपके सेशन, सेटिंग्स और कॉन्फ़िग bind mount में हैं इसलिए कुछ नहीं खोता।
 
 <p align="right">
   <a href="#top">ऊपर जाएं</a>
