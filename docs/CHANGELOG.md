@@ -4,6 +4,23 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 09/10/2026
+
+### Added
+
+- Add a v1.2.0 dependency audit that records the frozen upgrades, compatibility holds, and required release gates
+
+### Changed
+
+- Refresh Node.js to 24.21.0, OpenCode to 1.18.30, Claude Code to 2.1.268, OpenSpec to 1.13.0, Vite to 8.3.0, and Wrangler to 4.131.0
+- Keep pnpm 12.4.0 as a provenance-reviewed hold despite npm's `latest` and `latest-12` tags resolving to 12.3.4
+- Update the protected release baseline to `v1.1.9` and Renovate validation to 44.79.2
+- Refresh the Python dependency lock with FontTools 4.65.0 for Matplotlib
+
+### Fixed
+
+- Replace pip's vendored msgpack copy with the hash-verified 1.2.2 source while keeping it inside pip's vendored namespace
+
 ## [1.1.9] - 09/08/2026
 
 ### Added

@@ -14,9 +14,9 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.1.8@sha256:9e7748ce057082f6e8168ac9e6e5434234cf601927b412f49a09b0de992d901c
-  PREVIOUS_VERSION: v1.1.8
-  RELEASE_VERSION: v1.1.9
+  PREVIOUS_IMAGE: coderluii/holycode:1.1.9@sha256:06344a7b42b4938959c8913687d57a1fbbf65a18a11864bab3fca95d3b9b801c
+  PREVIOUS_VERSION: v1.1.9
+  RELEASE_VERSION: v1.2.0
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -74,7 +74,7 @@ jobs:
       - name: Set up Node for Renovate validation
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.20.0
+          node-version: 24.21.0
 
       - name: Static release validation
         run: |
@@ -87,7 +87,7 @@ jobs:
           ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
           docker compose -f docker-compose.yaml config --no-interpolate >/tmp/docker-compose.yaml
           docker compose -f docker-compose.full.yaml config --no-interpolate >/tmp/docker-compose.full.yaml
-          bash scripts/validate_renovate_extraction.sh 44.69.12
+          bash scripts/validate_renovate_extraction.sh 44.79.2
 
       - name: Free up disk space
         run: |

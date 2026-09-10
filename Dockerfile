@@ -103,7 +103,7 @@ RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
     go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
     go version -m /out/lazygit | grep -E 'golang.org/x/sys[[:space:]]+v0\.47\.0'
 
-FROM node:24.20.0-trixie-slim@sha256:50c3b2f6988dfc307b86e5301d69611af31f4789bdf232863b07d3b02fe55ae0
+FROM node:24.21.0-trixie-slim@sha256:db3ae80f5d8df06e04dabdf7b44cbf008d32de168205fa0294444aabbc08c590
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -116,13 +116,13 @@ ARG DELTA_VERSION=0.19.2
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.29
+ARG OPENCODE_VERSION=1.18.30
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.265
+ARG CLAUDE_CODE_VERSION=2.1.268
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.12.0
+ARG OPENSPEC_VERSION=1.13.0
 # renovate: datasource=npm depName=undici
 ARG PAPERCLIP_UNDICI_VERSION=6.28.1
 # renovate: datasource=npm depName=opencode-claude-auth
@@ -144,7 +144,7 @@ ARG TSX_VERSION=4.23.13
 # renovate: datasource=npm depName=pnpm
 ARG PNPM_VERSION=12.4.0
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.2.2
+ARG VITE_VERSION=8.3.0
 # renovate: datasource=npm depName=prettier
 ARG PRETTIER_VERSION=3.9.6
 # renovate: datasource=npm depName=prisma
@@ -156,9 +156,9 @@ ARG PRISMA_MYSQL2_VERSION=3.24.4
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.130.0
+ARG WRANGLER_VERSION=4.131.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20260908.0-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20260910.0-alpha
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.4
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
@@ -170,8 +170,8 @@ ARG NUMPY_VERSION=2.5.3
 # renovate: datasource=pypi depName=pip
 ARG PIP_VERSION=26.2.1
 # renovate: datasource=pypi depName=msgpack
-ARG PIP_VENDOR_MSGPACK_VERSION=1.2.1
-ARG PIP_VENDOR_MSGPACK_SHA256=04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647
+ARG PIP_VENDOR_MSGPACK_VERSION=1.2.2
+ARG PIP_VENDOR_MSGPACK_SHA256=9eb0b0e602064527a045ea28c4f174ed69383587e29cebe28947e3b84106eb2a
 # pip 26.2.1 vendors pkg_resources from vulnerable setuptools 70.3.0.
 ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
@@ -361,7 +361,7 @@ RUN python3 -m venv /tmp/holycode-pip-bootstrap && \
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
       --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/msgpack.tar.gz \
-      "https://files.pythonhosted.org/packages/31/f9/c0a1c127f9049db9155afc316952ea571720dd01833ff5e4d7e8e6352dbb/msgpack-${PIP_VENDOR_MSGPACK_VERSION}.tar.gz" && \
+      "https://files.pythonhosted.org/packages/6d/44/ea2100ec54d30c46ee9dba10a3bfb79b655e96c6df237238a3234c75869b/msgpack-${PIP_VENDOR_MSGPACK_VERSION}.tar.gz" && \
     echo "${PIP_VENDOR_MSGPACK_SHA256}  /tmp/msgpack.tar.gz" | sha256sum -c - && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/setuptools.tar.gz \
       "https://files.pythonhosted.org/packages/81/9c/42314ee079a3e9c24b27515f9fbc7a3c1d29992c33451779011c74488375/setuptools-${PIP_VENDOR_PKG_RESOURCES_VERSION}.tar.gz" && \
@@ -386,7 +386,7 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
       /tmp/pip-vendored-pkg-resources.patch && \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip --version | grep -F "pip ${PIP_VERSION}" && \
-    python3 -c 'import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == "1.2.1"; import pip._vendor.pkg_resources' && \
+    python3 -c 'import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == "1.2.2"; assert msgpack.unpackb(msgpack.packb({"holycode": True})) == {"holycode": True}; import pip._vendor.pkg_resources' && \
     _PIP_USE_IMPORTLIB_METADATA=0 python3 -m pip list --format=json >/dev/null && \
     python3 -c 'import setuptools; assert setuptools.__version__ == "84.0.0"' && \
     python3 -m pip check
@@ -544,13 +544,12 @@ RUN PM2_JS_YAML_INTEGRITY="sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TI
     rm -rf /tmp/holycode-build-pm2 "$PM2_APP" && \
     rm -rf /root/.npm
 
-# Wrangler 4.130.0 owns Miniflare 5.20260908.0-alpha, which directly pins
-# vulnerable Sharp 0.35.2. Overlay only that hoisted package and its exact native
-# payload for the target architecture, then bind Miniflare to the fixed release.
+# Wrangler 4.131.0 owns Miniflare 5.20260910.0-alpha, which directly pins the
+# fixed Sharp release. Bind the exact owner and architecture-specific payload.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "0.35.2" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
@@ -558,9 +557,10 @@ RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2]) process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!=="0.35.2") process.exit(1)' \
-      "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = "0.35.2" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
+      "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
+      "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \
       amd64) WRANGLER_SHARP_ARCH=x64; \
         WRANGLER_SHARP_NATIVE_INTEGRITY="sha512-9qvvEAuk8k89TfWUoX2htWjbAMX8p+NxCppjpcg5k6xMsjhBQPTsoIh36h9Qde4WRuGpJeYnOjdosDn/cnv+OA=="; \
@@ -574,9 +574,11 @@ RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn
     WRANGLER_SHARP_LIBVIPS_PACKAGE="@img/sharp-libvips-linux-${WRANGLER_SHARP_ARCH}" && \
     WRANGLER_SHARP_NATIVE_DIR="$WRANGLER_NODE_MODULES/@img/sharp-linux-${WRANGLER_SHARP_ARCH}" && \
     WRANGLER_SHARP_LIBVIPS_DIR="$WRANGLER_NODE_MODULES/@img/sharp-libvips-linux-${WRANGLER_SHARP_ARCH}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.version!=="0.35.2" || pkg.optionalDependencies[process.argv[2]]!=="1.3.1") process.exit(1)' \
-      "$WRANGLER_SHARP_NATIVE_DIR/package.json" "$WRANGLER_SHARP_LIBVIPS_PACKAGE" && \
-    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_LIBVIPS_DIR/package.json")" = "1.3.1" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.optionalDependencies[process.argv[3]]!==process.argv[4]) process.exit(1)' \
+      "$WRANGLER_SHARP_NATIVE_DIR/package.json" "${WRANGLER_SHARP_VERSION}" \
+      "$WRANGLER_SHARP_LIBVIPS_PACKAGE" "${WRANGLER_SHARP_LIBVIPS_VERSION}" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_LIBVIPS_DIR/package.json")" = \
+      "${WRANGLER_SHARP_LIBVIPS_VERSION}" && \
     test "$(npm view "${WRANGLER_SHARP_NATIVE_PACKAGE}@${WRANGLER_SHARP_VERSION}" dist.integrity)" = \
       "$WRANGLER_SHARP_NATIVE_INTEGRITY" && \
     test "$(npm view "${WRANGLER_SHARP_LIBVIPS_PACKAGE}@${WRANGLER_SHARP_LIBVIPS_VERSION}" dist.integrity)" = \
@@ -593,24 +595,21 @@ RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn
       "/tmp/${WRANGLER_SHARP_NATIVE_TARBALL}" "$WRANGLER_SHARP_NATIVE_INTEGRITY" && \
     node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
       "/tmp/${WRANGLER_SHARP_LIBVIPS_TARBALL}" "$WRANGLER_SHARP_LIBVIPS_INTEGRITY" && \
-    rm -rf "$WRANGLER_SHARP_DIR" "$WRANGLER_SHARP_NATIVE_DIR" "$WRANGLER_SHARP_LIBVIPS_DIR" && \
-    mkdir "$WRANGLER_SHARP_DIR" "$WRANGLER_SHARP_NATIVE_DIR" "$WRANGLER_SHARP_LIBVIPS_DIR" && \
-    tar -xzf "/tmp/${WRANGLER_SHARP_TARBALL}" -C "$WRANGLER_SHARP_DIR" --strip-components=1 && \
-    tar -xzf "/tmp/${WRANGLER_SHARP_NATIVE_TARBALL}" -C "$WRANGLER_SHARP_NATIVE_DIR" --strip-components=1 && \
-    tar -xzf "/tmp/${WRANGLER_SHARP_LIBVIPS_TARBALL}" -C "$WRANGLER_SHARP_LIBVIPS_DIR" --strip-components=1 && \
+    WRANGLER_SHARP_VERIFIED_DIR=/tmp/holycode-wrangler-sharp-verified && \
+    WRANGLER_SHARP_NATIVE_VERIFIED_DIR=/tmp/holycode-wrangler-sharp-native-verified && \
+    WRANGLER_SHARP_LIBVIPS_VERIFIED_DIR=/tmp/holycode-wrangler-sharp-libvips-verified && \
+    mkdir "$WRANGLER_SHARP_VERIFIED_DIR" "$WRANGLER_SHARP_NATIVE_VERIFIED_DIR" \
+      "$WRANGLER_SHARP_LIBVIPS_VERIFIED_DIR" && \
+    tar -xzf "/tmp/${WRANGLER_SHARP_TARBALL}" -C "$WRANGLER_SHARP_VERIFIED_DIR" && \
+    tar -xzf "/tmp/${WRANGLER_SHARP_NATIVE_TARBALL}" -C "$WRANGLER_SHARP_NATIVE_VERIFIED_DIR" && \
+    tar -xzf "/tmp/${WRANGLER_SHARP_LIBVIPS_TARBALL}" -C "$WRANGLER_SHARP_LIBVIPS_VERIFIED_DIR" && \
+    diff -qr --no-dereference "$WRANGLER_SHARP_VERIFIED_DIR/package" "$WRANGLER_SHARP_DIR" && \
+    diff -qr --no-dereference "$WRANGLER_SHARP_NATIVE_VERIFIED_DIR/package" "$WRANGLER_SHARP_NATIVE_DIR" && \
+    diff -qr --no-dereference "$WRANGLER_SHARP_LIBVIPS_VERIFIED_DIR/package" "$WRANGLER_SHARP_LIBVIPS_DIR" && \
+    rm -rf "$WRANGLER_SHARP_VERIFIED_DIR" "$WRANGLER_SHARP_NATIVE_VERIFIED_DIR" \
+      "$WRANGLER_SHARP_LIBVIPS_VERIFIED_DIR" && \
     rm "/tmp/${WRANGLER_SHARP_TARBALL}" "/tmp/${WRANGLER_SHARP_NATIVE_TARBALL}" \
       "/tmp/${WRANGLER_SHARP_LIBVIPS_TARBALL}" && \
-    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies.sharp!=="0.35.2") process.exit(1); pkg.dependencies.sharp=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
-      "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_SHARP_VERSION}" && \
-    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
-      "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.sharp!==process.argv[2]) process.exit(1)' \
-      "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.optionalDependencies[process.argv[3]]!==process.argv[4]) process.exit(1)' \
-      "$WRANGLER_SHARP_NATIVE_DIR/package.json" "${WRANGLER_SHARP_VERSION}" \
-      "$WRANGLER_SHARP_LIBVIPS_PACKAGE" "${WRANGLER_SHARP_LIBVIPS_VERSION}" && \
-    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_LIBVIPS_DIR/package.json")" = \
-      "${WRANGLER_SHARP_LIBVIPS_VERSION}" && \
     test "$(find /usr/local/lib/node_modules/wrangler -path '*/sharp/package.json' -type f | wc -l)" -eq 1 && \
     test "$(find /usr/local/lib/node_modules/wrangler -path "*/@img/sharp-linux-${WRANGLER_SHARP_ARCH}/package.json" -type f | wc -l)" -eq 1 && \
     test "$(find /usr/local/lib/node_modules/wrangler -path "*/@img/sharp-libvips-linux-${WRANGLER_SHARP_ARCH}/package.json" -type f | wc -l)" -eq 1 && \

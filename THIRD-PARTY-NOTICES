@@ -65,7 +65,7 @@ distribute or modify this plugin.
 - License: MIT
 - Source: https://github.com/Fission-AI/OpenSpec
 - npm: https://www.npmjs.com/package/@fission-ai/openspec
-- Version: 1.12.0
+- Version: 1.13.0
 
 Installed as the pinned global CLI. Telemetry is disabled in the image, and
 project initialization occurs only when you explicitly run
@@ -162,12 +162,12 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.265
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.265.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.268
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.268.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.265
+- Version: 2.1.268
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.265`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.268`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -221,9 +221,9 @@ update.
 
 - License: Apache-2.0
 - Source: https://github.com/msgpack/msgpack-python
-- Version: 1.2.1
+- Version: 1.2.2
 
-HolyCode replaces pip 26.2's internal msgpack copy with the hash-verified
+HolyCode replaces pip 26.2.1's internal msgpack copy with the hash-verified
 official PyPI source. The replacement remains under pip's vendored namespace.
 
 ## pip vendored pkg_resources
@@ -239,17 +239,18 @@ checksum-verified setuptools 78.1.1 source and keeps pip's vendoring imports.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.130.0
+- Version: 4.131.0
 
-### Miniflare bundled Sharp 0.35.4 replacement
+### Miniflare bundled Sharp 0.35.4 installed-byte verification
 
 - License: Apache-2.0
 - Source: https://github.com/lovell/sharp/releases/tag/v0.35.4
 - Version: 0.35.4
 
-HolyCode replaces Miniflare's nested Sharp package with the unmodified,
-integrity-verified 0.35.4 payload and matching architecture package. The
-matching prebuilt libvips 1.3.3 package remains LGPL-3.0-or-later.
+Miniflare directly owns Sharp 0.35.4. HolyCode verifies the installed Sharp,
+matching architecture, and prebuilt libvips package bytes against their
+integrity-verified registry payloads. libvips 1.3.3 remains
+LGPL-3.0-or-later.
 
 ## delta
 

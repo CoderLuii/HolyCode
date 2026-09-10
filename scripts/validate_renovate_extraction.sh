@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-renovate_version="${1:-44.69.12}"
+renovate_version="${1:-44.79.2}"
 log_file=$(mktemp)
 trap 'rm -f "$log_file"' EXIT
 

@@ -426,14 +426,14 @@ services:
 
 | ランタイム | バージョン |
 |---------|---------|
-| Node.js | 24.20.0 (LTS) |
+| Node.js | 24.21.0 (LTS) |
 | npm | 12.0.2 |
 | Python | 3.13（Trixie） |
 | pip | Python 3.13 にバンドル |
 
 > リリースタグは正確に `vX.Y.Z` を使います。Docker イメージタグでは `v` を付けません。`v1.0.9` の次は `v1.1.0`、`v1.1.9` の次は `v1.2.0`、`v1.9.9` の次は `v2.0.0` です。`v1.0.10` から `v1.0.13` までは不変です。
 
-> v1.1.9 は OpenCode 1.18.29、Claude Code 2.1.265、Undici 6.28.1 を使用する Paperclip 2026.831.1、npm 12.0.2、pnpm 12.4.0、ESLint 10.10.0、Wrangler 4.130.0、Prisma 7.10.0、TypeScript 6.0.3、json-server 0.17.4 を使用します。Python には tqdm 4.70.0、FastAPI 0.141.1、Uvicorn 0.52.4、NumPy 2.5.3 が含まれます。`opencode-claude-auth` 2.2.0 はイメージに収録され、起動時にオフラインでインストールされます。Netlify CLI と npm パッケージの `serve` は引き続き含まれません。HolyCode が管理する oh-my-openagent のインストールは停止しており、Hermes は引き続き利用できません。外部管理の CLIProxyAPI エンドポイントは引き続き利用できます。
+> v1.2.0 は OpenCode 1.18.30、Claude Code 2.1.268、Undici 6.28.1 を使用する Paperclip 2026.831.1、npm 12.0.2、pnpm 12.4.0、ESLint 10.10.0、Wrangler 4.131.0、Prisma 7.10.0、TypeScript 6.0.3、json-server 0.17.4 を使用します。Python には tqdm 4.70.0、FastAPI 0.141.1、Uvicorn 0.52.4、NumPy 2.5.3 が含まれます。`opencode-claude-auth` 2.2.0 はイメージに収録され、起動時にオフラインでインストールされます。Netlify CLI と npm パッケージの `serve` は引き続き含まれません。HolyCode が管理する oh-my-openagent のインストールは停止しており、Hermes は引き続き利用できません。外部管理の CLIProxyAPI エンドポイントは引き続き利用できます。
 
 </details>
 
@@ -680,9 +680,11 @@ environment:
 
 ## ⬆️ アップグレード
 
-最新イメージをプルする前にコンテナを停止し、home と workspace のボリュームをバックアップしてください。
+最新イメージをプルする前にコンテナを停止し、home、cache、workspace のボリュームをバックアップしてください。
 
 `v1.1.3` より前のリリースから更新する場合は、上記の seccomp プロファイルをダウンロードし、コンテナを再作成する前に `holycode` サービスへ `security_opt` を追加してください。
+
+v1.2.0 では Paperclip 2026.831.1 を維持するため、新しい Paperclip マイグレーションはありません。ロールバックする場合は、更新前の未変更の home、cache、workspace ボリュームをイメージ `1.1.9` で復元してください。v1.2.0 ですでに起動したボリュームは再利用しないでください。
 
 v1.1.9 は Paperclip を 2026.824.1 から 2026.831.1 へ移行し、マイグレーション `0223`～`0230` を適用します。廃止された `brandColor` と `attachmentMaxBytes` は削除され、進行中のログインセッションはリセットされます。更新後にもう一度ログインしてください。ロールバックする場合は、変更されていないバックアップをイメージ `1.1.8` で復元します。v1.1.9 で移行済みのデータベースを使って `1.1.8` を起動しないでください。
 

@@ -2,15 +2,15 @@
   "npmVersion": "12.0.2",
   "mode": "deny-by-default",
   "allowScripts": {
-    "@anthropic-ai/claude-code@2.1.265": {
+    "@anthropic-ai/claude-code@2.1.268": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-c6PZNLVtaiNdDbeeGtCvYQ+qlGE2oZmvvS0PxdYUxJZdmBf1Nd1/Ey7ziHJtj0IVvT1tLWndONf29oBxToCsvQ==",
+      "integrity": "sha512-DSRUVAbRRH7WaHm99OErT4FJQDkbhIUb8mIaevcFrXtKCZwA9UmKY5+SOFWmgyeEUj2Uh1pFw0Rk/gYffmUEUw==",
       "scripts": { "postinstall": "node install.cjs" },
       "reason": "Claude Code uses this script to install its pinned platform-native binary."
     },
-    "opencode-ai@1.18.29": {
+    "opencode-ai@1.18.30": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-syIDVwlrYTgTOXzZe9SkInJWethbq6l3SNC762UeXyO0a9V0wGfd+U4yACvppwNBnhIsl0j2QPYYCyLpNaSomg==",
+      "integrity": "sha512-oLcOLQE4XzDKy6T5L5d1RdVJvXHXwVlD4hRF5V317JbUQorrl2EyDdGZk5kbgv675J9FXp8usg92MZbEWhh6gQ==",
       "scripts": { "postinstall": "node ./postinstall.mjs" },
       "reason": "OpenCode uses this script to hydrate its pinned platform CLI and refuses to start without it."
     },
@@ -32,7 +32,7 @@
       "architectures": ["amd64", "arm64"],
       "integrity": "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
       "scripts": { "postinstall": "node install.js" },
-      "reason": "Wrangler 4.130.0 pins this nested esbuild release; its platform binary is packaged and exercised by Wrangler validation."
+      "reason": "Wrangler 4.131.0 pins this nested esbuild release; its platform binary is packaged and exercised by Wrangler validation."
     },
     "esbuild@0.28.2": {
       "architectures": ["amd64", "arm64"],
@@ -52,9 +52,9 @@
       "scripts": { "postinstall": "node scripts/postinstall.js" },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "workerd@1.20260908.1": {
+    "workerd@1.20260910.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-rYhpW6NWHD++p34ej+VXWzi5Pdnmd7ncdbB/ux4s+i3mf7IeOpW3O4roqClQ+Z8ernvyMCknBLCb76z1rA+a7Q==",
+      "integrity": "sha512-/HF0f8LmgT60Uk+ZPDbMnlUHjecfV8w4VMo61iFxW7ky7EexTdwbzUCANWZQiG0w1cBihjJTkhzmReeZLGarXw==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
     },

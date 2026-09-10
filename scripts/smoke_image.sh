@@ -135,7 +135,37 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   test "$(dpkg-query -W -f=\${db:Status-Status} python3-pip 2>/dev/null || true)" != installed
   test "$(dpkg-query -W -f=\${db:Status-Status} python3-setuptools 2>/dev/null || true)" != installed
   python3 -m pip check
-  python3 -c "import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == \"$EXPECTED_PIP_VENDOR_MSGPACK\""
+  python3 -c "import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == \"$EXPECTED_PIP_VENDOR_MSGPACK\"; assert msgpack.unpackb(msgpack.packb({\"holycode\": True})) == {\"holycode\": True}"
+  python3 - <<PY
+import pip._vendor.msgpack as msgpack
+from pip._vendor.msgpack import fallback
+
+payload = msgpack.packb({"holycode": True}) + b"\x00"
+interleaved = bytearray(len(payload) * 2)
+interleaved[::2] = payload
+try:
+    fallback.unpackb(memoryview(interleaved)[::2])
+except msgpack.ExtraData as error:
+    assert error.unpacked == {"holycode": True}
+    assert error.extra == b"\x00"
+else:
+    raise AssertionError("ExtraData not raised")
+
+try:
+    fallback.unpackb(b"\xd9")
+except ValueError:
+    pass
+else:
+    raise AssertionError("truncated input accepted")
+
+assert msgpack.Timestamp(0, 999999999).nanoseconds == 999999999
+try:
+    msgpack.Timestamp(0, 1000000000)
+except ValueError:
+    pass
+else:
+    raise AssertionError("invalid timestamp accepted")
+PY
   grep -Fx "msgpack==$EXPECTED_PIP_VENDOR_MSGPACK" /usr/local/lib/python3.13/dist-packages/pip/_vendor/vendor.txt
   grep -Fx "setuptools==$EXPECTED_PIP_VENDOR_PKG_RESOURCES" /usr/local/lib/python3.13/dist-packages/pip/_vendor/vendor.txt
   python3 -c "import json; components={item[\"name\"]:item[\"version\"] for item in json.load(open(\"/usr/local/lib/python3.13/dist-packages/pip/_vendor/bom.cdx.json\"))[\"components\"] if item.get(\"name\")==\"msgpack\"}; assert components[\"msgpack\"] == \"$EXPECTED_PIP_VENDOR_MSGPACK\""
@@ -146,6 +176,13 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   ! dpkg-query -W postgresql-client >/dev/null 2>&1
   python3 - <<PY
 import importlib.metadata as metadata
+from io import BytesIO
+
+import matplotlib
+matplotlib.use("Agg")
+from fontTools.ttLib import TTFont
+from matplotlib import pyplot as plt
+from matplotlib.font_manager import findfont
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI
@@ -158,6 +195,7 @@ assert metadata.version("requests") == "2.34.2"
 assert metadata.version("Pillow") == "12.3.0"
 assert metadata.version("pandas") == "3.0.5"
 assert metadata.version("matplotlib") == "3.11.1"
+assert metadata.version("fonttools") == "4.65.0"
 assert metadata.version("tqdm") == "4.70.0"
 assert metadata.version("fastapi") == "0.141.1"
 assert metadata.version("uvicorn") == "0.52.4"
@@ -176,6 +214,16 @@ else:
 assert np.array([1, 2, 3]).sum() == 6
 assert pd.Series([1, 2, 3]).mean() == 2
 assert etree.fromstring(b"<root><value>holycode</value></root>").findtext("value") == "holycode"
+
+font_path = findfont("DejaVu Sans", fallback_to_default=False)
+with TTFont(font_path) as font:
+    assert "name" in font
+rendered = BytesIO()
+figure, axis = plt.subplots(figsize=(2, 1))
+axis.text(0.5, 0.5, "HolyCode", ha="center", va="center")
+figure.savefig(rendered, format="png")
+plt.close(figure)
+assert rendered.getvalue().startswith(b"\x89PNG\r\n\x1a\n")
 
 class Health(BaseModel):
     status: str
@@ -274,6 +322,28 @@ EOF
   (cd /usr/local/lib/node_modules/wrangler && npm ls sharp --all >/dev/null)
   node -e "const sharp=require(process.argv[1]); if(sharp.versions.sharp!==process.env.EXPECTED_WRANGLER_SHARP || sharp.versions.heif!==\"1.23.2\") process.exit(1); sharp({create:{width:2,height:2,channels:4,background:{r:220,g:30,b:30,alpha:1}}}).avif().toBuffer().then(buffer=>sharp(buffer).raw().toBuffer({resolveWithObject:true})).then(({data,info})=>{if(info.width!==2 || info.height!==2 || info.channels!==4 || data.length!==16) process.exit(1)}).catch(error=>{console.error(error);process.exit(1)})" "$wrangler_sharp_dir"
   vite --version | grep -F "vite/$EXPECTED_VITE"
+  vite_workspace="$(mktemp -d)"
+  printf "<main>HolyCode Vite smoke</main>\n" > "$vite_workspace/index.html"
+  vite build "$vite_workspace" >/tmp/holycode-vite-build.log 2>&1
+  test -s "$vite_workspace/dist/index.html"
+  vite_port=4173
+  vite preview "$vite_workspace" --host 127.0.0.1 --port "$vite_port" --strictPort \
+    >/tmp/holycode-vite-preview.log 2>&1 &
+  vite_pid=$!
+  vite_ready=false
+  for attempt in 1 2 3 4 5; do
+    if curl -fsS "http://127.0.0.1:$vite_port/" >/tmp/holycode-vite-response.html; then
+      vite_ready=true
+      break
+    fi
+    sleep 1
+  done
+  test "$vite_ready" = true
+  grep -F "HolyCode Vite smoke" /tmp/holycode-vite-response.html >/dev/null
+  kill "$vite_pid"
+  wait "$vite_pid" || true
+  rm -rf "$vite_workspace" /tmp/holycode-vite-build.log \
+    /tmp/holycode-vite-preview.log /tmp/holycode-vite-response.html
   prettier --version | grep -Fx "$EXPECTED_PRETTIER"
   prisma --version | grep -E "^prisma[[:space:]]+:[[:space:]]+$EXPECTED_PRISMA$"
   node -e "console.log(require(\"/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts/package.json\").version)" | grep -Fx "$EXPECTED_PRISMA_DEEPMERGE"
@@ -345,6 +415,60 @@ EOF
   done
 '
 
+docker run --rm --network none --read-only \
+  --tmpfs /tmp:rw,exec,nosuid,nodev,mode=1777,size=64m \
+  --cap-drop ALL --security-opt no-new-privileges \
+  --user 1000:1000 --workdir /tmp --entrypoint sh \
+  "$image" -c '
+  set -eu
+  export HOME=/tmp/cc-home
+  export CLAUDE_CONFIG_DIR=/tmp/cc-config
+  export NO_COLOR=1
+  test -z "${ANTHROPIC_API_KEY:-}"
+  mkdir -p "$HOME" "$CLAUDE_CONFIG_DIR" /tmp/fixture/traversal/.claude-plugin
+  cat > /tmp/fixture/traversal/.claude-plugin/marketplace.json <<EOF
+{"name":"traversal-fixture","owner":{"name":"fixture"},"plugins":[{"name":"escape-plugin","source":"../outside"}]}
+EOF
+  if claude plugin validate /tmp/fixture/traversal --json >/tmp/traversal-validation.json 2>&1; then
+    echo "Claude unexpectedly accepted a marketplace source outside its root" >&2
+    exit 1
+  fi
+  grep -F "Path contains" /tmp/traversal-validation.json >/dev/null
+
+  plugin_dir=/tmp/fixture/market/plugins/escape-plugin
+  mkdir -p /tmp/fixture/market/.claude-plugin "$plugin_dir/.claude-plugin" \
+    "$plugin_dir/skills/safe" /tmp/fixture/outside/leak
+  cat > /tmp/fixture/market/.claude-plugin/marketplace.json <<EOF
+{"name":"containment-fixture","owner":{"name":"fixture"},"plugins":[{"name":"escape-plugin","source":"./plugins/escape-plugin","version":"1.0.0"}]}
+EOF
+  cat > "$plugin_dir/.claude-plugin/plugin.json" <<EOF
+{"name":"escape-plugin","version":"1.0.0","description":"HolyCode marketplace containment fixture"}
+EOF
+  cat > "$plugin_dir/skills/safe/SKILL.md" <<EOF
+---
+name: safe
+description: Safe HolyCode containment fixture
+---
+
+SAFE_MARKER_2_1_268
+EOF
+  printf "OUTSIDE_MARKER_2_1_268\n" > /tmp/fixture/outside/leak/secret.txt
+  ln -s /tmp/fixture/outside/leak "$plugin_dir/leak-dir"
+  test "$(readlink -f "$plugin_dir/leak-dir")" = /tmp/fixture/outside/leak
+
+  claude plugin marketplace add /tmp/fixture/market
+  claude plugin install escape-plugin@containment-fixture --scope user
+  claude_plugin_cache="$CLAUDE_CONFIG_DIR/plugins/cache/containment-fixture/escape-plugin/1.0.0"
+  test -f "$claude_plugin_cache/skills/safe/SKILL.md"
+  grep -F "SAFE_MARKER_2_1_268" "$claude_plugin_cache/skills/safe/SKILL.md" >/dev/null
+  test ! -e "$claude_plugin_cache/leak-dir"
+  test ! -L "$claude_plugin_cache/leak-dir"
+  if grep -R -F "OUTSIDE_MARKER_2_1_268" "$claude_plugin_cache"; then
+    echo "Claude copied a symlink target outside the marketplace root" >&2
+    exit 1
+  fi
+'
+
 openspec_workspace="$(mktemp -d)"
 cleanup_openspec_workspace() {
   docker run --rm --network none --user 0:0 --entrypoint sh \
@@ -378,4 +502,43 @@ docker run --rm --network none --user 1000:1000 --entrypoint sh \
   test -d openspec
   openspec_snapshot_after="$(snapshot_openspec_workspace)"
   test "$openspec_snapshot_before" = "$openspec_snapshot_after"
+  openspec new change holycode-smoke
+  mkdir -p openspec/changes/holycode-smoke/specs/holycode-smoke
+  printf "%s\n" \
+    "## Why" "" "Exercise the OpenSpec apply and archive lifecycle offline." "" \
+    "## What Changes" "" "- Add a disposable HolyCode smoke capability." "" \
+    "## Capabilities" "" "### New Capabilities" \
+    "- holycode-smoke: Verifies the bundled OpenSpec lifecycle." "" \
+    "### Modified Capabilities" "" "## Impact" "" \
+    "Only the disposable smoke workspace is affected." \
+    > openspec/changes/holycode-smoke/proposal.md
+  printf "%s\n" \
+    "## Purpose" "" \
+    "Verifies that HolyCode can complete and archive an OpenSpec change without network access." "" \
+    "## ADDED Requirements" "" "### Requirement: Offline lifecycle" \
+    "The fixture SHALL complete the OpenSpec apply and archive lifecycle offline." "" \
+    "#### Scenario: Archive completed change" \
+    "- **WHEN** the disposable task is marked complete" \
+    "- **THEN** OpenSpec archives the change into the canonical specification tree" \
+    > openspec/changes/holycode-smoke/specs/holycode-smoke/spec.md
+  printf "%s\n" \
+    "## Context" "" "The smoke fixture runs with Docker networking disabled." "" \
+    "## Goals / Non-Goals" "" "**Goals:**" \
+    "Prove local apply guidance and archive behavior." "" "**Non-Goals:**" \
+    "No product project files are changed." "" "## Decisions" "" \
+    "Use one disposable capability and one completed task." "" \
+    "## Risks / Trade-offs" "" \
+    "The fixture checks the bundled CLI workflow, not an external integration." \
+    > openspec/changes/holycode-smoke/design.md
+  printf "%s\n" "## 1. Lifecycle" "" \
+    "- [ ] 1.1 Complete the disposable fixture and verify strict validation passes" \
+    > openspec/changes/holycode-smoke/tasks.md
+  openspec validate holycode-smoke --strict
+  openspec instructions apply --change holycode-smoke --json >/tmp/openspec-apply.json
+  jq -e ".state == \"ready\"" /tmp/openspec-apply.json >/dev/null
+  sed -i "s/- \[ \]/- [x]/" openspec/changes/holycode-smoke/tasks.md
+  openspec archive holycode-smoke --yes --json >/tmp/openspec-archive.json
+  test -s openspec/specs/holycode-smoke/spec.md
+  test -d openspec/changes/archive/
+  find openspec/changes/archive/ -path "*-holycode-smoke/tasks.md" -type f -print -quit | grep -q .
 '

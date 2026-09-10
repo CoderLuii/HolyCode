@@ -426,14 +426,14 @@ services:
 
 | Entorno | Versión |
 |---------|---------|
-| Node.js | 24.20.0 (LTS) |
+| Node.js | 24.21.0 (LTS) |
 | npm | 12.0.2 |
 | Python | 3.13 (Trixie) |
 | pip | Incluido con Python 3.13 |
 
 > Las etiquetas de release usan exactamente `vX.Y.Z`. Las etiquetas de Docker omiten la `v`. Después de `v1.0.9` viene `v1.1.0`, después de `v1.1.9` viene `v1.2.0` y después de `v1.9.9` viene `v2.0.0`. `v1.0.10` a `v1.0.13` siguen siendo inmutables.
 
-> v1.1.9 usa OpenCode 1.18.29, Claude Code 2.1.265, Paperclip 2026.831.1 con Undici 6.28.1, npm 12.0.2, pnpm 12.4.0, ESLint 10.10.0, Wrangler 4.130.0, Prisma 7.10.0, TypeScript 6.0.3 y json-server 0.17.4. Python incluye tqdm 4.70.0, FastAPI 0.141.1, Uvicorn 0.52.4 y NumPy 2.5.3. `opencode-claude-auth` 2.2.0 viene dentro de la imagen y se instala sin conexión al arrancar. Netlify CLI y el paquete npm `serve` siguen sin estar incluidos. La instalación de oh-my-openagent administrada por HolyCode queda suspendida, Hermes sigue sin estar disponible y los endpoints CLIProxyAPI administrados externamente siguen siendo compatibles.
+> v1.2.0 usa OpenCode 1.18.30, Claude Code 2.1.268, Paperclip 2026.831.1 con Undici 6.28.1, npm 12.0.2, pnpm 12.4.0, ESLint 10.10.0, Wrangler 4.131.0, Prisma 7.10.0, TypeScript 6.0.3 y json-server 0.17.4. Python incluye tqdm 4.70.0, FastAPI 0.141.1, Uvicorn 0.52.4 y NumPy 2.5.3. `opencode-claude-auth` 2.2.0 viene dentro de la imagen y se instala sin conexión al arrancar. Netlify CLI y el paquete npm `serve` siguen sin estar incluidos. La instalación de oh-my-openagent administrada por HolyCode queda suspendida, Hermes sigue sin estar disponible y los endpoints CLIProxyAPI administrados externamente siguen siendo compatibles.
 
 </details>
 
@@ -680,9 +680,11 @@ Si omites esto, los archivos de tu espacio de trabajo pueden ser propiedad de ro
 
 ## ⬆️ Actualizaciones
 
-Detén el contenedor y haz una copia de seguridad de los volúmenes de inicio y del espacio de trabajo antes de descargar la última imagen.
+Detén el contenedor y haz una copia de seguridad de los volúmenes de inicio, caché y espacio de trabajo antes de descargar la última imagen.
 
 Si actualizas desde una versión anterior a `v1.1.3`, descarga el perfil seccomp indicado arriba y agrega `security_opt` al servicio `holycode` antes de recrear el contenedor.
+
+v1.2.0 mantiene Paperclip en 2026.831.1, por lo que no añade una migración de Paperclip. Para volver atrás, restaura los volúmenes de inicio, caché y espacio de trabajo intactos de antes de la actualización con la imagen `1.1.9`; no reutilices volúmenes que ya se hayan iniciado con v1.2.0.
 
 v1.1.9 migra Paperclip de 2026.824.1 a 2026.831.1 mediante las migraciones `0223`–`0230`. Los campos retirados `brandColor` y `attachmentMaxBytes` se eliminan y las sesiones de inicio de sesión en curso se reinician; vuelve a iniciar sesión después de la actualización. Para volver atrás, restaura la copia intacta con la imagen `1.1.8`. Nunca inicies `1.1.8` con una base de datos ya migrada por v1.1.9.
 
