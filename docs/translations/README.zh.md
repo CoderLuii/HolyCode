@@ -433,7 +433,7 @@ services:
 
 > 发布标签严格使用 `vX.Y.Z`。Docker 镜像标签会去掉 `v`。`v1.0.9` 之后使用 `v1.1.0`，`v1.1.9` 之后使用 `v1.2.0`，`v1.9.9` 之后使用 `v2.0.0`。`v1.0.10` 到 `v1.0.13` 保持不可变。
 
-> v1.2.0 使用 OpenCode 1.18.30、Claude Code 2.1.268、带 Undici 6.28.1 的 Paperclip 2026.831.1、npm 12.0.2、pnpm 12.4.0、ESLint 10.10.0、Wrangler 4.131.0、Prisma 7.10.0、TypeScript 6.0.3 和 json-server 0.17.4。Python 包含 tqdm 4.70.0、FastAPI 0.141.1、Uvicorn 0.52.4 和 NumPy 2.5.3。`opencode-claude-auth` 2.2.0 已放入镜像，并在启动时离线安装。Netlify CLI 和 npm 包 `serve` 仍未包含。HolyCode 管理的 oh-my-openagent 安装已暂停，Hermes 仍不可用，外部管理的 CLIProxyAPI endpoint 继续受支持。
+> v1.2.1 使用 OpenCode 1.18.30、Claude Code 2.1.270、带 Undici 6.28.1 的 Paperclip 2026.831.1、npm 12.0.2、pnpm 12.4.1、ESLint 10.10.0、带 Miniflare 5.20260911.1-alpha 和 workerd 1.20260911.1 的 Wrangler 4.131.2、Prisma 7.10.0、TypeScript 6.0.3 和 json-server 0.17.4。Python 包含 Matplotlib 3.11.2、tqdm 4.70.1、FastAPI 0.141.1、Uvicorn 0.53.0 和 NumPy 2.5.3。`opencode-claude-auth` 2.2.0 已放入镜像，并在启动时离线安装。Netlify CLI 和 npm 包 `serve` 仍未包含。HolyCode 管理的 oh-my-openagent 安装已暂停，Hermes 仍不可用，外部管理的 CLIProxyAPI endpoint 继续受支持。
 
 </details>
 
@@ -684,7 +684,7 @@ environment:
 
 如果从 `v1.1.3` 之前的版本升级，请下载上面的 seccomp 配置文件，并在重新创建容器前把 `security_opt` 添加到 `holycode` 服务中。
 
-v1.2.0 继续使用 Paperclip 2026.831.1，因此没有新增 Paperclip 迁移。回滚时，请使用镜像 `1.1.9` 恢复升级前未改动的 home、cache 和 workspace 卷；不要重复使用已经由 v1.2.0 启动过的卷。
+v1.2.1 继续使用 Paperclip 2026.831.1，因此没有新增 Paperclip 迁移。回滚时，请使用镜像 `1.2.0` 恢复升级前未改动的 home、cache 和 workspace 卷；不要重复使用已经由 v1.2.1 启动过的卷。
 
 v1.1.9 通过迁移 `0223`–`0230` 将 Paperclip 从 2026.824.1 升级到 2026.831.1。已弃用的 `brandColor` 和 `attachmentMaxBytes` 字段会被移除，进行中的登录会话会被重置；升级后请重新登录。回滚时必须把未改动的备份还原到镜像 `1.1.8`。不要用 `1.1.8` 启动已由 v1.1.9 迁移的数据库。
 

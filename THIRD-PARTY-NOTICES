@@ -132,6 +132,25 @@ HolyCode replaces Prisma's nested `mysql2` package with the unmodified,
 integrity-verified 3.24.4 npm payload and updates Prisma's installed dependency
 declaration to that exact version.
 
+### Prisma-scoped @types/node 20.19.43 peer
+
+- License: MIT
+- Source: https://github.com/DefinitelyTyped/DefinitelyTyped
+- Version: 20.19.43
+
+HolyCode materializes the unmodified, integrity-verified `@types/node 20.19.43`
+type-only peer in Prisma's package scope to satisfy mysql2 3.24.4.
+
+### Prisma-scoped undici-types 6.21.0 declarations
+
+- License: MIT
+- Source: https://github.com/nodejs/undici
+- Version: 6.21.0
+
+HolyCode materializes the unmodified, integrity-verified `undici-types 6.21.0`
+declarations beside `@types/node`. No package-manager resolution runs for either
+declaration payload.
+
 ## Debian GNU/Linux
 
 - License: Multiple free-software licenses by package
@@ -162,12 +181,12 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.268
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.268.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.270
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.270.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.268
+- Version: 2.1.270
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.268`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.270`.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -200,7 +219,7 @@ Built from the exact upstream release commit with Go 1.27.1 and its verified mod
 - License: MIT
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
-- Version: 0.65.0 (`c07f4d381b90419583b7ce04f87379654d983ebc`)
+- Version: 0.65.1 (`17cb09fa7b08bc96d9f0e81b91f4720fc1a36700`)
 
 Built from the exact upstream release commit with the reviewed x/text 0.41.0 module
 update.
@@ -239,7 +258,9 @@ checksum-verified setuptools 78.1.1 source and keeps pip's vendoring imports.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.131.0
+- Version: 4.131.2
+
+Wrangler owns Miniflare 5.20260911.1-alpha and workerd 1.20260911.1.
 
 ### Miniflare bundled Sharp 0.35.4 installed-byte verification
 
@@ -281,7 +302,7 @@ LGPL-3.0-or-later.
 - License: MIT
 - Copyright: Junegunn Choi
 - Source: https://github.com/junegunn/fzf
-- Version: 0.74.3
+- Version: 0.74.4 (`a140afeb4d733cad3c96a56bf6db7e26853b6757`)
 
 Built from the exact upstream tag with the reviewed x/sys 0.44.0 module
 update.

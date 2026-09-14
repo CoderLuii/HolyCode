@@ -433,7 +433,7 @@ services:
 
 > 릴리스 태그는 정확히 `vX.Y.Z`를 사용합니다. Docker 이미지 태그에서는 `v`를 뺍니다. `v1.0.9` 다음은 `v1.1.0`, `v1.1.9` 다음은 `v1.2.0`, `v1.9.9` 다음은 `v2.0.0`입니다. `v1.0.10`부터 `v1.0.13`까지는 변경되지 않습니다.
 
-> v1.2.0은 OpenCode 1.18.30, Claude Code 2.1.268, Undici 6.28.1을 사용하는 Paperclip 2026.831.1, npm 12.0.2, pnpm 12.4.0, ESLint 10.10.0, Wrangler 4.131.0, Prisma 7.10.0, TypeScript 6.0.3, json-server 0.17.4를 사용합니다. Python에는 tqdm 4.70.0, FastAPI 0.141.1, Uvicorn 0.52.4, NumPy 2.5.3이 포함됩니다. `opencode-claude-auth` 2.2.0은 이미지에 포함되며 시작 시 오프라인으로 설치됩니다. Netlify CLI와 npm 패키지 `serve`는 계속 포함되지 않습니다. HolyCode가 관리하는 oh-my-openagent 설치는 중단되었고 Hermes는 계속 사용할 수 없습니다. 외부에서 관리하는 CLIProxyAPI 엔드포인트는 계속 지원됩니다.
+> v1.2.1은 OpenCode 1.18.30, Claude Code 2.1.270, Undici 6.28.1을 사용하는 Paperclip 2026.831.1, npm 12.0.2, pnpm 12.4.1, ESLint 10.10.0, Miniflare 5.20260911.1-alpha와 workerd 1.20260911.1을 사용하는 Wrangler 4.131.2, Prisma 7.10.0, TypeScript 6.0.3, json-server 0.17.4를 사용합니다. Python에는 Matplotlib 3.11.2, tqdm 4.70.1, FastAPI 0.141.1, Uvicorn 0.53.0, NumPy 2.5.3이 포함됩니다. `opencode-claude-auth` 2.2.0은 이미지에 포함되며 시작 시 오프라인으로 설치됩니다. Netlify CLI와 npm 패키지 `serve`는 계속 포함되지 않습니다. HolyCode가 관리하는 oh-my-openagent 설치는 중단되었고 Hermes는 계속 사용할 수 없습니다. 외부에서 관리하는 CLIProxyAPI 엔드포인트는 계속 지원됩니다.
 
 </details>
 
@@ -684,7 +684,7 @@ environment:
 
 `v1.1.3` 이전 릴리스에서 업그레이드한다면 위의 seccomp 프로필을 다운로드하고 컨테이너를 재생성하기 전에 `holycode` 서비스에 `security_opt`를 추가하세요.
 
-v1.2.0은 Paperclip 2026.831.1을 유지하므로 새로운 Paperclip 마이그레이션이 없습니다. 롤백하려면 업그레이드 전의 변경되지 않은 home, cache, workspace 볼륨을 이미지 `1.1.9`로 복원하세요. v1.2.0으로 이미 시작한 볼륨은 재사용하지 마세요.
+v1.2.1은 Paperclip 2026.831.1을 유지하므로 새로운 Paperclip 마이그레이션이 없습니다. 롤백하려면 업그레이드 전의 변경되지 않은 home, cache, workspace 볼륨을 이미지 `1.2.0`으로 복원하세요. v1.2.1로 이미 시작한 볼륨은 재사용하지 마세요.
 
 v1.1.9에서는 마이그레이션 `0223`–`0230`으로 Paperclip을 2026.824.1에서 2026.831.1로 업그레이드합니다. 폐기된 `brandColor`와 `attachmentMaxBytes` 필드는 제거되고 진행 중인 로그인 세션은 초기화되므로 업그레이드 후 다시 로그인하세요. 롤백하려면 변경되지 않은 백업을 이미지 `1.1.8`로 복원하세요. v1.1.9에서 이미 마이그레이션된 데이터베이스로 `1.1.8`을 시작하지 마세요.
 

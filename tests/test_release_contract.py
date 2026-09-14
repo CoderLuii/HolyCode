@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import textwrap
 import threading
 import time
 import unittest
@@ -39,7 +40,7 @@ class ReleaseContractTests(unittest.TestCase):
         cls.dockerhub = (ROOT / "docs" / "dockerhub-description.md").read_text(encoding="utf-8")
         cls.changelog = (ROOT / "docs" / "CHANGELOG.md").read_text(encoding="utf-8")
         cls.dependency_audit = (
-            ROOT / "docs" / "dependency-audit-v1.2.0.md"
+            ROOT / "docs" / "dependency-audit-v1.2.1.md"
         )
         cls.notices = (ROOT / "THIRD-PARTY-NOTICES").read_text(encoding="utf-8")
         cls.gitattributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
@@ -80,10 +81,10 @@ class ReleaseContractTests(unittest.TestCase):
         expected = (
             "ARG S6_OVERLAY_VERSION=3.2.3.2",
             "ARG GITHUB_CLI_VERSION=2.100.0",
-            "ARG FZF_VERSION=0.74.3",
-            "ARG LAZYGIT_VERSION=0.65.0",
+            "ARG FZF_VERSION=0.74.4",
+            "ARG LAZYGIT_VERSION=0.65.1",
             "ARG OPENCODE_VERSION=1.18.30",
-            "ARG CLAUDE_CODE_VERSION=2.1.268",
+            "ARG CLAUDE_CODE_VERSION=2.1.270",
             "ARG PAPERCLIP_VERSION=2026.831.1",
             "ARG OPENSPEC_VERSION=1.13.0",
             "ARG PAPERCLIP_UNDICI_VERSION=6.28.1",
@@ -97,28 +98,28 @@ class ReleaseContractTests(unittest.TestCase):
             "ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1",
             "ARG SETUPTOOLS_VERSION=84.0.0",
             "ARG TSX_VERSION=4.23.13",
-            "ARG PNPM_VERSION=12.4.0",
+            "ARG PNPM_VERSION=12.4.1",
             "ARG VITE_VERSION=8.3.0",
             "ARG PRETTIER_VERSION=3.9.6",
             "ARG PRISMA_VERSION=7.10.0",
             "ARG PRISMA_DEEPMERGE_VERSION=8.0.2",
             "ARG PRISMA_MYSQL2_VERSION=3.24.4",
             "ARG LIGHTHOUSE_VERSION=13.4.1",
-            "ARG WRANGLER_VERSION=4.131.0",
-            "ARG WRANGLER_MINIFLARE_VERSION=5.20260910.0-alpha",
+            "ARG WRANGLER_VERSION=4.131.2",
+            "ARG WRANGLER_MINIFLARE_VERSION=5.20260911.1-alpha",
             "ARG WRANGLER_SHARP_VERSION=0.35.4",
             "ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3",
             "ARG ESLINT_VERSION=10.10.0",
             "requests==2.34.2",
             "pillow==12.3.0",
             "postgresql-client-17 redis-tools sqlite3",
-            "matplotlib==3.11.1",
+            "matplotlib==3.11.2",
             "fonttools==4.65.0",
             "pandas==3.0.5",
-            "tqdm==4.70.0",
+            "tqdm==4.70.1",
             "fastapi==0.141.1",
             "playwright==1.62.0",
-            "uvicorn==0.52.4",
+            "uvicorn==0.53.0",
             "packaging==26.3",
             "setuptools==84.0.0",
             "numpy==2.5.3",
@@ -168,13 +169,63 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("test ! -e /root/.npm", self.smoke)
         for value in (
             'metadata.version("fonttools") == "4.65.0"',
+            'metadata.version("matplotlib") == "3.11.2"',
+            'metadata.version("tqdm") == "4.70.1"',
+            'metadata.version("uvicorn") == "0.53.0"',
             'matplotlib.use("Agg")',
             'findfont("DejaVu Sans", fallback_to_default=False)',
             "TTFont(font_path)",
             'rendered.getvalue().startswith(b"\\x89PNG\\r\\n\\x1a\\n")',
+            'converted.getvalue().startswith(b"RIFF")',
+            'workbook.active["A1"] = "HolyCode"',
+            'Document(document_bytes).paragraphs[0].text == "HolyCode"',
+            'list(tqdm(range(3), file=progress, disable=False)) == [0, 1, 2]',
+            'uvicorn.run(app, host="127.0.0.1", port=port, log_level="critical")',
+            'requests.get(url, timeout=1)',
+            'httpx.get(url, timeout=1)',
+            'server.start()',
+            'server.terminate()',
+            'server.join(timeout=5)',
+            'server.kill()',
+            'assert not server.is_alive()',
         ):
             with self.subTest(value=value):
                 self.assertIn(value, self.smoke)
+
+    def test_uvicorn_cleanup_forces_a_stubborn_process_dead(self):
+        cleanup = re.search(
+            r"def stop_server\(server\):\n(?:    .*\n)+",
+            self.smoke,
+        )
+        self.assertIsNotNone(cleanup)
+        namespace = {}
+        exec(textwrap.dedent(cleanup.group(0)), namespace)
+
+        class StubbornProcess:
+            def __init__(self):
+                self.alive = True
+                self.events = []
+
+            def terminate(self):
+                self.events.append("terminate")
+
+            def join(self, timeout):
+                self.events.append(("join", timeout))
+
+            def is_alive(self):
+                return self.alive
+
+            def kill(self):
+                self.events.append("kill")
+                self.alive = False
+
+        server = StubbornProcess()
+        namespace["stop_server"](server)
+        self.assertEqual(
+            server.events,
+            ["terminate", ("join", 5), "kill", ("join", 5)],
+        )
+        self.assertFalse(server.is_alive())
 
     def test_each_root_npm_layer_removes_its_cache(self):
         run_instructions = []
@@ -255,11 +306,11 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_fzf_and_lazygit_are_rebuilt_from_exact_release_sources(self):
         self.assertIn(
-            "ARG FZF_REF=15f64c492a08f0840b81540c7d1de35737448086",
+            "ARG FZF_REF=a140afeb4d733cad3c96a56bf6db7e26853b6757",
             self.dockerfile,
         )
         self.assertIn(
-            "ARG LAZYGIT_REF=c07f4d381b90419583b7ce04f87379654d983ebc",
+            "ARG LAZYGIT_REF=17cb09fa7b08bc96d9f0e81b91f4720fc1a36700",
             self.dockerfile,
         )
         self.assertIn(
@@ -364,6 +415,8 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("ARG PRISMA_DEEPMERGE_VERSION=8.0.2", self.dockerfile)
         self.assertIn("io.holycode.version.prisma-deepmerge-ts", self.dockerfile)
         self.assertIn("io.holycode.version.prisma-mysql2", self.dockerfile)
+        self.assertIn("io.holycode.version.prisma-types-node", self.dockerfile)
+        self.assertIn("io.holycode.version.prisma-undici-types", self.dockerfile)
         self.assertIn(
             "sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==",
             self.dockerfile,
@@ -375,12 +428,20 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("PRISMA_CONFIG_PACKAGE", self.dockerfile)
         self.assertIn('test "$(npm view "prisma@${PRISMA_VERSION}" dependencies.mysql2)" = "3.15.3"', self.dockerfile)
         self.assertIn("sha512-A2olluVlj0mvgyIRRISMEzXc51m+21mRtcMVjJyIpt2GG98+XrC9m9HzsqcMsX2LcnfccJvY5NB22g8fENBnOA==", self.dockerfile)
-        self.assertIn('npm install --prefix "$PRISMA_MYSQL2_DIR" --ignore-scripts --package-lock=false --omit=dev', self.dockerfile)
-        self.assertIn("npm ls deepmerge-ts mysql2 --all", self.dockerfile)
+        self.assertIn(
+            'npm install --prefix "$PRISMA_MYSQL2_DIR" --ignore-scripts --package-lock=false --omit=dev',
+            self.dockerfile,
+        )
+        self.assertNotIn('npm install --prefix /usr/local/lib/node_modules/prisma ', self.dockerfile)
+        self.assertIn("npm ls deepmerge-ts mysql2 @types/node undici-types --all", self.dockerfile)
         self.assertIn("expected_prisma_deepmerge", self.smoke)
         self.assertIn("EXPECTED_PRISMA_DEEPMERGE", self.smoke)
         self.assertIn("expected_prisma_mysql2", self.smoke)
         self.assertIn("EXPECTED_PRISMA_MYSQL2", self.smoke)
+        self.assertIn("expected_prisma_types_node", self.smoke)
+        self.assertIn("EXPECTED_PRISMA_TYPES_NODE", self.smoke)
+        self.assertIn("expected_prisma_undici_types", self.smoke)
+        self.assertIn("EXPECTED_PRISMA_UNDICI_TYPES", self.smoke)
         self.assertIn(
             "--require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock",
             self.dockerfile,
@@ -392,8 +453,56 @@ class ReleaseContractTests(unittest.TestCase):
             "assert setuptools.__version__ == \"84.0.0\"",
             self.dockerfile,
         )
+
+    def test_prisma_mysql2_peer_is_raw_integrity_bound_and_graph_checked(self):
+        for value in (
+            "ARG PRISMA_TYPES_NODE_VERSION=20.19.43",
+            "ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0",
+            "https://registry.npmjs.org/@types/node/-/node-${PRISMA_TYPES_NODE_VERSION}.tgz",
+            "https://registry.npmjs.org/undici-types/-/undici-types-${PRISMA_UNDICI_TYPES_VERSION}.tgz",
+            "sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==",
+            "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==",
+            'test ! -e "$PRISMA_TYPES_NODE_DIR"',
+            'test ! -e "$PRISMA_UNDICI_TYPES_DIR"',
+            'pkg.peerDependencies["@types/node"]!==">= 8"',
+            'pkg.peerDependenciesMeta?.["@types/node"]!==undefined',
+            'pkg.main!==""',
+            'pkg.dependencies["undici-types"]!=="~6.21.0"',
+            'test -s "$PRISMA_TYPES_NODE_DIR/index.d.ts"',
+            'test -s "$PRISMA_UNDICI_TYPES_DIR/fetch.d.ts"',
+            'require.resolve("@types/node/package.json",{paths:[process.argv[1]]})',
+            'require.resolve("undici-types/package.json",{paths:[process.argv[1]]})',
+        ):
+            with self.subTest(value=value):
+                self.assertIn(value, self.dockerfile)
+        self.assertGreaterEqual(self.dockerfile.count('crypto.createHash("sha512")'), 5)
+
+        for value in (
+            "npm ls -g --all --json",
+            'test "$npm_tree_status" -eq 1',
+            'lighthouse?.version!==\\"13.4.1\\"',
+            'trace?.version!==\\"0.0.65\\"',
+            'tracePkg.dependencies[\\"third-party-web\\"]!==\\"latest\\"',
+            'tracePkg.dependencies[\\"legacy-javascript\\"]!==\\"latest\\"',
+            "invalid: third-party-web@0.29.2",
+            "invalid: legacy-javascript@0.0.1",
+            "missing:",
+        ):
+            with self.subTest(value=value):
+                self.assertIn(value, self.smoke)
+
+        for value in (
+            "python3 -m http.server",
+            'lighthouse "http://127.0.0.1:',
+            '--only-categories=performance',
+            '--headless --no-sandbox --disable-gpu --disable-dev-shm-usage',
+            'categories.performance.score',
+            'kill "$lighthouse_server_pid"',
+        ):
+            with self.subTest(lighthouse_consumer=value):
+                self.assertIn(value, self.smoke)
         for assertion in (
-            'assert metadata.version("uvicorn") == "0.52.4"',
+            'assert metadata.version("uvicorn") == "0.53.0"',
             'assert metadata.version("packaging") == "26.3"',
             'assert metadata.version("pip") == "26.2.1"',
             'assert metadata.version("setuptools") == "84.0.0"',
@@ -497,7 +606,7 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_wrangler_miniflare_sharp_is_native_and_owner_guarded_without_overlay(self):
         for value in (
-            "ARG WRANGLER_MINIFLARE_VERSION=5.20260910.0-alpha",
+            "ARG WRANGLER_MINIFLARE_VERSION=5.20260911.1-alpha",
             "ARG WRANGLER_SHARP_VERSION=0.35.4",
             "ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3",
             "io.holycode.version.wrangler-miniflare",
@@ -509,6 +618,8 @@ class ReleaseContractTests(unittest.TestCase):
             "sha512-4vKmvAst9nrowcqquKFAyZJUDolUaIp8uRiN0mWFguJ1IplC9/pitXtlnnlU4aa/eJw3J7i67V+pwUL+wZGdsA==",
             "sha512-0DaL0A6Xu6sQSQFwe4iVCrKWU2cCTItnRsYsCdxAMm9NF6twAA9BKnoqy4hqz4+azQ0JHuA26qiUKsf1XJ/v5A==",
             'npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}"',
+            'npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260911.1"',
+            'npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260911.1"',
             'dependencies.sharp!==process.argv[3]',
             "WRANGLER_SHARP_TARBALL",
             "WRANGLER_SHARP_NATIVE_TARBALL",
@@ -540,11 +651,12 @@ class ReleaseContractTests(unittest.TestCase):
             1,
         )
         self.assertNotIn("pkg.dependencies[process.argv[2]]", self.dockerfile)
+        self.assertNotIn("ARG WRANGLER_WORKERD_VERSION", self.dockerfile)
         digest_check = (
             'crypto.createHash("sha512").update(fs.readFileSync(process.argv[1]))'
             '.digest("base64")'
         )
-        self.assertEqual(self.dockerfile.count(digest_check), 4)
+        self.assertEqual(self.dockerfile.count(digest_check), 6)
         for obsolete in (
             'rm -rf "$WRANGLER_SHARP_DIR"',
             '-C "$WRANGLER_SHARP_DIR" --strip-components=1',
@@ -561,6 +673,10 @@ class ReleaseContractTests(unittest.TestCase):
             "EXPECTED_WRANGLER_SHARP",
             "EXPECTED_WRANGLER_SHARP_LIBVIPS",
             "/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json",
+            "/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json",
+            "workerd_count=0",
+            '$(find /usr/local/lib/node_modules -path "*/workerd/package.json" -type f | sort)',
+            'test "$workerd_count" -gt 0',
             "wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp",
             "npm ls sharp --all",
             'sharp.versions.sharp!==process.env.EXPECTED_WRANGLER_SHARP',
@@ -828,11 +944,11 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("chromium-sandbox", self.dockerfile)
         self.assertIn("test -u /usr/lib/chromium/chrome-sandbox", self.dockerfile)
 
-    def test_v1_2_0_uses_v1_1_9_as_its_git_predecessor(self):
-        self.assertIn("RELEASE_VERSION: v1.2.0", self.protected)
-        self.assertIn("PREVIOUS_VERSION: v1.1.9", self.protected)
+    def test_v1_2_1_uses_v1_2_0_as_its_git_predecessor(self):
+        self.assertIn("RELEASE_VERSION: v1.2.1", self.protected)
+        self.assertIn("PREVIOUS_VERSION: v1.2.0", self.protected)
         self.assertIn(
-            "coderluii/holycode:1.1.9@sha256:06344a7b42b4938959c8913687d57a1fbbf65a18a11864bab3fca95d3b9b801c",
+            "coderluii/holycode:1.2.0@sha256:72085db834a1ac2de07629abfeb8c9972296a40f3a0903fbd35d54155553f1c6",
             self.protected,
         )
         self.assertIn("needs: protected-validation", self.publish)
@@ -842,21 +958,91 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertEqual(self.publish.count("docker/build-push-action"), 1)
         self.assertNotIn("config/security-exceptions-v1.1.4.json", self.protected)
 
-    def test_v1_2_0_release_metadata_is_documented(self):
-        self.assertRegex(self.changelog, r"(?m)^## \[1\.2\.0\] - 09/10/2026$")
+    def test_v1_2_1_release_metadata_is_documented(self):
+        self.assertRegex(self.changelog, r"(?m)^## \[1\.2\.1\] - 09/14/2026$")
         self.assertTrue(self.dependency_audit.is_file())
         audit = self.dependency_audit.read_text(encoding="utf-8")
-        self.assertIn("Git predecessor `v1.1.9`", audit)
+        self.assertIn("Git predecessor `v1.2.0`", audit)
         self.assertIn(
-            "`coderluii/holycode:1.1.9@sha256:06344a7b42b4938959c8913687d57a1fbbf65a18a11864bab3fca95d3b9b801c`",
+            "`coderluii/holycode:1.2.0@sha256:72085db834a1ac2de07629abfeb8c9972296a40f3a0903fbd35d54155553f1c6`",
             audit,
         )
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.1.9.md").is_file())
-        self.assertIn("v1.2.0 release pins", self.readme)
-        self.assertIn("dependency-audit-v1.2.0.md", self.readme)
-        self.assertIn("v1.2.0", self.dockerhub)
+        self.assertTrue((ROOT / "docs" / "dependency-audit-v1.2.0.md").is_file())
+        self.assertIn("v1.2.1 release pins", self.readme)
+        self.assertIn("dependency-audit-v1.2.1.md", self.readme)
+        self.assertIn("v1.2.1", self.dockerhub)
+        self.assertIn("Python 3.13.15", audit)
+        self.assertIn("pip 26.2.1", audit)
+        self.assertIn("pip-tools 7.6.1", audit)
+        self.assertIn("Click 8.4.2", audit)
+        self.assertIn("product package `click==8.5.0`", audit)
+        self.assertIn("upstream pip-tools fix", audit)
+        self.assertIn("native ARM64", audit)
+        self.assertIn("opencode-claude-auth 2.2.0", audit)
+        for value in (
+            "| TypeScript | 6.0.3 | 7.0.2 |",
+            "tsserver and programmatic compiler API",
+            "| Prisma | 7.10.0 | 8.0.0-rc.15 |",
+            "stable compatible release plus database, client, and migration fixtures",
+            "| json-server | 0.17.4 | 1.0.0-beta.15 |",
+            "stable compatible release plus CLI and CRUD fixtures",
+            "| PM2-owned js-yaml | 4.3.2 | 5.4.2 |",
+            "Owner and API checks plus the PM2 YAML process fixture",
+            "| Paperclip-owned Undici | 6.28.1 | 8.10.2 |",
+            "Owner checks plus streaming, error, and request fixtures",
+        ):
+            with self.subTest(dependency_hold=value):
+                self.assertIn(value, audit)
         self.assertIn("js-yaml 4.3.2", self.notices)
         self.assertIn("ip-address 10.7.0", self.notices)
+        for value in (
+            "@types/node 20.19.43",
+            "undici-types 6.21.0",
+            "type-only peer",
+        ):
+            with self.subTest(prisma_peer_notice=value):
+                self.assertIn(value, self.notices)
+        for value in (
+            "@types/node 20.19.43",
+            "undici-types 6.21.0",
+            "Lighthouse 13.4.1",
+            "@paulirish/trace_engine 0.0.65",
+            "third-party-web 0.29.2",
+            "legacy-javascript 0.0.1",
+            "not a universal clean-tree claim",
+        ):
+            with self.subTest(prisma_peer_audit=value):
+                self.assertIn(value, audit)
+        for value in (
+            "@anthropic-ai/claude-code@2.1.270",
+            "0.65.1 (`17cb09fa7b08bc96d9f0e81b91f4720fc1a36700`)",
+            "Wrangler owns Miniflare 5.20260911.1-alpha and workerd 1.20260911.1",
+            "0.74.4 (`a140afeb4d733cad3c96a56bf6db7e26853b6757`)",
+        ):
+            with self.subTest(notice=value):
+                self.assertIn(value, self.notices)
+
+    def test_current_translation_summaries_match_v1_2_1(self):
+        for path in sorted((ROOT / "docs" / "translations").glob("README.*.md")):
+            translation = path.read_text(encoding="utf-8")
+            with self.subTest(translation=path.name):
+                for value in (
+                    "v1.2.1",
+                    "Claude Code 2.1.270",
+                    "pnpm 12.4.1",
+                    "Wrangler 4.131.2",
+                    "Miniflare 5.20260911.1-alpha",
+                    "workerd 1.20260911.1",
+                    "Matplotlib 3.11.2",
+                    "tqdm 4.70.1",
+                    "Uvicorn 0.53.0",
+                    "`1.2.0`",
+                ):
+                    self.assertIn(value, translation)
+
+    def test_release_apt_refresh_matches_preparation_date(self):
+        self.assertIn("ARG RELEASE_APT_REFRESH=2026-09-14", self.dockerfile)
 
     def test_openspec_is_pinned_installed_and_telemetry_disabled(self):
         self.assertIn(
@@ -909,6 +1095,17 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("--network none --user 0:0 --entrypoint sh", self.smoke)
         self.assertIn("find /workspace -mindepth 1 -delete", self.smoke)
         self.assertIn("trap cleanup_openspec_workspace EXIT", self.smoke)
+        self.assertIn('openspec_bind_source="$openspec_workspace"', self.smoke)
+        self.assertIn("if command -v cygpath >/dev/null 2>&1; then", self.smoke)
+        self.assertIn(
+            'openspec_bind_source="$(cygpath -w "$openspec_workspace")"',
+            self.smoke,
+        )
+        self.assertEqual(
+            self.smoke.count('-v "$openspec_bind_source:/workspace"'),
+            2,
+        )
+        self.assertNotIn('-v "$openspec_workspace:/workspace"', self.smoke)
         self.assertIn("openspec list --json", self.smoke)
         self.assertGreaterEqual(self.smoke.count("openspec init --tools opencode"), 2)
         self.assertIn("snapshot_openspec_workspace", self.smoke)
@@ -1082,19 +1279,19 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn(checkout, self.protected)
         self.assertIn(checkout, self.pr_validation)
         self.assertIn(
-            "bash scripts/validate_renovate_extraction.sh 44.79.2",
+            "bash scripts/validate_renovate_extraction.sh 44.87.1",
             self.pr_validation,
         )
         self.assertIn(
-            "bash scripts/validate_renovate_extraction.sh 44.79.2",
+            "bash scripts/validate_renovate_extraction.sh 44.87.1",
             self.protected,
         )
         self.assertIn(
-            "bash scripts/validate_renovate_extraction.sh 44.79.2",
+            "bash scripts/validate_renovate_extraction.sh 44.87.1",
             self.workflow_pin_validator,
         )
         self.assertIn(
-            'renovate_version="${1:-44.79.2}"',
+            'renovate_version="${1:-44.87.1}"',
             self.renovate_extraction,
         )
         setup_node = (
@@ -1284,6 +1481,97 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("pnpm-lock.yaml", self.smoke)
         self.assertIn("pnpm run verify", self.smoke)
 
+    def test_non_python_runtime_behavior_contracts_are_exercised(self):
+        for value in (
+            'printf "alpha\\nneedle-result\\nomega\\n" | fzf --filter=needle',
+            "expected_lazygit",
+            "lazygit --path $lazygit_repo",
+            "TSServer protocol smoke passed",
+            "npm install --offline --ignore-scripts",
+            "eslint --config",
+            "prettier --write",
+            "prisma db push --schema ./schema.prisma --url file:./smoke.db",
+            "wrangler dev --local --ip 127.0.0.1",
+        ):
+            with self.subTest(value=value):
+                self.assertIn(value, self.smoke)
+
+        main_smoke = self.smoke.split('openspec_workspace="$(mktemp -d)"', 1)[0]
+        self.assertIn(
+            'docker run --rm -i --network none --security-opt',
+            main_smoke,
+        )
+        wrangler_loopback = main_smoke[main_smoke.index("  (\n    cd /tmp/wrangler-modern") :]
+        self.assertIn("wrangler dev --local --ip 127.0.0.1", wrangler_loopback)
+        self.assertIn("curl -fsS http://127.0.0.1:8787/", wrangler_loopback)
+        self.assertIn('test "$wrangler_ready" = true', wrangler_loopback)
+        self.assertIn('kill "$wrangler_pid"', wrangler_loopback)
+        self.assertIn('wait "$wrangler_pid" || true', wrangler_loopback)
+        self.assertNotIn("0.0.0.0", wrangler_loopback)
+
+    def test_main_smoke_script_is_streamed_over_stdin(self):
+        main_smoke = self.smoke.split('openspec_workspace="$(mktemp -d)"', 1)[0]
+        self.assertIn(
+            'docker run --rm -i --network none --security-opt',
+            main_smoke,
+        )
+        self.assertIn("$image\" -lc 'exec sh -eu -s' <<'HOLYCODE_SMOKE'", main_smoke)
+        self.assertIn("\nHOLYCODE_SMOKE\n", main_smoke)
+        self.assertNotIn("$image\" -lc '\n", main_smoke)
+        for guarded_probe in (
+            "prisma db push --schema ./schema.prisma --url file:./smoke.db",
+            "lighthouse --version",
+        ):
+            with self.subTest(guarded_probe=guarded_probe):
+                self.assertIn(guarded_probe, main_smoke)
+
+    def test_drizzle_behavior_fixture_is_exact_and_network_isolated(self):
+        fixture = ROOT / "tests" / "fixtures" / "drizzle-smoke"
+        package_json = fixture / "package.json"
+        package_lock = fixture / "package-lock.json"
+        schema = fixture / "schema.ts"
+        for path in (package_json, package_lock, schema):
+            with self.subTest(path=path.name):
+                self.assertTrue(path.is_file())
+
+        manifest = json.loads(package_json.read_text(encoding="utf-8"))
+        lock = json.loads(package_lock.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["dependencies"], {"drizzle-orm": "0.45.2"})
+        self.assertEqual(
+            lock["packages"]["node_modules/drizzle-orm"]["integrity"],
+            "sha512-kY0BSaTNYWnoDMVoyY8uxmyHjpJW1geOmBMdSSicKo9CIIWkSxMIj2rkeSR51b8KAPB7m+qysjuHme5nKP+E5Q==",
+        )
+        drizzle_setup, drizzle_offline = self.smoke.split(
+            "docker run --rm --network none --entrypoint sh \\\n"
+            '  --mount "type=volume,src=$drizzle_volume,dst=/fixture"',
+            1,
+        )
+        drizzle_setup = drizzle_setup[drizzle_setup.index("drizzle_fixture_dir=") :]
+        self.assertIn("docker run --rm -i --entrypoint sh", drizzle_setup)
+        self.assertNotIn("--network none", drizzle_setup)
+        self.assertIn("npm ci --ignore-scripts --omit=optional --omit=peer", drizzle_setup)
+        for setting in (
+            "--fetch-retries=2",
+            "--fetch-retry-mintimeout=1000",
+            "--fetch-retry-maxtimeout=10000",
+            "--fetch-timeout=30000",
+        ):
+            with self.subTest(setting=setting):
+                self.assertIn(setting, drizzle_setup)
+                self.assertNotIn(setting, drizzle_offline)
+
+        self.assertIn('drizzle-kit generate --dialect sqlite', drizzle_offline)
+        self.assertIn("test ! -e node_modules/.bin/drizzle-kit", drizzle_offline)
+        self.assertIn("ln -s /fixture/node_modules/drizzle-orm", drizzle_offline)
+        self.assertIn(
+            'grep -F "CREATE TABLE \\`smoke\\`" "$drizzle_sql"',
+            drizzle_offline,
+        )
+
+    def test_lazygit_runtime_version_is_bound_to_its_existing_arg(self):
+        self.assertIn("io.holycode.version.lazygit=${LAZYGIT_VERSION}", self.dockerfile)
+        self.assertIn("EXPECTED_LAZYGIT", self.smoke)
+
     def test_runtime_python_stack_is_exercised(self):
         for value in (
             "import numpy as np",
@@ -1313,8 +1601,12 @@ class ReleaseContractTests(unittest.TestCase):
         policy = json.loads((ROOT / "config" / "npm-global-script-policy.json").read_text(encoding="utf-8"))
         self.assertEqual(policy["npmVersion"], "12.0.2")
         self.assertEqual(
-            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.268"]["integrity"],
-            "sha512-DSRUVAbRRH7WaHm99OErT4FJQDkbhIUb8mIaevcFrXtKCZwA9UmKY5+SOFWmgyeEUj2Uh1pFw0Rk/gYffmUEUw==",
+            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.270"]["integrity"],
+            "sha512-0zMkfIWQu7/SG56VP8r780HZWvrNShzK28AbAnhKRK0ns+ToGXPT0W8UqyZmZCUKAkJDd5//TrwSOhk1+hysiw==",
+        )
+        self.assertEqual(
+            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.270"]["scripts"],
+            {"postinstall": "node install.cjs"},
         )
         self.assertEqual(
             policy["allowScripts"]["opencode-ai@1.18.30"]["integrity"],
@@ -1324,19 +1616,19 @@ class ReleaseContractTests(unittest.TestCase):
             policy["blockedScripts"]["esbuild@0.28.1"]["integrity"],
             "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
         )
-        self.assertIn("Wrangler 4.131.0", policy["blockedScripts"]["esbuild@0.28.1"]["reason"])
+        self.assertIn("Wrangler 4.131.2", policy["blockedScripts"]["esbuild@0.28.1"]["reason"])
         self.assertIn("esbuild@0.28.2", policy["blockedScripts"])
         self.assertEqual(
-            policy["blockedScripts"]["workerd@1.20260910.1"]["integrity"],
-            "sha512-/HF0f8LmgT60Uk+ZPDbMnlUHjecfV8w4VMo61iFxW7ky7EexTdwbzUCANWZQiG0w1cBihjJTkhzmReeZLGarXw==",
+            policy["blockedScripts"]["workerd@1.20260911.1"]["integrity"],
+            "sha512-vRr8QdBxueQOZJO1hRCI73EZlix87IAyBAcSyI3rA1VB+6oxjw3oaqzYnIV8C4IOPtUgihbdMAgzkb5GM4V7DQ==",
         )
         self.assertEqual(
-            policy["blockedScripts"]["pnpm@12.4.0"]["scripts"],
+            policy["blockedScripts"]["pnpm@12.4.1"]["scripts"],
             {"preinstall": "node install.js", "postinstall": "node install.js"},
         )
         self.assertEqual(
-            policy["blockedScripts"]["pnpm@12.4.0"]["integrity"],
-            "sha512-N1NsJu1Aq0E0tlEeCfayfz67RWh0aPJAbKOAUnmk5coVjBkxNQrZd01qshCNcbPbrrOZQxWSlDdeTQU+jgVoXA==",
+            policy["blockedScripts"]["pnpm@12.4.1"]["integrity"],
+            "sha512-LoHjmdc/6DkNqyXgaqeIq3pZCCSNL1o3D4K0gRR6ano2e/gEj5pv22Rg8hpm8FQt7bi5TKLIcjWWdBkgsWVtTA==",
         )
         self.assertIn("prisma@7.10.0", policy["blockedScripts"])
         self.assertIn("@prisma/engines@7.10.0", policy["blockedScripts"])
@@ -1348,12 +1640,27 @@ class ReleaseContractTests(unittest.TestCase):
                     self.assertTrue(entry["architectures"])
 
     def test_python_lock_header_is_renovate_pip_compile_compatible(self):
-        header = "\n".join(self.python_lock.splitlines()[:8])
-        self.assertIn(
-            "pip-compile --allow-unsafe --generate-hashes --strip-extras",
-            header,
-        )
-        self.assertNotIn("pip-compile --upgrade", header)
+        for lock_name, lock in (
+            ("python-requirements", self.python_lock),
+            ("python-seed-requirements", self.python_seed_lock),
+        ):
+            header = "\n".join(lock.splitlines()[:8])
+            with self.subTest(lock=lock_name):
+                for value in (
+                    "Python 3.13",
+                    "pip-compile",
+                    "--allow-unsafe",
+                    "--generate-hashes",
+                    "--strip-extras",
+                    "--index-url=https://pypi.org/simple",
+                    "--no-emit-index-url",
+                    f"--output-file=config/{lock_name}.lock",
+                    f"config/{lock_name}.in",
+                ):
+                    self.assertIn(value, header)
+                self.assertNotIn("--no-index", header)
+                self.assertNotIn("--reuse-hashes", header)
+                self.assertNotIn("pip-compile --upgrade", header)
 
 
 if __name__ == "__main__":

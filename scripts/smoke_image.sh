@@ -33,9 +33,12 @@ expected_prettier="$(image_label io.holycode.version.prettier)"
 expected_prisma="$(image_label io.holycode.version.prisma)"
 expected_prisma_deepmerge="$(image_label io.holycode.version.prisma-deepmerge-ts)"
 expected_prisma_mysql2="$(image_label io.holycode.version.prisma-mysql2)"
+expected_prisma_types_node="$(image_label io.holycode.version.prisma-types-node)"
+expected_prisma_undici_types="$(image_label io.holycode.version.prisma-undici-types)"
 expected_lighthouse="$(image_label io.holycode.version.lighthouse)"
 expected_s6="$(image_label io.holycode.version.s6-overlay)"
 expected_fzf="$(image_label io.holycode.version.fzf)"
+expected_lazygit="$(image_label io.holycode.version.lazygit)"
 expected_github_cli="$(image_label io.holycode.version.github-cli)"
 
 secret_pattern='(_API_KEY|TOKEN|SECRET|PASSWORD)=[^[:space:]]+'
@@ -50,7 +53,7 @@ if docker history --no-trunc "$image" | grep -Ei '(sk-[A-Za-z0-9_-]{20,}|ghp_[A-
   exit 1
 fi
 
-docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
+docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   -e EXPECTED_OPENCODE="$expected_opencode" \
   -e EXPECTED_CLAUDE="$expected_claude" \
   -e EXPECTED_PAPERCLIP="$expected_paperclip" \
@@ -76,11 +79,14 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   -e EXPECTED_PRISMA="$expected_prisma" \
   -e EXPECTED_PRISMA_DEEPMERGE="$expected_prisma_deepmerge" \
   -e EXPECTED_PRISMA_MYSQL2="$expected_prisma_mysql2" \
+  -e EXPECTED_PRISMA_TYPES_NODE="$expected_prisma_types_node" \
+  -e EXPECTED_PRISMA_UNDICI_TYPES="$expected_prisma_undici_types" \
   -e EXPECTED_LIGHTHOUSE="$expected_lighthouse" \
   -e EXPECTED_S6="$expected_s6" \
   -e EXPECTED_FZF="$expected_fzf" \
+  -e EXPECTED_LAZYGIT="$expected_lazygit" \
   -e EXPECTED_GITHUB_CLI="$expected_github_cli" \
-  "$image" -lc '
+  "$image" -lc 'exec sh -eu -s' <<'HOLYCODE_SMOKE'
   set -eu
   test ! -e /root/.npm
   export NPM_CONFIG_CACHE=/tmp/holycode-smoke-npm
@@ -109,6 +115,50 @@ docker run --rm --security-opt "seccomp=$seccomp_profile" --entrypoint sh \
   opencode --version | grep -Fx "$EXPECTED_OPENCODE"
   test -d "/package/admin/s6-overlay-$EXPECTED_S6"
   fzf --version | grep -E "^$EXPECTED_FZF([[:space:]]|$)"
+  test "$(printf "alpha\nneedle-result\nomega\n" | fzf --filter=needle --select-1 --exit-0)" = "needle-result"
+  lazygit --version | grep -F "version=$EXPECTED_LAZYGIT"
+  lazygit_home="$(mktemp -d)"
+  lazygit_repo="$(mktemp -d)"
+  git -C "$lazygit_repo" init -q
+  git -C "$lazygit_repo" config user.email smoke@example.invalid
+  git -C "$lazygit_repo" config user.name "HolyCode Smoke"
+  printf "base\n" > "$lazygit_repo/file.txt"
+  git -C "$lazygit_repo" add file.txt
+  git -C "$lazygit_repo" commit -qm initial
+  printf "staged\n" >> "$lazygit_repo/file.txt"
+  git -C "$lazygit_repo" add file.txt
+  printf "unstaged\n" >> "$lazygit_repo/file.txt"
+  mkdir -p "$lazygit_home/config/lazygit"
+  cat > "$lazygit_home/config/lazygit/config.yml" <<EOF
+disableStartupPopups: true
+confirmOnQuit: false
+update:
+  method: never
+EOF
+  lazygit_socket="holycode-lazygit-$$"
+  tmux -L "$lazygit_socket" new-session -d -s lazygit \
+    "env HOME=$lazygit_home XDG_CONFIG_HOME=$lazygit_home/config lazygit --path $lazygit_repo --use-config-dir $lazygit_home/config/lazygit --debug"
+  lazygit_ready=false
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    tmux -L "$lazygit_socket" capture-pane -pt lazygit > "$lazygit_home/pane.txt"
+    if grep -F "file.txt" "$lazygit_home/pane.txt" >/dev/null; then
+      lazygit_ready=true
+      break
+    fi
+    sleep 1
+  done
+  test "$lazygit_ready" = true
+  tmux -L "$lazygit_socket" send-keys -t lazygit q
+  lazygit_stopped=false
+  for attempt in 1 2 3 4 5; do
+    if ! tmux -L "$lazygit_socket" has-session -t lazygit 2>/dev/null; then
+      lazygit_stopped=true
+      break
+    fi
+    sleep 1
+  done
+  test "$lazygit_stopped" = true
+  rm -rf "$lazygit_home" "$lazygit_repo"
   test "$(command -v gh)" = "/usr/local/bin/gh"
   gh --version | grep -F "gh version $EXPECTED_GITHUB_CLI"
   ! dpkg-query -W gh >/dev/null 2>&1
@@ -176,29 +226,39 @@ PY
   ! dpkg-query -W postgresql-client >/dev/null 2>&1
   python3 - <<PY
 import importlib.metadata as metadata
-from io import BytesIO
+import multiprocessing
+import socket
+import time
+from io import BytesIO, StringIO
 
+import httpx
 import matplotlib
 matplotlib.use("Agg")
 from fontTools.ttLib import TTFont
 from matplotlib import pyplot as plt
 from matplotlib.font_manager import findfont
 import numpy as np
+from docx import Document
+from openpyxl import Workbook, load_workbook
 import pandas as pd
+from PIL import Image
+import requests
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from lxml import etree
 from pydantic import BaseModel
+from tqdm import tqdm
+import uvicorn
 
 assert metadata.version("numpy") == "$EXPECTED_NUMPY"
 assert metadata.version("requests") == "2.34.2"
 assert metadata.version("Pillow") == "12.3.0"
 assert metadata.version("pandas") == "3.0.5"
-assert metadata.version("matplotlib") == "3.11.1"
+assert metadata.version("matplotlib") == "3.11.2"
 assert metadata.version("fonttools") == "4.65.0"
-assert metadata.version("tqdm") == "4.70.0"
+assert metadata.version("tqdm") == "4.70.1"
 assert metadata.version("fastapi") == "0.141.1"
-assert metadata.version("uvicorn") == "0.52.4"
+assert metadata.version("uvicorn") == "0.53.0"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
 assert metadata.version("pip") == "26.2.1"
@@ -224,6 +284,28 @@ axis.text(0.5, 0.5, "HolyCode", ha="center", va="center")
 figure.savefig(rendered, format="png")
 plt.close(figure)
 assert rendered.getvalue().startswith(b"\x89PNG\r\n\x1a\n")
+rendered.seek(0)
+converted = BytesIO()
+Image.open(rendered).convert("RGB").save(converted, format="WEBP")
+assert converted.getvalue().startswith(b"RIFF")
+
+workbook = Workbook()
+workbook.active["A1"] = "HolyCode"
+workbook_bytes = BytesIO()
+workbook.save(workbook_bytes)
+workbook_bytes.seek(0)
+assert load_workbook(workbook_bytes).active["A1"].value == "HolyCode"
+
+document = Document()
+document.add_paragraph("HolyCode")
+document_bytes = BytesIO()
+document.save(document_bytes)
+document_bytes.seek(0)
+assert Document(document_bytes).paragraphs[0].text == "HolyCode"
+
+progress = StringIO()
+assert list(tqdm(range(3), file=progress, disable=False)) == [0, 1, 2]
+assert "3/3" in progress.getvalue()
 
 class Health(BaseModel):
     status: str
@@ -237,6 +319,41 @@ def health():
 response = TestClient(app).get("/health")
 assert response.status_code == 200
 assert response.json() == {"status": "ok"}
+
+def serve(port):
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="critical")
+
+def stop_server(server):
+    server.terminate()
+    server.join(timeout=5)
+    if server.is_alive():
+        server.kill()
+        server.join(timeout=5)
+    assert not server.is_alive()
+
+with socket.socket() as listener:
+    listener.bind(("127.0.0.1", 0))
+    port = listener.getsockname()[1]
+
+server = multiprocessing.get_context("fork").Process(target=serve, args=(port,))
+server.start()
+url = f"http://127.0.0.1:{port}/health"
+try:
+    for _ in range(30):
+        try:
+            response = requests.get(url, timeout=1)
+            break
+        except requests.RequestException:
+            time.sleep(0.1)
+    else:
+        raise AssertionError("Uvicorn did not start")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    response = httpx.get(url, timeout=1)
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+finally:
+    stop_server(server)
 PY
   python3 -m venv /tmp/holycode-python-seed
   /tmp/holycode-python-seed/bin/python -m pip install --no-index \
@@ -278,6 +395,52 @@ const program = ts.createProgram([process.argv[2]], { strict: true, noEmit: true
 const diagnostics = ts.getPreEmitDiagnostics(program);
 if (diagnostics.length !== 0 || ts.version !== process.env.EXPECTED_TYPESCRIPT) process.exit(1);
 NODE
+  node - "$typescript_workspace/index.ts" <<\NODE
+const { spawn } = require("child_process");
+const file = process.argv[2];
+const child = spawn("tsserver", [], { stdio: ["pipe", "pipe", "pipe"] });
+let buffer = Buffer.alloc(0);
+let stderr = "";
+let done = false;
+const timer = setTimeout(() => child.kill("SIGKILL"), 10000);
+child.stderr.on("data", (chunk) => { stderr += chunk; });
+child.stdout.on("data", (chunk) => {
+  buffer = Buffer.concat([buffer, chunk]);
+  for (;;) {
+    while (buffer.length >= 2 && buffer[0] === 13 && buffer[1] === 10) buffer = buffer.subarray(2);
+    const headerEnd = buffer.indexOf("\r\n\r\n");
+    if (headerEnd === -1) return;
+    const header = buffer.subarray(0, headerEnd).toString();
+    const match = header.match(/^Content-Length: (\d+)$/m);
+    if (!match) throw new Error(`invalid tsserver header: ${header}`);
+    const length = Number(match[1]);
+    const bodyStart = headerEnd + 4;
+    if (buffer.length < bodyStart + length) return;
+    const message = JSON.parse(buffer.subarray(bodyStart, bodyStart + length).toString());
+    buffer = buffer.subarray(bodyStart + length);
+    if (message.type === "response" && message.request_seq === 2) {
+      if (!message.success || message.command !== "semanticDiagnosticsSync" ||
+          !Array.isArray(message.body) || message.body.length !== 0) {
+        throw new Error(JSON.stringify(message));
+      }
+      done = true;
+      child.stdin.end();
+    }
+  }
+});
+child.on("exit", (code) => {
+  clearTimeout(timer);
+  if (!done || code !== 0) {
+    console.error(stderr);
+    process.exit(1);
+  }
+  console.log("TSServer protocol smoke passed");
+});
+for (const request of [
+  { seq: 1, type: "request", command: "open", arguments: { file } },
+  { seq: 2, type: "request", command: "semanticDiagnosticsSync", arguments: { file } },
+]) child.stdin.write(`${JSON.stringify(request)}\n`);
+NODE
   rm -rf "$typescript_workspace"
 
   pnpm_workspace="$(mktemp -d)"
@@ -294,6 +457,12 @@ EOF
   (cd "$pnpm_workspace/project" && pnpm install --offline --ignore-scripts)
   test -f "$pnpm_workspace/project/pnpm-lock.yaml"
   (cd "$pnpm_workspace/project" && pnpm run verify)
+  mkdir "$pnpm_workspace/npm-project"
+  cat > "$pnpm_workspace/npm-project/package.json" <<EOF
+{"name":"holycode-npm-offline-project","private":true,"dependencies":{"holycode-local-fixture":"file:../holycode-local-fixture-1.0.0.tgz"}}
+EOF
+  (cd "$pnpm_workspace/npm-project" && npm install --offline --ignore-scripts --no-audit --no-fund)
+  (cd "$pnpm_workspace/npm-project" && node -e "if(require(\"holycode-local-fixture\")!==\"holycode\") process.exit(1)")
   rm -rf "$pnpm_workspace"
 
   tsx --version | grep -F "tsx v$EXPECTED_TSX"
@@ -301,9 +470,11 @@ EOF
   wrangler_package=/usr/local/lib/node_modules/wrangler/package.json
   wrangler_node_modules=/usr/local/lib/node_modules/wrangler/node_modules
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
+  wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE) process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20260911.1\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20260911.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260911.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -344,6 +515,21 @@ EOF
   wait "$vite_pid" || true
   rm -rf "$vite_workspace" /tmp/holycode-vite-build.log \
     /tmp/holycode-vite-preview.log /tmp/holycode-vite-response.html
+  lint_workspace="$(mktemp -d)"
+  printf "const value = \"holycode\";\nvoid value;\n" > "$lint_workspace/valid.js"
+  cat > "$lint_workspace/eslint.config.mjs" <<EOF
+export default [{ rules: { "no-undef": "error" } }];
+EOF
+  (cd "$lint_workspace" && eslint --config ./eslint.config.mjs ./valid.js)
+  cat > "$lint_workspace/formatted.js" <<EOF
+const value={name:"holycode"}
+EOF
+  prettier --write "$lint_workspace/formatted.js" >/dev/null
+  cat > "$lint_workspace/expected.js" <<EOF
+const value = { name: "holycode" };
+EOF
+  cmp "$lint_workspace/expected.js" "$lint_workspace/formatted.js"
+  rm -rf "$lint_workspace"
   prettier --version | grep -Fx "$EXPECTED_PRETTIER"
   prisma --version | grep -E "^prisma[[:space:]]+:[[:space:]]+$EXPECTED_PRISMA$"
   node -e "console.log(require(\"/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts/package.json\").version)" | grep -Fx "$EXPECTED_PRISMA_DEEPMERGE"
@@ -351,9 +537,65 @@ EOF
   (cd /usr/local/lib/node_modules/prisma && npm ls deepmerge-ts --all >/dev/null)
   node -e "console.log(require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json\").version)" | grep -Fx "$EXPECTED_PRISMA_MYSQL2"
   node -e "const pkg=require(\"/usr/local/lib/node_modules/prisma/package.json\"); if(pkg.dependencies.mysql2!==process.env.EXPECTED_PRISMA_MYSQL2) process.exit(1)"
-  (cd /usr/local/lib/node_modules/prisma && npm ls mysql2 --all >/dev/null)
+  node -e "const pkg=require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json\"); if(pkg.peerDependencies[\"@types/node\"]!==\">= 8\" || pkg.peerDependenciesMeta?.[\"@types/node\"]!==undefined) process.exit(1)"
+  node -e "const resolved=require.resolve(\"@types/node/package.json\",{paths:[\"/usr/local/lib/node_modules/prisma/node_modules/mysql2\"]}); const pkg=require(resolved); if(pkg.version!==process.env.EXPECTED_PRISMA_TYPES_NODE || resolved!==\"/usr/local/lib/node_modules/prisma/node_modules/@types/node/package.json\" || pkg.types!==\"index.d.ts\" || pkg.main!==\"\" || pkg.dependencies[\"undici-types\"]!==\"~6.21.0\") process.exit(1)"
+  node -e "const resolved=require.resolve(\"undici-types/package.json\",{paths:[\"/usr/local/lib/node_modules/prisma/node_modules/@types/node\"]}); const pkg=require(resolved); if(pkg.version!==process.env.EXPECTED_PRISMA_UNDICI_TYPES || resolved!==\"/usr/local/lib/node_modules/prisma/node_modules/undici-types/package.json\") process.exit(1)"
+  test -s /usr/local/lib/node_modules/prisma/node_modules/@types/node/index.d.ts
+  test -s /usr/local/lib/node_modules/prisma/node_modules/undici-types/fetch.d.ts
+  (cd /usr/local/lib/node_modules/prisma && npm ls mysql2 @types/node undici-types --all >/dev/null)
   node -e "const mysql=require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2\"); if(typeof mysql.createConnection!==\"function\") process.exit(1)"
+  prisma_workspace="$(mktemp -d)"
+  cat > "$prisma_workspace/schema.prisma" <<EOF
+datasource db {
+  provider = "sqlite"
+}
+
+model Smoke {
+  id   Int    @id
+  name String
+}
+EOF
+  (
+    cd "$prisma_workspace"
+    prisma validate --schema ./schema.prisma
+    prisma db push --schema ./schema.prisma --url file:./smoke.db
+    sqlite3 ./smoke.db "SELECT name FROM sqlite_master WHERE type=\"table\" AND name=\"Smoke\";" | grep -Fx Smoke
+  )
+  rm -rf "$prisma_workspace"
   lighthouse --version | grep -Fx "$EXPECTED_LIGHTHOUSE"
+  lighthouse_workspace="$(mktemp -d)"
+  printf "<main>HolyCode Lighthouse smoke</main>\n" > "$lighthouse_workspace/index.html"
+  lighthouse_port=4175
+  python3 -m http.server "$lighthouse_port" --bind 127.0.0.1 --directory "$lighthouse_workspace" \
+    >/tmp/holycode-lighthouse-server.log 2>&1 &
+  lighthouse_server_pid=$!
+  lighthouse_ready=false
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    if curl -fsS "http://127.0.0.1:$lighthouse_port/" >/dev/null 2>&1; then
+      lighthouse_ready=true
+      break
+    fi
+    sleep 1
+  done
+  test "$lighthouse_ready" = true
+  mkdir -p /tmp/holycode-lighthouse-home
+  HOME=/tmp/holycode-lighthouse-home \
+    lighthouse "http://127.0.0.1:$lighthouse_port/" --quiet --output=json \
+      --output-path=/tmp/holycode-lighthouse-report.json --only-categories=performance \
+      --chrome-flags="--headless --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  jq -e ".finalUrl == \"http://127.0.0.1:4175/\" and (.categories.performance.score | type == \"number\")" \
+    /tmp/holycode-lighthouse-report.json >/dev/null
+  kill "$lighthouse_server_pid"
+  wait "$lighthouse_server_pid" || true
+  rm -rf "$lighthouse_workspace" /tmp/holycode-lighthouse-home \
+    /tmp/holycode-lighthouse-server.log /tmp/holycode-lighthouse-report.json
+  npm_tree=/tmp/holycode-npm-tree.json
+  npm_tree_status=0
+  npm ls -g --all --json > "$npm_tree" 2>/tmp/holycode-npm-tree.stderr || npm_tree_status=$?
+  test -s "$npm_tree"
+  test "$npm_tree_status" -eq 1
+  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const expected=[\"invalid: third-party-web@0.29.2 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.1 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\" || problems.some(problem=>problem.startsWith(\"missing:\")) || JSON.stringify([...problems].sort())!==JSON.stringify(expected)) process.exit(1); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); if(lighthouse?.version!==\"13.4.1\" || trace?.version!==\"0.0.65\" || tracePkg.dependencies[\"third-party-web\"]!==\"latest\" || tracePkg.dependencies[\"legacy-javascript\"]!==\"latest\" || trace.dependencies?.[\"third-party-web\"]?.version!==\"0.29.2\" || trace.dependencies?.[\"legacy-javascript\"]?.version!==\"0.0.1\") process.exit(1)" "$npm_tree"
+  rm -f "$npm_tree" /tmp/holycode-npm-tree.stderr
   ! command -v vercel
   ! command -v sharp
   ! command -v concurrently
@@ -362,9 +604,17 @@ EOF
   ! command -v serve
   esbuild --version | grep -Fx "0.28.2"
   prisma --version >/dev/null
-  workerd_bin="$(find /usr/local/lib/node_modules/wrangler -path "*/workerd/bin/workerd" -type f -print -quit)"
-  test -n "$workerd_bin"
-  "$workerd_bin" --version >/dev/null
+  workerd_count=0
+  while IFS= read -r package_json; do
+    workerd_dir="${package_json%/package.json}"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260911.1\") process.exit(1)" "$package_json"
+    test -x "$workerd_dir/bin/workerd"
+    "$workerd_dir/bin/workerd" --version >/dev/null
+    workerd_count=$((workerd_count + 1))
+  done <<EOF
+$(find /usr/local/lib/node_modules -path "*/workerd/package.json" -type f | sort)
+EOF
+  test "$workerd_count" -gt 0
   sharp_count=0
   while IFS= read -r package_json; do
     sharp_dir="${package_json%/package.json}"
@@ -394,6 +644,26 @@ compatibility_date = "2026-07-15"
 name = "holycode-wrangler-staging"
 EOF
   (cd /tmp/wrangler-modern && wrangler deploy --dry-run --env staging --outdir /tmp/wrangler-output >/tmp/wrangler-modern.log 2>&1)
+  (
+    cd /tmp/wrangler-modern
+    CLOUDFLARE_API_TOKEN= WRANGLER_SEND_METRICS=false WRANGLER_DISABLE_UPDATE_CHECK=true \
+      wrangler dev --local --ip 127.0.0.1 --port 8787 --inspector-port 9229 \
+      --log-level error --show-interactive-dev-session=false \
+      >/tmp/wrangler-dev.log 2>&1
+  ) &
+  wrangler_pid=$!
+  wrangler_ready=false
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    if curl -fsS http://127.0.0.1:8787/ >/tmp/wrangler-response.txt; then
+      wrangler_ready=true
+      break
+    fi
+    sleep 1
+  done
+  test "$wrangler_ready" = true
+  grep -Fx ok /tmp/wrangler-response.txt
+  kill "$wrangler_pid"
+  wait "$wrangler_pid" || true
   cp /tmp/wrangler-modern/worker.js /tmp/wrangler-legacy/worker.js
   cat > /tmp/wrangler-legacy/wrangler.toml <<EOF
 name = "holycode-wrangler-legacy"
@@ -413,7 +683,7 @@ EOF
       *) echo "runtime contains non-empty secret-like environment variable: $line" >&2; exit 1 ;;
     esac
   done
-'
+HOLYCODE_SMOKE
 
 docker run --rm --network none --read-only \
   --tmpfs /tmp:rw,exec,nosuid,nodev,mode=1777,size=64m \
@@ -470,9 +740,13 @@ EOF
 '
 
 openspec_workspace="$(mktemp -d)"
+openspec_bind_source="$openspec_workspace"
+if command -v cygpath >/dev/null 2>&1; then
+  openspec_bind_source="$(cygpath -w "$openspec_workspace")"
+fi
 cleanup_openspec_workspace() {
   docker run --rm --network none --user 0:0 --entrypoint sh \
-    -v "$openspec_workspace:/workspace" \
+    -v "$openspec_bind_source:/workspace" \
     "$image" -c 'find /workspace -mindepth 1 -delete' >/dev/null 2>&1 || true
   rm -rf "$openspec_workspace"
 }
@@ -481,7 +755,7 @@ chmod 0777 "$openspec_workspace"
 docker run --rm --network none --user 1000:1000 --entrypoint sh \
   -e EXPECTED_OPENSPEC="$expected_openspec" \
   -e OPENSPEC_TELEMETRY=0 \
-  -v "$openspec_workspace:/workspace" \
+  -v "$openspec_bind_source:/workspace" \
   -w /workspace \
   "$image" -lc '
   set -eu
@@ -542,3 +816,48 @@ docker run --rm --network none --user 1000:1000 --entrypoint sh \
   test -d openspec/changes/archive/
   find openspec/changes/archive/ -path "*-holycode-smoke/tasks.md" -type f -print -quit | grep -q .
 '
+
+cleanup_openspec_workspace
+trap - EXIT
+
+drizzle_fixture_dir="tests/fixtures/drizzle-smoke"
+drizzle_volume="$(docker volume create)"
+cleanup_drizzle_volume() {
+  docker volume rm -f "$drizzle_volume" >/dev/null 2>&1 || true
+}
+trap cleanup_drizzle_volume EXIT
+
+tar -cf - -C "$drizzle_fixture_dir" package.json package-lock.json schema.ts | \
+  docker run --rm -i --entrypoint sh \
+    --mount "type=volume,src=$drizzle_volume,dst=/fixture" \
+    "$image" -lc '
+    set -eu
+    tar -xf - -C /fixture
+    cd /fixture
+    npm ci --ignore-scripts --omit=optional --omit=peer \
+      --fetch-retries=2 --fetch-retry-mintimeout=1000 \
+      --fetch-retry-maxtimeout=10000 --fetch-timeout=30000
+    test "$(find node_modules -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1
+  '
+
+docker run --rm --network none --entrypoint sh \
+  --mount "type=volume,src=$drizzle_volume,dst=/fixture" \
+  "$image" -lc '
+  set -eu
+  cd /fixture
+  node -e "console.log(require(\"./node_modules/drizzle-orm/package.json\").version)" | grep -Fx 0.45.2
+  test "$(command -v drizzle-kit)" = /usr/local/bin/drizzle-kit
+  test ! -e node_modules/.bin/drizzle-kit
+  test ! -e /usr/local/lib/node_modules/drizzle-kit/node_modules/drizzle-orm
+  ln -s /fixture/node_modules/drizzle-orm \
+    /usr/local/lib/node_modules/drizzle-kit/node_modules/drizzle-orm
+  test "$(readlink -f /usr/local/lib/node_modules/drizzle-kit/node_modules/drizzle-orm)" = \
+    /fixture/node_modules/drizzle-orm
+  drizzle-kit generate --dialect sqlite --schema ./schema.ts --out ./drizzle --name smoke
+  drizzle_sql="$(find ./drizzle -type f -name "*.sql" -print -quit)"
+  test -n "$drizzle_sql"
+  grep -F "CREATE TABLE \`smoke\`" "$drizzle_sql"
+'
+
+cleanup_drizzle_volume
+trap - EXIT

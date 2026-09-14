@@ -7,11 +7,11 @@
 ARG GITHUB_CLI_VERSION=2.100.0
 ARG GITHUB_CLI_REF=45437bc7eeeb3359bbfddd1742f79de7652fd3e2
 # renovate: datasource=github-releases depName=junegunn/fzf
-ARG FZF_VERSION=0.74.3
-ARG FZF_REF=15f64c492a08f0840b81540c7d1de35737448086
+ARG FZF_VERSION=0.74.4
+ARG FZF_REF=a140afeb4d733cad3c96a56bf6db7e26853b6757
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.65.0
-ARG LAZYGIT_REF=c07f4d381b90419583b7ce04f87379654d983ebc
+ARG LAZYGIT_VERSION=0.65.1
+ARG LAZYGIT_REF=17cb09fa7b08bc96d9f0e81b91f4720fc1a36700
 
 # Rebuild exact release sources with reviewed dependency fixes.
 FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS github-cli-builder
@@ -118,7 +118,7 @@ ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
 ARG OPENCODE_VERSION=1.18.30
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.268
+ARG CLAUDE_CODE_VERSION=2.1.270
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@fission-ai/openspec
@@ -142,7 +142,7 @@ ARG PM2_JS_YAML_VERSION=4.3.2
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.13
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.4.0
+ARG PNPM_VERSION=12.4.1
 # renovate: datasource=npm depName=vite
 ARG VITE_VERSION=8.3.0
 # renovate: datasource=npm depName=prettier
@@ -153,12 +153,16 @@ ARG PRISMA_VERSION=7.10.0
 ARG PRISMA_DEEPMERGE_VERSION=8.0.2
 # renovate: datasource=npm depName=mysql2
 ARG PRISMA_MYSQL2_VERSION=3.24.4
+# renovate: datasource=npm depName=@types/node
+ARG PRISMA_TYPES_NODE_VERSION=20.19.43
+# renovate: datasource=npm depName=undici-types
+ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.131.0
+ARG WRANGLER_VERSION=4.131.2
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20260910.0-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20260911.1-alpha
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.4
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
@@ -177,7 +181,7 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-09-08
+ARG RELEASE_APT_REFRESH=2026-09-14
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -202,9 +206,12 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.prisma=${PRISMA_VERSION} \
     io.holycode.version.prisma-deepmerge-ts=${PRISMA_DEEPMERGE_VERSION} \
     io.holycode.version.prisma-mysql2=${PRISMA_MYSQL2_VERSION} \
+    io.holycode.version.prisma-types-node=${PRISMA_TYPES_NODE_VERSION} \
+    io.holycode.version.prisma-undici-types=${PRISMA_UNDICI_TYPES_VERSION} \
     io.holycode.version.lighthouse=${LIGHTHOUSE_VERSION} \
     io.holycode.version.s6-overlay=${S6_OVERLAY_VERSION} \
     io.holycode.version.fzf=${FZF_VERSION} \
+    io.holycode.version.lazygit=${LAZYGIT_VERSION} \
     io.holycode.version.wrangler=${WRANGLER_VERSION} \
     io.holycode.version.wrangler-miniflare=${WRANGLER_MINIFLARE_VERSION} \
     io.holycode.version.wrangler-sharp=${WRANGLER_SHARP_VERSION} \
@@ -474,27 +481,54 @@ RUN npm i -g --ignore-scripts \
     rm -rf /root/.npm
 
 # Prisma 7.10.0 pins deepmerge-ts 7.1.5 and mysql2 3.15.3. Replace only those
-# nested copies with integrity-verified fixed releases and bind their owners.
-RUN test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)" = \
+# nested copies and materialize mysql2's required declaration peer from verified payloads.
+RUN PRISMA_TYPES_NODE_INTEGRITY="sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==" && \
+    PRISMA_UNDICI_TYPES_INTEGRITY="sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==" && \
+    test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)" = \
       "sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==" && \
     test "$(npm view "mysql2@${PRISMA_MYSQL2_VERSION}" dist.integrity)" = \
       "sha512-A2olluVlj0mvgyIRRISMEzXc51m+21mRtcMVjJyIpt2GG98+XrC9m9HzsqcMsX2LcnfccJvY5NB22g8fENBnOA==" && \
+    test "$(npm view "@types/node@${PRISMA_TYPES_NODE_VERSION}" dist.integrity)" = "$PRISMA_TYPES_NODE_INTEGRITY" && \
+    test "$(npm view "undici-types@${PRISMA_UNDICI_TYPES_VERSION}" dist.integrity)" = "$PRISMA_UNDICI_TYPES_INTEGRITY" && \
     test "$(npm view "@prisma/config@${PRISMA_VERSION}" dependencies.deepmerge-ts)" = "7.1.5" && \
     test "$(npm view "prisma@${PRISMA_VERSION}" dependencies.mysql2)" = "3.15.3" && \
     PRISMA_DEEPMERGE_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}") && \
     PRISMA_MYSQL2_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "mysql2@${PRISMA_MYSQL2_VERSION}") && \
+    PRISMA_TYPES_NODE_TARBALL=/tmp/prisma-types-node.tgz && \
+    PRISMA_UNDICI_TYPES_TARBALL=/tmp/prisma-undici-types.tgz && \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL \
+      -o "$PRISMA_TYPES_NODE_TARBALL" \
+      "https://registry.npmjs.org/@types/node/-/node-${PRISMA_TYPES_NODE_VERSION}.tgz" && \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL \
+      -o "$PRISMA_UNDICI_TYPES_TARBALL" \
+      "https://registry.npmjs.org/undici-types/-/undici-types-${PRISMA_UNDICI_TYPES_VERSION}.tgz" && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
+      "$PRISMA_TYPES_NODE_TARBALL" "$PRISMA_TYPES_NODE_INTEGRITY" && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
+      "$PRISMA_UNDICI_TYPES_TARBALL" "$PRISMA_UNDICI_TYPES_INTEGRITY" && \
     PRISMA_DEEPMERGE_DIR=/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts && \
     PRISMA_MYSQL2_DIR=/usr/local/lib/node_modules/prisma/node_modules/mysql2 && \
+    PRISMA_TYPES_NODE_DIR=/usr/local/lib/node_modules/prisma/node_modules/@types/node && \
+    PRISMA_UNDICI_TYPES_DIR=/usr/local/lib/node_modules/prisma/node_modules/undici-types && \
     PRISMA_PACKAGE=/usr/local/lib/node_modules/prisma/package.json && \
     PRISMA_CONFIG_PACKAGE=/usr/local/lib/node_modules/prisma/node_modules/@prisma/config/package.json && \
+    test "$(node -p 'require(process.argv[1]).version' "$PRISMA_PACKAGE")" = "${PRISMA_VERSION}" && \
+    test ! -e "$PRISMA_TYPES_NODE_DIR" && \
+    test ! -e "$PRISMA_UNDICI_TYPES_DIR" && \
     rm -rf "$PRISMA_DEEPMERGE_DIR" && mkdir "$PRISMA_DEEPMERGE_DIR" && \
     tar -xzf "/tmp/${PRISMA_DEEPMERGE_TARBALL}" -C "$PRISMA_DEEPMERGE_DIR" --strip-components=1 && \
     rm -rf "$PRISMA_MYSQL2_DIR" && mkdir "$PRISMA_MYSQL2_DIR" && \
     tar -xzf "/tmp/${PRISMA_MYSQL2_TARBALL}" -C "$PRISMA_MYSQL2_DIR" --strip-components=1 && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.peerDependencies["@types/node"]!==">= 8" || pkg.peerDependenciesMeta?.["@types/node"]!==undefined) process.exit(1)' \
+      "$PRISMA_MYSQL2_DIR/package.json" "${PRISMA_MYSQL2_VERSION}" && \
+    mkdir -p "$PRISMA_TYPES_NODE_DIR" "$PRISMA_UNDICI_TYPES_DIR" && \
+    tar -xzf "$PRISMA_TYPES_NODE_TARBALL" -C "$PRISMA_TYPES_NODE_DIR" --strip-components=1 && \
+    tar -xzf "$PRISMA_UNDICI_TYPES_TARBALL" -C "$PRISMA_UNDICI_TYPES_DIR" --strip-components=1 && \
     npm install --prefix "$PRISMA_MYSQL2_DIR" --ignore-scripts --package-lock=false --omit=dev && \
-    rm "/tmp/${PRISMA_DEEPMERGE_TARBALL}" "/tmp/${PRISMA_MYSQL2_TARBALL}" && \
+    rm "/tmp/${PRISMA_DEEPMERGE_TARBALL}" "/tmp/${PRISMA_MYSQL2_TARBALL}" \
+      "$PRISMA_TYPES_NODE_TARBALL" "$PRISMA_UNDICI_TYPES_TARBALL" && \
     node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies["deepmerge-ts"]!=="7.1.5") process.exit(1); pkg.dependencies["deepmerge-ts"]=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
       "$PRISMA_CONFIG_PACKAGE" "${PRISMA_DEEPMERGE_VERSION}" && \
     node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies.mysql2!=="3.15.3") process.exit(1); pkg.dependencies.mysql2=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
@@ -503,7 +537,17 @@ RUN test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)"
       "${PRISMA_DEEPMERGE_VERSION}" && \
     test "$(node -p 'require("/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json").version')" = \
       "${PRISMA_MYSQL2_VERSION}" && \
-    (cd /usr/local/lib/node_modules/prisma && npm ls deepmerge-ts mysql2 --all >/dev/null) && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.types!=="index.d.ts" || pkg.main!=="" || pkg.dependencies["undici-types"]!=="~6.21.0") process.exit(1)' \
+      "$PRISMA_TYPES_NODE_DIR/package.json" "${PRISMA_TYPES_NODE_VERSION}" && \
+    test "$(node -p 'require(process.argv[1]).version' "$PRISMA_UNDICI_TYPES_DIR/package.json")" = \
+      "${PRISMA_UNDICI_TYPES_VERSION}" && \
+    test -s "$PRISMA_TYPES_NODE_DIR/index.d.ts" && \
+    test -s "$PRISMA_UNDICI_TYPES_DIR/fetch.d.ts" && \
+    node -e 'const resolved=require.resolve("@types/node/package.json",{paths:[process.argv[1]]}); const pkg=require(resolved); if(pkg.version!==process.argv[2] || resolved!==process.argv[3]) process.exit(1)' \
+      "$PRISMA_MYSQL2_DIR" "${PRISMA_TYPES_NODE_VERSION}" "$PRISMA_TYPES_NODE_DIR/package.json" && \
+    node -e 'const resolved=require.resolve("undici-types/package.json",{paths:[process.argv[1]]}); const pkg=require(resolved); if(pkg.version!==process.argv[2] || resolved!==process.argv[3]) process.exit(1)' \
+      "$PRISMA_TYPES_NODE_DIR" "${PRISMA_UNDICI_TYPES_VERSION}" "$PRISMA_UNDICI_TYPES_DIR/package.json" && \
+    (cd /usr/local/lib/node_modules/prisma && npm ls deepmerge-ts mysql2 @types/node undici-types --all >/dev/null) && \
     node -e 'const mysql=require("/usr/local/lib/node_modules/prisma/node_modules/mysql2"); if(typeof mysql.createConnection!=="function") process.exit(1)' && \
     prisma --version >/dev/null && \
     rm -rf /root/.npm
@@ -544,21 +588,28 @@ RUN PM2_JS_YAML_INTEGRITY="sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TI
     rm -rf /tmp/holycode-build-pm2 "$PM2_APP" && \
     rm -rf /root/.npm
 
-# Wrangler 4.131.0 owns Miniflare 5.20260910.0-alpha, which directly pins the
-# fixed Sharp release. Bind the exact owner and architecture-specific payload.
+# Wrangler 4.131.2 owns Miniflare 5.20260911.1-alpha and workerd 1.20260911.1;
+# Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260911.1" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260911.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
+    WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2]) process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260911.1") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260911.1") process.exit(1)' \
+      "$WRANGLER_MINIFLARE_PACKAGE" && \
+    test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
+      "1.20260911.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \

@@ -4,6 +4,22 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] - 09/14/2026
+
+### Added
+
+- Add a v1.2.1 dependency audit with the frozen runtime pins, Python lock-generator boundary, and required native release gates
+
+### Changed
+
+- Refresh Claude Code to 2.1.270, pnpm to 12.4.1, Wrangler to 4.131.2 with its owned Miniflare/workerd pair, fzf to 0.74.4, and lazygit to 0.65.1
+- Refresh Matplotlib to 3.11.2, tqdm to 4.70.1, Uvicorn to 0.53.0, and Renovate validation to 44.87.1
+- Update the protected release baseline to `v1.2.0` and refresh Debian package resolution for the release preparation date
+
+### Fixed
+
+- Keep OpenSpec's non-root project initialization portable through Git Bash bind mounts and force stubborn Uvicorn smoke processes to stop cleanly
+
 ## [1.2.0] - 09/10/2026
 
 ### Added
