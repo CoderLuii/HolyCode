@@ -17,10 +17,10 @@ REQUIRED_PINS = {
     "actions/checkout": ("3d3c42e5aac5ba805825da76410c181273ba90b1", "v7.0.1"),
     "actions/setup-node": ("820762786026740c76f36085b0efc47a31fe5020", "v7.0.0"),
     "actions/upload-artifact": ("043fb46d1a93c77aae656e7c1c64a875d1fc6a0a", "v7.0.1"),
-    "docker/setup-qemu-action": ("1f40c72289eff860ee54a304f1438e3cff362e0a", "v4.3.0"),
-    "docker/setup-buildx-action": ("37fe631027851001ddb9b187196cc803df7f5f0e", "v4.3.0"),
+    "docker/setup-qemu-action": ("99012661954931238ded8c8b007157a8430204e1", "v4.4.0"),
+    "docker/setup-buildx-action": ("f87e5991a6d7451dcb8d9637bfbc97413f497069", "v4.4.1"),
     "docker/login-action": ("dbcb813823bdd20940b903addbd779551569679f", "v4.6.0"),
-    "docker/build-push-action": ("53b7df96c91f9c12dcc8a07bcb9ccacbed38856a", "v7.3.0"),
+    "docker/build-push-action": ("c3c9e263c25d99ce0380d002d59b67737d91b0dc", "v7.4.0"),
     "peter-evans/dockerhub-description": ("1b9a80c056b620d92cedb9d9b5a223409c68ddfa", "v5.0.0"),
     "aquasecurity/trivy-action": ("ed142fd0673e97e23eac54620cfb913e5ce36c25", "v0.36.0"),
 }
@@ -89,13 +89,13 @@ def collect_errors() -> list[str]:
         "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.74.0",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.2.0@sha256:72085db834a1ac2de07629abfeb8c9972296a40f3a0903fbd35d54155553f1c6",
-        "PREVIOUS_VERSION: v1.2.0",
-        "RELEASE_VERSION: v1.2.1",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.2.1@sha256:12382641397dd477fe4a57a7dcf74107b05062c5285f0f50cc8664056701a2b2",
+        "PREVIOUS_VERSION: v1.2.1",
+        "RELEASE_VERSION: v1.2.2",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
-        "bash scripts/validate_renovate_extraction.sh 44.87.1",
+        "bash scripts/validate_renovate_extraction.sh 44.97.6",
         "scripts/validate_scanner_findings.py",
         "bash scripts/test_plugin_modes.sh",
         'ref: ${{ github.sha }}',
@@ -157,7 +157,7 @@ def collect_errors() -> list[str]:
             errors.append(f"pr-validation.yml must contain {required_text!r}")
     if "github.event_name == 'pull_request' || github.ref" in pr_text:
         errors.append("pr-validation.yml must fail rejected manual refs, not skip every job")
-    if "bash scripts/validate_renovate_extraction.sh 44.87.1" not in pr_text:
+    if "bash scripts/validate_renovate_extraction.sh 44.97.6" not in pr_text:
         errors.append("pr-validation.yml must validate Renovate extraction with the audited pin")
     if pr_text.count("scanners: vuln,secret") != 2:
         errors.append("manual pre-tag validation must run both Trivy gates with vuln and secret scanners")

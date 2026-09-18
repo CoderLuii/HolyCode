@@ -28,6 +28,101 @@ def exception_keys(record, as_of):
     return keys, errors
 
 
+def validate_trivy_report(report):
+    if not isinstance(report, dict):
+        return "top level must be an object"
+    results = report.get("Results")
+    if not isinstance(results, list):
+        return "Trivy Results must be an array"
+    for result_index, result in enumerate(results):
+        if not isinstance(result, dict):
+            return f"Trivy Results[{result_index}] must be an object"
+        for key in ("Vulnerabilities", "Secrets"):
+            if key not in result:
+                continue
+            items = result[key]
+            if not isinstance(items, list):
+                return f"Trivy Results[{result_index}].{key} must be an array"
+            for item_index, item in enumerate(items):
+                if not isinstance(item, dict):
+                    return (
+                        f"Trivy Results[{result_index}].{key}[{item_index}] "
+                        "must be an object"
+                    )
+                fields = (
+                    ("VulnerabilityID", "PkgName", "InstalledVersion")
+                    if key == "Vulnerabilities"
+                    else ("RuleID",)
+                )
+                for field in fields:
+                    if field in item and not isinstance(item[field], str):
+                        return (
+                            f"Trivy Results[{result_index}].{key}[{item_index}]"
+                            f".{field} must be a string"
+                        )
+    return None
+
+
+def validate_scout_report(report):
+    if not isinstance(report, dict):
+        return "top level must be an object"
+    runs = report.get("runs")
+    if not isinstance(runs, list) or not runs:
+        return "Scout runs must be a non-empty array"
+    for run_index, run in enumerate(runs):
+        if not isinstance(run, dict):
+            return f"Scout runs[{run_index}] must be an object"
+        results = run.get("results")
+        if not isinstance(results, list):
+            return f"Scout runs[{run_index}].results must be an array"
+        for result_index, result in enumerate(results):
+            if not isinstance(result, dict):
+                return (
+                    f"Scout runs[{run_index}].results[{result_index}] "
+                    "must be an object"
+                )
+            if "ruleId" in result and not isinstance(result["ruleId"], str):
+                return (
+                    f"Scout runs[{run_index}].results[{result_index}].ruleId "
+                    "must be a string"
+                )
+        tool = run.get("tool", {})
+        if not isinstance(tool, dict):
+            return f"Scout runs[{run_index}].tool must be an object"
+        driver = tool.get("driver", {})
+        if not isinstance(driver, dict):
+            return f"Scout runs[{run_index}].tool.driver must be an object"
+        rules = driver.get("rules", [])
+        if not isinstance(rules, list):
+            return f"Scout runs[{run_index}].tool.driver.rules must be an array"
+        for rule_index, rule in enumerate(rules):
+            if not isinstance(rule, dict):
+                return (
+                    f"Scout runs[{run_index}].tool.driver.rules[{rule_index}] "
+                    "must be an object"
+                )
+            if "id" in rule and not isinstance(rule["id"], str):
+                return (
+                    f"Scout runs[{run_index}].tool.driver.rules[{rule_index}].id "
+                    "must be a string"
+                )
+            properties = rule.get("properties", {})
+            if not isinstance(properties, dict):
+                return (
+                    f"Scout runs[{run_index}].tool.driver.rules[{rule_index}]"
+                    ".properties must be an object"
+                )
+            purls = properties.get("purls", [])
+            if not isinstance(purls, list) or not all(
+                isinstance(purl, str) for purl in purls
+            ):
+                return (
+                    f"Scout runs[{run_index}].tool.driver.rules[{rule_index}]"
+                    ".properties.purls must be an array of strings"
+                )
+    return None
+
+
 def trivy_findings(report):
     findings = []
     for result in report.get("Results") or []:
@@ -96,6 +191,15 @@ def main():
         record = load_json(args.exceptions) if args.exceptions else {"exceptions": []}
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(error, file=sys.stderr)
+        return 2
+
+    report_error = (
+        validate_scout_report(report)
+        if args.scanner == "scout"
+        else validate_trivy_report(report)
+    )
+    if report_error:
+        print(f"invalid scanner report: {report_error}", file=sys.stderr)
         return 2
 
     allowed, errors = exception_keys(record, as_of)

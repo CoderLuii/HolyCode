@@ -147,6 +147,129 @@ class ScannerFindingTests(unittest.TestCase):
         result = self.run_validator("scout", {"runs": [{"results": []}]})
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_rejects_reports_without_the_scanner_collection(self):
+        for scanner in ("trivy", "scout"):
+            with self.subTest(scanner=scanner):
+                result = self.run_validator(scanner, {})
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("invalid scanner report", result.stderr)
+
+    def test_rejects_cross_scanner_reports(self):
+        cases = (
+            ("trivy", {"runs": [{"results": []}]}),
+            ("scout", {"Results": []}),
+        )
+        for scanner, report in cases:
+            with self.subTest(scanner=scanner):
+                result = self.run_validator(scanner, report)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("invalid scanner report", result.stderr)
+
+    def test_rejects_wrong_scanner_collection_types(self):
+        cases = (
+            ("trivy", []),
+            ("trivy", {"Results": {}}),
+            ("trivy", {"Results": [[]]}),
+            ("trivy", {"Results": [{"Vulnerabilities": {}}]}),
+            ("trivy", {"Results": [{"Secrets": {}}]}),
+            ("scout", []),
+            ("scout", {"runs": {}}),
+            ("scout", {"runs": []}),
+            ("scout", {"runs": [[]]}),
+            ("scout", {"runs": [{"results": {}}]}),
+        )
+        for scanner, report in cases:
+            with self.subTest(scanner=scanner, report=report):
+                result = self.run_validator(scanner, report)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("invalid scanner report", result.stderr)
+
+    def test_rejects_wrong_scout_nested_structure_types(self):
+        reports = (
+            {"runs": [{"results": [], "tool": None}]},
+            {"runs": [{"results": [], "tool": {"driver": []}}]},
+            {"runs": [{"results": [], "tool": {"driver": {"rules": {}}}}]},
+            {"runs": [{"results": [], "tool": {"driver": {"rules": [[]]}}}]},
+            {
+                "runs": [
+                    {
+                        "results": [],
+                        "tool": {"driver": {"rules": [{"properties": []}]}},
+                    }
+                ]
+            },
+            {
+                "runs": [
+                    {
+                        "results": [],
+                        "tool": {
+                            "driver": {"rules": [{"properties": {"purls": {}}}]}
+                        },
+                    }
+                ]
+            },
+            {
+                "runs": [
+                    {
+                        "results": [],
+                        "tool": {
+                            "driver": {"rules": [{"properties": {"purls": [1]}}]}
+                        },
+                    }
+                ]
+            },
+        )
+        for report in reports:
+            with self.subTest(report=report):
+                result = self.run_validator("scout", report)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("invalid scanner report", result.stderr)
+
+    def test_rejects_non_string_scanner_key_fields(self):
+        cases = []
+        for invalid in ([], {}):
+            for key in ("VulnerabilityID", "PkgName", "InstalledVersion"):
+                cases.append(
+                    (
+                        "trivy",
+                        {"Results": [{"Vulnerabilities": [{key: invalid}]}]},
+                    )
+                )
+            cases.append(
+                ("trivy", {"Results": [{"Secrets": [{"RuleID": invalid}]}]})
+            )
+            cases.append(
+                (
+                    "scout",
+                    {
+                        "runs": [
+                            {
+                                "tool": {"driver": {"rules": [{"id": invalid}]}},
+                                "results": [],
+                            }
+                        ]
+                    },
+                )
+            )
+            cases.append(
+                (
+                    "scout",
+                    {
+                        "runs": [
+                            {
+                                "tool": {"driver": {"rules": []}},
+                                "results": [{"ruleId": invalid}],
+                            }
+                        ]
+                    },
+                )
+            )
+        for scanner, report in cases:
+            with self.subTest(scanner=scanner, report=report):
+                result = self.run_validator(scanner, report)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("invalid scanner report", result.stderr)
+
     def test_no_exception_mode_accepts_empty_report(self):
         result = self.run_validator(
             "trivy", {"Results": []}, use_exceptions=False

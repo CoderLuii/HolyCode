@@ -4,6 +4,24 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] - 09/18/2026
+
+### Added
+
+- Add a v1.2.2 dependency audit covering the selected runtime, Python, CI, owner-scoped overrides, compatibility holds, and pending native release gates
+
+### Changed
+
+- Refresh GitHub CLI to 2.101.0, OpenCode to 1.18.31, Claude Code to 2.1.276, OpenSpec to 1.13.1, pnpm to 12.4.2, Prettier to 3.9.8, and Wrangler to 4.134.0 with its Miniflare 5.20260917.0-alpha and workerd 1.20260917.1 graph
+- Refresh Playwright to 1.63.0 and pandas to 3.0.6, with compatible clean-resolved updates to contourpy 1.4.0, greenlet 3.5.6, idna 3.20, and urllib3 2.8.0
+- Refresh the Node 24.21.0 base image digest, npm-owned brace-expansion to 5.0.12 and ip-address to 10.7.2, and the protected Renovate validator to 44.97.6
+- Keep Paperclip at 2026.831.1 because 2026.916.0 enables the native runner by default without a narrow supported self-hosted control that preserves explicit user settings
+- Move the protected release predecessor and rollback image from v1.2.0 to v1.2.1
+
+### Fixed
+
+- Reject malformed or cross-scanner Trivy and Docker Scout reports instead of accepting them as empty findings
+
 ## [1.2.1] - 09/14/2026
 
 ### Added

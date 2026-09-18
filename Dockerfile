@@ -4,8 +4,8 @@
 # ==============================================================================
 
 # renovate: datasource=github-releases depName=cli/cli
-ARG GITHUB_CLI_VERSION=2.100.0
-ARG GITHUB_CLI_REF=45437bc7eeeb3359bbfddd1742f79de7652fd3e2
+ARG GITHUB_CLI_VERSION=2.101.0
+ARG GITHUB_CLI_REF=0cf1092493af067646fc5f3db9421c6a6ec9c938
 # renovate: datasource=github-releases depName=junegunn/fzf
 ARG FZF_VERSION=0.74.4
 ARG FZF_REF=a140afeb4d733cad3c96a56bf6db7e26853b6757
@@ -24,11 +24,9 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
     test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}" && \
     test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
     test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.83.2" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.41.0" && \
-    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.19.2" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.39.0" && \
-    go get golang.org/x/mod@v0.40.0 && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.40.0" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.42.0" && \
+    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.20.0" && \
+    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.41.0" && \
     go mod verify && \
     mkdir -p /tmp/gh-test && \
     chown -R nobody:nogroup /src /tmp/gh-test && \
@@ -41,9 +39,9 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
       GOOS=linux GOARCH="${GH_GOARCH}" CGO_ENABLED=0 && \
     install -D -m 0755 bin/gh /out/gh && \
     go version -m /out/gh | grep -F "go1.27.1" && \
-    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.19\.2' && \
-    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
-    go version -m /out/gh | grep -E 'golang.org/x/mod[[:space:]]+v0\.40\.0'
+    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.20\.0' && \
+    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.42\.0' && \
+    go version -m /out/gh | grep -E 'golang.org/x/mod[[:space:]]+v0\.41\.0'
 
 FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS fzf-builder
 ARG FZF_VERSION
@@ -103,7 +101,7 @@ RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
     go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
     go version -m /out/lazygit | grep -E 'golang.org/x/sys[[:space:]]+v0\.47\.0'
 
-FROM node:24.21.0-trixie-slim@sha256:db3ae80f5d8df06e04dabdf7b44cbf008d32de168205fa0294444aabbc08c590
+FROM node:24.21.0-trixie-slim@sha256:d7b4e5c4ad20b327d7bb16fab6aecd60ac20aa50f8514eb75a2b059e89abe48e
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -116,13 +114,13 @@ ARG DELTA_VERSION=0.19.2
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.30
+ARG OPENCODE_VERSION=1.18.31
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.270
+ARG CLAUDE_CODE_VERSION=2.1.276
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.13.0
+ARG OPENSPEC_VERSION=1.13.1
 # renovate: datasource=npm depName=undici
 ARG PAPERCLIP_UNDICI_VERSION=6.28.1
 # renovate: datasource=npm depName=opencode-claude-auth
@@ -132,21 +130,21 @@ ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
 ARG NPM_VERSION=12.0.2
 # renovate: datasource=npm depName=brace-expansion
-ARG NPM_BRACE_EXPANSION_VERSION=5.0.9
+ARG NPM_BRACE_EXPANSION_VERSION=5.0.12
 # renovate: datasource=npm depName=tar
 ARG NPM_TAR_VERSION=7.5.22
 # renovate: datasource=npm depName=ip-address
-ARG NPM_IP_ADDRESS_VERSION=10.7.0
+ARG NPM_IP_ADDRESS_VERSION=10.7.2
 # renovate: datasource=npm depName=js-yaml
 ARG PM2_JS_YAML_VERSION=4.3.2
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.13
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.4.1
+ARG PNPM_VERSION=12.4.2
 # renovate: datasource=npm depName=vite
 ARG VITE_VERSION=8.3.0
 # renovate: datasource=npm depName=prettier
-ARG PRETTIER_VERSION=3.9.6
+ARG PRETTIER_VERSION=3.9.8
 # renovate: datasource=npm depName=prisma
 ARG PRISMA_VERSION=7.10.0
 # renovate: datasource=npm depName=deepmerge-ts
@@ -160,9 +158,9 @@ ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.4.1
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.131.2
+ARG WRANGLER_VERSION=4.134.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20260911.1-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20260917.0-alpha
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.4
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
@@ -181,7 +179,7 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-09-14
+ARG RELEASE_APT_REFRESH=2026-09-18
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -404,7 +402,7 @@ RUN npm install -g --ignore-scripts "npm@${NPM_VERSION}" && \
     test "$(npm --version)" = "${NPM_VERSION}" && \
     rm -rf /root/.npm
 RUN test "$(npm view "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}" dist.integrity)" = \
-      "sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==" && \
+      "sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==" && \
     BRACE_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}") && \
     BRACE_DIR=/usr/local/lib/node_modules/npm/node_modules/brace-expansion && \
@@ -427,9 +425,9 @@ RUN test "$(npm view "tar@${NPM_TAR_VERSION}" dist.integrity)" = \
     (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null) && \
     rm -rf /root/.npm
 # npm 12.0.2 resolves ip-address 10.2.0 through socks. Keep the compatible
-# socks range and replace that nested copy with the fixed 10.7.0 release.
+# socks range and replace that nested copy with the fixed 10.7.2 release.
 RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
-      "sha512-BGFsyJd5mpXp3rK6jIdADLNgpJUK1jnjzvYF8lK+VyDab9JAmqN0YOKDdP17HlgKb2+ehPgDc8EtnRLbGCAMhA==" && \
+      "sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==" && \
     NPM_IP_ADDRESS_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "ip-address@${NPM_IP_ADDRESS_VERSION}") && \
     NPM_IP_ADDRESS_DIR=/usr/local/lib/node_modules/npm/node_modules/ip-address && \
@@ -588,28 +586,28 @@ RUN PM2_JS_YAML_INTEGRITY="sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TI
     rm -rf /tmp/holycode-build-pm2 "$PM2_APP" && \
     rm -rf /root/.npm
 
-# Wrangler 4.131.2 owns Miniflare 5.20260911.1-alpha and workerd 1.20260911.1;
+# Wrangler 4.134.0 owns Miniflare 5.20260917.0-alpha and workerd 1.20260917.1;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260911.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260917.1" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260911.1" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260917.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260911.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260917.1") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260911.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260917.1") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20260911.1" && \
+      "1.20260917.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \

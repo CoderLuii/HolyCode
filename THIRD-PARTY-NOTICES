@@ -12,8 +12,9 @@ general legal-compliance audit of every transitive package.
 - License: MIT
 - Copyright: Anomaly
 - Source: https://github.com/anomalyco/opencode
-- npm: https://www.npmjs.com/package/opencode-ai
+- npm: https://www.npmjs.com/package/opencode-ai/v/1.18.31
 - Website: https://opencode.ai
+- Version: 1.18.31
 
 OpenCode is the core AI coding agent bundled in HolyCode. It is installed
 via npm as a global package and runs as an s6-overlay supervised process.
@@ -64,8 +65,8 @@ distribute or modify this plugin.
 
 - License: MIT
 - Source: https://github.com/Fission-AI/OpenSpec
-- npm: https://www.npmjs.com/package/@fission-ai/openspec
-- Version: 1.13.0
+- npm: https://www.npmjs.com/package/@fission-ai/openspec/v/1.13.1
+- Version: 1.13.1
 
 Installed as the pinned global CLI. Telemetry is disabled in the image, and
 project initialization occurs only when you explicitly run
@@ -77,14 +78,24 @@ project initialization occurs only when you explicitly run
 - Source: https://github.com/npm/cli
 - Version: 12.0.2
 
-### npm bundled ip-address 10.7.0 replacement
+### npm bundled brace-expansion 5.0.12 replacement
+
+- License: MIT
+- Source: https://github.com/juliangruber/brace-expansion
+- Version: 5.0.12
+
+HolyCode replaces npm's nested `brace-expansion` package with the unmodified,
+integrity-verified 5.0.12 npm payload. npm's bundled `minimatch` dependency
+range accepts this version.
+
+### npm bundled ip-address 10.7.2 replacement
 
 - License: MIT
 - Source: https://github.com/beaugunderson/ip-address
-- Version: 10.7.0
+- Version: 10.7.2
 
 HolyCode replaces npm's nested `ip-address` package with the unmodified,
-integrity-verified 10.7.0 npm payload. npm's bundled `socks` dependency range
+integrity-verified 10.7.2 npm payload. npm's bundled `socks` dependency range
 already accepts this version.
 
 ## PM2
@@ -170,6 +181,7 @@ automation via Playwright and Puppeteer.
 - License: Apache-2.0
 - Copyright: Microsoft Corporation
 - Source: https://github.com/microsoft/playwright
+- Version: 1.63.0
 
 Installed via pip. Uses the system Chromium binary, not Playwright's
 bundled browsers.
@@ -181,12 +193,15 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.270
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.270.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.276
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.276.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.270
+- Version: 2.1.276
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.270`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.276`.
+The immutable registry tarball, installed CLI, and installed Linux native
+payload carry the same 147-byte legal-agreements notice. This is artifact
+evidence, not a permissive SPDX license classification.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -194,7 +209,7 @@ ENABLE_CLAUDE_AUTH=true.
 
 - License: MIT
 - Source: https://github.com/paperclipai/paperclip
-- Release: https://github.com/paperclipai/paperclip/releases/tag/v2026.831.0
+- Release: https://github.com/paperclipai/paperclip/releases/tag/v2026.831.1
 - npm: https://www.npmjs.com/package/paperclipai
 - Catalog npm: https://www.npmjs.com/package/@paperclipai/skills-catalog
 
@@ -210,7 +225,7 @@ an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 - License: MIT
 - Copyright: GitHub, Inc.
 - Source: https://github.com/cli/cli
-- Version: 2.100.0 (`45437bc7eeeb3359bbfddd1742f79de7652fd3e2`)
+- Version: 2.101.0 (`0cf1092493af067646fc5f3db9421c6a6ec9c938`)
 
 Built from the exact upstream release commit with Go 1.27.1 and its verified module graph.
 
@@ -229,6 +244,27 @@ update.
 - License: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
 - Source: https://github.com/numpy/numpy
 - Version: 2.5.3
+
+## pandas
+
+- License: BSD-3-Clause plus bundled third-party license texts
+- Source: https://github.com/pandas-dev/pandas
+- Version: 3.0.6
+
+The installed pandas distribution includes its primary license and bundled
+third-party notices in one license file. This notice does not reduce that file
+to a single blanket license.
+
+## Python lock transitive updates
+
+The clean-resolved Python lock also includes these changed transitive packages:
+
+| Package | Version | License | Source |
+| --- | --- | --- | --- |
+| contourpy | 1.4.0 | BSD-3-Clause | https://github.com/contourpy/contourpy |
+| greenlet | 3.5.6 | MIT AND PSF-2.0 | https://github.com/python-greenlet/greenlet |
+| idna | 3.20 | BSD-3-Clause | https://github.com/kjd/idna |
+| urllib3 | 2.8.0 | MIT | https://github.com/urllib3/urllib3 |
 
 ## Packaging
 
@@ -258,9 +294,28 @@ checksum-verified setuptools 78.1.1 source and keeps pip's vendoring imports.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.131.2
+- Version: 4.134.0
 
-Wrangler owns Miniflare 5.20260911.1-alpha and workerd 1.20260911.1.
+Wrangler owns Miniflare 5.20260917.0-alpha and workerd 1.20260917.1. The
+installed package manifests declare MIT for Miniflare and Apache-2.0 for
+workerd. These package roots do not include license files in the selected
+AMD64 image, so this notice does not claim bundled license text for them. The
+final ARM64 image must verify its separate workerd native payload.
+
+## pnpm
+
+- License: MIT
+- Source: https://github.com/pnpm/pnpm
+- Version: 12.4.2
+
+The installed package manifest declares MIT. The selected image has no license
+file at the pnpm package root, so this notice does not claim one is bundled.
+
+## Prettier
+
+- License: MIT
+- Source: https://github.com/prettier/prettier
+- Version: 3.9.8
 
 ### Miniflare bundled Sharp 0.35.4 installed-byte verification
 

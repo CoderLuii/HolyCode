@@ -433,7 +433,7 @@ services:
 
 > Release tags ठीक `vX.Y.Z` का उपयोग करते हैं. Docker image tags से `v` हटा रहता है. `v1.0.9` के बाद `v1.1.0`, `v1.1.9` के बाद `v1.2.0`, और `v1.9.9` के बाद `v2.0.0` आता है. `v1.0.10` से `v1.0.13` तक अपरिवर्तनीय हैं.
 
-> v1.2.1 में OpenCode 1.18.30, Claude Code 2.1.270, Undici 6.28.1 के साथ Paperclip 2026.831.1, npm 12.0.2, pnpm 12.4.1, ESLint 10.10.0, Miniflare 5.20260911.1-alpha और workerd 1.20260911.1 के साथ Wrangler 4.131.2, Prisma 7.10.0, TypeScript 6.0.3 और json-server 0.17.4 शामिल हैं। Python में Matplotlib 3.11.2, tqdm 4.70.1, FastAPI 0.141.1, Uvicorn 0.53.0 और NumPy 2.5.3 हैं। `opencode-claude-auth` 2.2.0 image में पैक है और स्टार्टअप पर offline इंस्टॉल होता है। Netlify CLI और npm पैकेज `serve` image में शामिल नहीं हैं। HolyCode द्वारा मैनेज की जाने वाली oh-my-openagent इंस्टॉलेशन सस्पेंड है, Hermes अभी भी उपलब्ध नहीं है और बाहर से मैनेज किए गए CLIProxyAPI endpoint समर्थित रहते हैं।
+> v1.2.2 में OpenCode 1.18.31, OpenSpec 1.13.1, Claude Code 2.1.276, Undici 6.28.1 के साथ Paperclip 2026.831.1, npm 12.0.2, pnpm 12.4.2, ESLint 10.10.0, Prettier 3.9.8, Miniflare 5.20260917.0-alpha और workerd 1.20260917.1 के साथ Wrangler 4.134.0, Prisma 7.10.0, TypeScript 6.0.3 और json-server 0.17.4 शामिल हैं। Python में Playwright 1.63.0, pandas 3.0.6, Matplotlib 3.11.2, tqdm 4.70.1, FastAPI 0.141.1, Uvicorn 0.53.0 और NumPy 2.5.3 हैं। `opencode-claude-auth` 2.2.0 image में पैक है और स्टार्टअप पर offline इंस्टॉल होता है। Netlify CLI और npm पैकेज `serve` image में शामिल नहीं हैं। HolyCode द्वारा मैनेज की जाने वाली oh-my-openagent इंस्टॉलेशन सस्पेंड है, Hermes अभी भी उपलब्ध नहीं है और बाहर से मैनेज किए गए CLIProxyAPI endpoint समर्थित रहते हैं।
 
 </details>
 
@@ -684,7 +684,7 @@ environment:
 
 अगर आप `v1.1.3` से पहले के release से अपग्रेड कर रहे हैं, तो ऊपर दी गई seccomp प्रोफ़ाइल डाउनलोड करें और कंटेनर को री-क्रिएट करने से पहले `holycode` service में `security_opt` जोड़ें।
 
-v1.2.1 में Paperclip 2026.831.1 पर ही रहता है, इसलिए Paperclip का कोई नया migration नहीं है। Rollback के लिए अपग्रेड से पहले के untouched home, cache और workspace volumes को image `1.2.0` के साथ restore करें; v1.2.1 के साथ पहले ही शुरू किए गए volumes दोबारा इस्तेमाल न करें।
+v1.2.2 में Paperclip 2026.831.1 पर ही रहता है, इसलिए Paperclip का कोई नया migration या native runner default override नहीं है। Rollback के लिए अपग्रेड से पहले के untouched home, cache और workspace volumes को image `1.2.1` के साथ restore करें; v1.2.2 के साथ पहले ही शुरू किए गए volumes दोबारा इस्तेमाल न करें।
 
 v1.1.9 में Paperclip 2026.824.1 से 2026.831.1 पर migrations `0223`–`0230` के साथ migrate होता है। हटाए गए `brandColor` और `attachmentMaxBytes` fields निकाल दिए जाते हैं और चल रहे login sessions reset होते हैं; upgrade के बाद दोबारा login करें। Rollback के लिए untouched backup को image `1.1.8` के साथ restore करें। v1.1.9 से migrate हुए database के साथ `1.1.8` कभी शुरू न करें।
 
