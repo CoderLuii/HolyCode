@@ -12,9 +12,9 @@ general legal-compliance audit of every transitive package.
 - License: MIT
 - Copyright: Anomaly
 - Source: https://github.com/anomalyco/opencode
-- npm: https://www.npmjs.com/package/opencode-ai/v/1.18.31
+- npm: https://www.npmjs.com/package/opencode-ai/v/1.18.32
 - Website: https://opencode.ai
-- Version: 1.18.31
+- Version: 1.18.32
 
 OpenCode is the core AI coding agent bundled in HolyCode. It is installed
 via npm as a global package and runs as an s6-overlay supervised process.
@@ -25,10 +25,12 @@ HolyCode does not modify OpenCode's source code.
 - License: MIT
 - Copyright: Griffin Martin
 - Source: https://github.com/griffinmartin/opencode-claude-auth
+- npm: https://www.npmjs.com/package/opencode-claude-auth/v/2.2.1
+- Version: 2.2.1
 
 Optional OpenCode plugin that bridges Claude Code OAuth credentials into
 OpenCode. Not installed by default. Enabled via ENABLE_CLAUDE_AUTH=true
-environment variable. HolyCode includes the exact `2.2.0` npm payload in the
+environment variable. HolyCode includes the exact `2.2.1` npm payload in the
 image after registry-integrity verification, then installs it offline at
 container startup when enabled. HolyCode does not modify this plugin.
 
@@ -65,8 +67,8 @@ distribute or modify this plugin.
 
 - License: MIT
 - Source: https://github.com/Fission-AI/OpenSpec
-- npm: https://www.npmjs.com/package/@fission-ai/openspec/v/1.13.1
-- Version: 1.13.1
+- npm: https://www.npmjs.com/package/@fission-ai/openspec/v/1.13.2
+- Version: 1.13.2
 
 Installed as the pinned global CLI. Telemetry is disabled in the image, and
 project initialization occurs only when you explicitly run
@@ -76,7 +78,7 @@ project initialization occurs only when you explicitly run
 
 - License: Artistic-2.0
 - Source: https://github.com/npm/cli
-- Version: 12.0.2
+- Version: 12.1.0
 
 ### npm bundled brace-expansion 5.0.12 replacement
 
@@ -193,15 +195,16 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.276
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.276.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.281
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.281.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.276
+- Version: 2.1.281
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.276`.
-The immutable registry tarball, installed CLI, and installed Linux native
-payload carry the same 147-byte legal-agreements notice. This is artifact
-evidence, not a permissive SPDX license classification.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.281`.
+The immutable registry tarball contains a 147-byte `LICENSE.md` legal-agreements
+notice. Final native image validation must prove that the installed CLI and
+Linux native payload carry the same notice. This is artifact evidence, not a
+permissive SPDX license classification.
 Used for Claude subscription authentication flows when
 ENABLE_CLAUDE_AUTH=true.
 
@@ -294,28 +297,58 @@ checksum-verified setuptools 78.1.1 source and keeps pip's vendoring imports.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.134.0
+- Version: 4.138.0
 
-Wrangler owns Miniflare 5.20260917.0-alpha and workerd 1.20260917.1. The
+Wrangler owns Miniflare 5.20260921.1-alpha and workerd 1.20260921.1. The
 installed package manifests declare MIT for Miniflare and Apache-2.0 for
-workerd. These package roots do not include license files in the selected
-AMD64 image, so this notice does not claim bundled license text for them. The
-final ARM64 image must verify its separate workerd native payload.
+workerd. Their selected npm package roots do not include license files, so this
+notice does not claim bundled license text for them. The final AMD64 and ARM64
+images must verify the installed package roots and separate workerd payloads.
 
 ## pnpm
 
 - License: MIT
 - Source: https://github.com/pnpm/pnpm
-- Version: 12.4.2
+- Version: 12.6.0
 
-The installed package manifest declares MIT. The selected image has no license
-file at the pnpm package root, so this notice does not claim one is bundled.
+The selected package manifest declares MIT. Its npm package has no license file
+at the package root, so this notice does not claim one is bundled.
 
 ## Prettier
 
 - License: MIT
 - Source: https://github.com/prettier/prettier
-- Version: 3.9.8
+- Version: 3.9.9
+
+## tsx
+
+- License: MIT
+- Source: https://github.com/privatenumber/tsx
+- Version: 4.23.15
+
+## Vite
+
+- License: MIT
+- Source: https://github.com/vitejs/vite
+- Version: 8.3.1
+
+## Lighthouse
+
+- License: Apache-2.0
+- Source: https://github.com/GoogleChrome/lighthouse
+- Version: 13.5.0
+
+## ESLint
+
+- License: MIT
+- Source: https://github.com/eslint/eslint
+- Version: 10.11.0
+
+## drizzle-kit
+
+- License: MIT
+- Source: https://github.com/drizzle-team/drizzle-orm
+- Version: 0.31.11
 
 ### Miniflare bundled Sharp 0.35.4 installed-byte verification
 

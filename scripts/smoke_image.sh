@@ -568,9 +568,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20260917.1\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20260917.1\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260917.1\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20260921.1\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20260921.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260921.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -690,7 +690,7 @@ EOF
   npm ls -g --all --json > "$npm_tree" 2>/tmp/holycode-npm-tree.stderr || npm_tree_status=$?
   test -s "$npm_tree"
   test "$npm_tree_status" -eq 1
-  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const expected=[\"invalid: third-party-web@0.29.2 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.1 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\" || problems.some(problem=>problem.startsWith(\"missing:\")) || JSON.stringify([...problems].sort())!==JSON.stringify(expected)) process.exit(1); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); if(lighthouse?.version!==\"13.4.1\" || trace?.version!==\"0.0.65\" || tracePkg.dependencies[\"third-party-web\"]!==\"latest\" || tracePkg.dependencies[\"legacy-javascript\"]!==\"latest\" || trace.dependencies?.[\"third-party-web\"]?.version!==\"0.29.2\" || trace.dependencies?.[\"legacy-javascript\"]?.version!==\"0.0.1\") process.exit(1)" "$npm_tree"
+  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const expected=[\"invalid: third-party-web@0.30.0 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.1 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\" || problems.some(problem=>problem.startsWith(\"missing:\")) || JSON.stringify([...problems].sort())!==JSON.stringify(expected)) process.exit(1); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); if(lighthouse?.version!==\"13.5.0\" || trace?.version!==\"0.0.65\" || tracePkg.dependencies[\"third-party-web\"]!==\"latest\" || tracePkg.dependencies[\"legacy-javascript\"]!==\"latest\" || trace.dependencies?.[\"third-party-web\"]?.version!==\"0.30.0\" || trace.dependencies?.[\"legacy-javascript\"]?.version!==\"0.0.1\") process.exit(1)" "$npm_tree"
   rm -f "$npm_tree" /tmp/holycode-npm-tree.stderr
   ! command -v vercel
   ! command -v sharp
@@ -703,7 +703,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260917.1\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260921.1\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))
@@ -780,6 +780,82 @@ EOF
     esac
   done
 HOLYCODE_SMOKE
+
+cliproxy_network="holycode-cliproxy-smoke-$$"
+cliproxy_mock="holycode-cliproxy-mock-$$"
+cliproxy_candidate="holycode-cliproxy-candidate-$$"
+cliproxy_home="holycode-cliproxy-home-$$"
+cleanup_cliproxy_smoke() {
+  docker rm -f "$cliproxy_candidate" "$cliproxy_mock" >/dev/null 2>&1 || true
+  docker volume rm -f "$cliproxy_home" >/dev/null 2>&1 || true
+  docker network rm "$cliproxy_network" >/dev/null 2>&1 || true
+}
+trap cleanup_cliproxy_smoke EXIT
+docker network create --internal "$cliproxy_network" >/dev/null
+docker volume create "$cliproxy_home" >/dev/null
+docker run -d --name "$cliproxy_mock" --network "$cliproxy_network" \
+  --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,mode=1777,size=16m \
+  --cap-drop ALL --security-opt no-new-privileges --entrypoint python3 \
+  "$image" -c '
+import json
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path != "/v1/models" or self.headers.get("Authorization"):
+            self.send_error(400)
+            return
+        body = json.dumps({"data":[{"id":"holycode-discovered-primary"},{"id":"vendor/holycode-discovered-small"}]}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        pass
+
+ThreadingHTTPServer(("0.0.0.0", 8317), Handler).serve_forever()
+' >/dev/null
+cliproxy_mock_ready=false
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  if docker exec "$cliproxy_mock" python3 -c \
+    'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8317/v1/models", timeout=1).read()'; then
+    cliproxy_mock_ready=true
+    break
+  fi
+  sleep 1
+done
+test "$cliproxy_mock_ready" = true
+docker run -d --name "$cliproxy_candidate" --network "$cliproxy_network" \
+  -v "$cliproxy_home:/home/opencode" \
+  -e ENABLE_PAPERCLIP=false \
+  -e CLIPROXYAPI_ENABLED=true \
+  -e CLIPROXYAPI_BASE_URL="http://$cliproxy_mock:8317/v1" \
+  "$image" >/dev/null
+cliproxy_config_ready=false
+for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+  if docker exec "$cliproxy_candidate" node -e '
+    const config=require("/home/opencode/.config/opencode/opencode.json");
+    const provider=config.provider?.cliproxyapi;
+    if(!provider || provider.options?.baseURL!==process.argv[1] || provider.options?.apiKey!==undefined || !provider.models["holycode-discovered-primary"] || !provider.models["vendor/holycode-discovered-small"] || Object.keys(provider.models).length!==2) process.exit(1);
+  ' "http://$cliproxy_mock:8317/v1"; then
+    cliproxy_config_ready=true
+    break
+  fi
+  sleep 1
+done
+if [ "$cliproxy_config_ready" != true ]; then
+  docker logs "$cliproxy_candidate" || true
+  exit 1
+fi
+docker logs "$cliproxy_candidate" 2>&1 | grep -F "CLIProxyAPI discovered 2 model(s) from /models"
+cliproxy_models="$(docker exec --user opencode -e HOME=/home/opencode \
+  "$cliproxy_candidate" timeout 15 opencode models cliproxyapi)"
+printf '%s\n' "$cliproxy_models" | grep -F "holycode-discovered-primary"
+printf '%s\n' "$cliproxy_models" | grep -F "vendor/holycode-discovered-small"
+cleanup_cliproxy_smoke
+trap - EXIT
 
 docker run --rm --network none --read-only \
   --tmpfs /tmp:rw,exec,nosuid,nodev,mode=1777,size=64m \
@@ -941,7 +1017,7 @@ docker run --rm --network none --entrypoint sh \
   "$image" -lc '
   set -eu
   cd /fixture
-  node -e "console.log(require(\"./node_modules/drizzle-orm/package.json\").version)" | grep -Fx 0.45.2
+  node -e "console.log(require(\"./node_modules/drizzle-orm/package.json\").version)" | grep -Fx 0.45.3
   test "$(command -v drizzle-kit)" = /usr/local/bin/drizzle-kit
   test ! -e node_modules/.bin/drizzle-kit
   test ! -e /usr/local/lib/node_modules/drizzle-kit/node_modules/drizzle-orm

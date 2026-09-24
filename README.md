@@ -404,8 +404,9 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | `CLIPROXYAPI_ENABLED` | (none) | Set to `true` to add the optional OpenCode `cliproxyapi` provider |
 | `CLIPROXYAPI_BASE_URL` | `http://cliproxyapi:8317/v1` | Externally managed CLIProxyAPI base URL reachable from the HolyCode container |
 | `CLIPROXYAPI_API_KEY` | (none) | Optional API key for CLIProxyAPI, stored only as an OpenCode env reference when set |
-| `CLIPROXYAPI_MODEL` | (none) | Optional primary model key exposed as `cliproxyapi/<model>` |
-| `CLIPROXYAPI_SMALL_MODEL` | (none) | Optional smaller/faster model key exposed as `cliproxyapi/<model>` |
+| `CLIPROXYAPI_MODELS` | (none) | Optional comma-separated model IDs exposed as `cliproxyapi/<model>`; when all model settings are empty, HolyCode discovers `/v1/models` at startup |
+| `CLIPROXYAPI_MODEL` | (none) | Backward-compatible single primary model ID; also merged into `CLIPROXYAPI_MODELS` when both are set |
+| `CLIPROXYAPI_SMALL_MODEL` | (none) | Optional additional smaller/faster model ID |
 | `HOLYCODE_PLUGIN_UPDATE` | `manual` | Plugin update mode: `manual` (install if missing and keep user versions) or `auto` (sync declared pins on boot) |
 
 > The supported `ENABLE_CLAUDE_AUTH` toggle takes effect on container restart. Set the env var and run `docker compose down && docker compose up -d`.
@@ -424,7 +425,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 > The bundled Hermes service is currently unavailable. If an older deployment still sets `ENABLE_HERMES=true`, startup stops with a migration message instead of silently ignoring the flag. Your `/home/opencode/.hermes` data is not changed.
 
-> `CLIPROXYAPI_ENABLED=true` adds a separate OpenCode provider named `cliproxyapi`. It does not change `ENABLE_CLAUDE_AUTH`, does not touch `/home/opencode/.claude`, and does not set global `ANTHROPIC_*` proxy variables. Set `CLIPROXYAPI_BASE_URL` to your externally managed service and keep its credentials and network exposure outside the HolyCode container.
+> `CLIPROXYAPI_ENABLED=true` adds a separate OpenCode provider named `cliproxyapi`. When every model setting is empty, HolyCode discovers model IDs from the endpoint's `/v1/models` response before OpenCode starts. The integration does not change `ENABLE_CLAUDE_AUTH`, touch `/home/opencode/.claude`, or set global `ANTHROPIC_*` proxy variables. Set `CLIPROXYAPI_BASE_URL` to your externally managed service and keep its credentials and network exposure outside the HolyCode container.
 
 > `GIT_USER_NAME` and `GIT_USER_EMAIL` are only applied on first boot. To re-apply, delete the sentinel file and restart: `docker exec holycode rm /home/opencode/.config/opencode/.holycode-bootstrapped` then `docker compose restart`.
 
@@ -472,13 +473,13 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 </details>
 
 <details>
-<summary><strong>v1.2.2 release pins</strong></summary>
+<summary><strong>v1.2.3 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
-| OpenCode | 1.18.31 |
-| OpenSpec | 1.13.1; telemetry disabled, initialize a project explicitly with `openspec init --tools opencode` |
-| npm | 12.0.2 with integrity-verified `brace-expansion` 5.0.12 and `ip-address` 10.7.2 replacements |
+| OpenCode | 1.18.32 |
+| OpenSpec | 1.13.2; telemetry disabled, initialize a project explicitly with `openspec init --tools opencode` |
+| npm | 12.1.0 with integrity-verified `brace-expansion` 5.0.12 and `ip-address` 10.7.2 replacements |
 | PM2 | 7.0.4 with owner-guarded `js-yaml` 4.3.2 replacement |
 | Paperclip | 2026.831.1 compatibility hold with reviewed Undici 6.28.1 replacement; no new migration or native-runner default override |
 | Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
@@ -487,30 +488,30 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | eza | 0.23.5 |
 | fzf | 0.74.4 |
 | lazygit | 0.65.1 |
-| pnpm | 12.4.2 |
-| Vite | 8.3.0 |
-| ESLint | 10.10.0 |
-| Prettier | 3.9.8 |
-| Wrangler | 4.134.0 with Miniflare 5.20260917.0-alpha, workerd 1.20260917.1, and upstream-owned, integrity-verified `sharp` 0.35.4; legacy service environments are not supported |
+| pnpm | 12.6.0 |
+| Vite | 8.3.1 |
+| ESLint | 10.11.0 |
+| Prettier | 3.9.9 |
+| Wrangler | 4.138.0 with Miniflare 5.20260921.1-alpha, workerd 1.20260921.1, and upstream-owned, integrity-verified `sharp` 0.35.4; legacy service environments are not supported |
 | Prisma | 7.10.0 |
-| Lighthouse | 13.4.1 |
+| Lighthouse | 13.5.0 |
 | Netlify CLI and `serve` | Removed |
 | Hermes, Vercel, sharp-cli, concurrently, LHCI | Not bundled |
 | Matplotlib / tqdm | 3.11.2 / 4.70.1 |
 | FastAPI / Uvicorn | 0.141.1 / 0.53.0 |
 | Playwright / pandas | 1.63.0 / 3.0.6 |
-| Claude stable | 2.1.276 |
+| Claude stable | 2.1.281 |
 | GitHub CLI | 2.101.0, built from signed upstream commit `0cf1092493af067646fc5f3db9421c6a6ec9c938` |
-| tsx | 4.23.13 |
+| tsx | 4.23.15 |
 | TypeScript | 6.0.3, held because TypeScript 7 removes the `tsserver` command and changes the stable programmatic API surface |
 | NumPy | 2.5.3 on Python 3.13 |
 | json-server | 0.17.4, held on the stable release instead of the 1.0 beta |
-| opencode-claude-auth default | 2.2.0, integrity-verified and installed offline from the image |
+| opencode-claude-auth default | 2.2.1, integrity-verified and installed offline from the image; refresh issue #11 remains open |
 | oh-my-openagent | HolyCode-managed installation suspended; legacy active entry disabled once while settings, skills, and cache remain |
 
 Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. Manual main-branch validation also runs Docker Scout and Trivy natively on AMD64 and ARM64 before a tag is created. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
 
-The dated adoption, hold, and removal decisions, plus the required release gates, are in the [v1.2.2 dependency audit](docs/dependency-audit-v1.2.2.md).
+The dated adoption, hold, and removal decisions, plus the required release gates, are in the [v1.2.3 dependency audit](docs/dependency-audit-v1.2.3.md).
 
 </details>
 
@@ -636,8 +637,14 @@ environment:
   - CLIPROXYAPI_ENABLED=true
   - CLIPROXYAPI_BASE_URL=http://your-cliproxy-host:8317/v1
   - CLIPROXYAPI_API_KEY=
-  - CLIPROXYAPI_MODEL=your-model-id
+  - CLIPROXYAPI_MODELS=model-a,model-b,model-c
 ```
+
+Leave `CLIPROXYAPI_MODELS`, `CLIPROXYAPI_MODEL`, and `CLIPROXYAPI_SMALL_MODEL` empty to load every valid model ID returned by `CLIPROXYAPI_BASE_URL/models`. Discovery uses `CLIPROXYAPI_API_KEY` as a Bearer token when set, applies a five-second network timeout, rejects redirects and malformed or oversized responses, and never writes or logs the key. If discovery fails on first setup, HolyCode prints an actionable warning and does not add an empty provider. On a later restart, it keeps the last HolyCode-managed model set instead of replacing it with an empty one.
+
+Set `CLIPROXYAPI_MODELS` when you want a fixed comma-separated allowlist and no startup discovery. `CLIPROXYAPI_MODEL` remains supported for one primary model, and `CLIPROXYAPI_SMALL_MODEL` can add another model. HolyCode merges explicit IDs and removes duplicates.
+
+If you manually define `provider.cliproxyapi` in `opencode.json`, HolyCode treats it as user-owned. It preserves that provider exactly as written and skips discovery, managed updates, and removal.
 
 Make sure the endpoint is reachable from the HolyCode container before restarting. Put CLIProxyAPI API keys and OAuth state in the external service; do not reuse `/home/opencode/.claude`.
 
@@ -764,7 +771,7 @@ Plugin cache is mounted separately at `./local-cache/opencode` by default so you
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 
-The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.276`. npm lifecycle scripts are disabled during installation. HolyCode validates each script package's version, integrity, architecture, and script body before running only the approved OpenCode, Claude Code, and Paperclip embedded PostgreSQL steps. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file, and new virtual environments can bootstrap audited packaging tools from the image's offline seed. Debian packages still resolve from current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. User-installed plugins remain outside the image SBOM. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising universal freshness or zero total findings.
+The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.281`. npm lifecycle scripts are disabled during installation. HolyCode validates each script package's version, integrity, architecture, and script body before running only the approved OpenCode, Claude Code, and Paperclip embedded PostgreSQL steps. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file, and new virtual environments can bootstrap audited packaging tools from the image's offline seed. Debian packages still resolve from current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. User-installed plugins remain outside the image SBOM. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising universal freshness or zero total findings.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
 
@@ -833,7 +840,7 @@ docker compose pull
 docker compose up -d
 ```
 
-`v1.2.2` keeps Paperclip at 2026.831.1, so this release adds no Paperclip migration or native-runner default override. To roll back, stop the stack, select `coderluii/holycode:1.2.1`, restore the untouched home, local-cache, and workspace copies you made before upgrading, and start the stack again. Do not reuse volumes that the newer image has already started against when testing the rollback.
+`v1.2.3` keeps Paperclip at 2026.831.1, so this release adds no Paperclip migration or native-runner default override. To roll back, stop the stack, select `coderluii/holycode:1.2.2`, restore the untouched home, local-cache, and workspace copies you made before upgrading, and start the stack again. Do not reuse volumes that the newer image has already started against when testing the rollback.
 
 `v1.1.9` upgrades Paperclip from 2026.824.1 to 2026.831.1 and applies migrations `0223` through `0230`. Migrations remove the retired `brandColor` and `attachmentMaxBytes` company fields, reset transient in-progress login sessions, and require users to restart login. Keep your untouched pre-upgrade copies until onboarding, Skills, agents, projects, workspaces, connections, and provider authentication pass your checks.
 

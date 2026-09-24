@@ -11,7 +11,7 @@ OC_USER="opencode"
 OC_HOME="/home/opencode"
 WORKSPACE_DIR="/workspace"
 CLAUDE_AUTH_PLUGIN_NAME="opencode-claude-auth"
-CLAUDE_AUTH_PLUGIN_VERSION="2.2.0"
+CLAUDE_AUTH_PLUGIN_VERSION="2.2.1"
 CLAUDE_AUTH_PLUGIN_SOURCE="/usr/local/share/holycode/plugins/opencode-claude-auth"
 
 sync_shipped_skills() {
@@ -404,20 +404,36 @@ if [ -f "$CONFIG_FILE" ]; then
 
     # CLIProxyAPI provider
     CLIPROXYAPI_MARKER="$OC_HOME/.config/opencode/.holycode-cliproxyapi-provider.sha256"
-    if ! runuser -u "$OC_USER" -- python3 - "$CONFIG_FILE" "$CLIPROXYAPI_MARKER" "${CLIPROXYAPI_ENABLED:-}" "${CLIPROXYAPI_BASE_URL:-http://cliproxyapi:8317/v1}" "${CLIPROXYAPI_MODEL:-}" "${CLIPROXYAPI_SMALL_MODEL:-}" "${CLIPROXYAPI_API_KEY:+set}" <<'PY'; then
+    if ! runuser -u "$OC_USER" -- python3 - "$CONFIG_FILE" "$CLIPROXYAPI_MARKER" "${CLIPROXYAPI_ENABLED:-}" "${CLIPROXYAPI_BASE_URL:-http://cliproxyapi:8317/v1}" "${CLIPROXYAPI_MODELS:-}" "${CLIPROXYAPI_MODEL:-}" "${CLIPROXYAPI_SMALL_MODEL:-}" "${CLIPROXYAPI_API_KEY:+set}" <<'PY'; then
 import hashlib
+import http.client
 import json
 import os
+import queue
 import sys
+import threading
+import time
+import urllib.error
+import urllib.request
 
 config_file = sys.argv[1]
 marker_file = sys.argv[2]
 enabled = sys.argv[3] == 'true'
 base_url = sys.argv[4]
-model = sys.argv[5]
-small_model = sys.argv[6]
-api_key_is_set = sys.argv[7] == 'set'
+model_list = sys.argv[5]
+model = sys.argv[6]
+small_model = sys.argv[7]
+api_key_is_set = sys.argv[8] == 'set'
 provider_name = 'cliproxyapi'
+discovery_timeout_seconds = 5
+
+
+class DiscoveryDeadlineError(TimeoutError):
+    pass
+
+
+class DiscoveryValidationError(ValueError):
+    pass
 
 
 def provider_hash(provider):
@@ -450,7 +466,92 @@ def is_holycode_managed(provider):
     return bool(marker) and provider_hash(provider) == marker
 
 
-def build_provider():
+def configured_models():
+    model_ids = []
+    seen = set()
+    for model_id in [*model_list.split(','), model, small_model]:
+        model_id = model_id.strip()
+        if model_id and model_id not in seen:
+            seen.add(model_id)
+            model_ids.append(model_id)
+    return model_ids
+
+
+def discover_models():
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+
+    deadline = time.monotonic() + discovery_timeout_seconds
+    request = urllib.request.Request(
+        f'{base_url.rstrip("/")}/models',
+        headers={'Accept': 'application/json'},
+    )
+    api_key = os.environ.get('CLIPROXYAPI_API_KEY')
+    if api_key:
+        request.add_header('Authorization', f'Bearer {api_key}')
+
+    result = queue.Queue(maxsize=1)
+
+    def fetch():
+        try:
+            opener = urllib.request.build_opener(NoRedirect)
+            with opener.open(request, timeout=discovery_timeout_seconds) as response:
+                body = response.read(1024 * 1024 + 1)
+            result.put(('body', body))
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            http.client.HTTPException,
+            OSError,
+        ) as exc:
+            result.put(('error', exc))
+        except BaseException as exc:
+            result.put(('unexpected_error', exc))
+
+    threading.Thread(target=fetch, daemon=True).start()
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise DiscoveryDeadlineError
+    try:
+        result_type, value = result.get(timeout=remaining)
+    except queue.Empty as exc:
+        raise DiscoveryDeadlineError from exc
+    if result_type in ('error', 'unexpected_error'):
+        raise value
+    body = value
+    if len(body) > 1024 * 1024:
+        raise DiscoveryValidationError('response exceeds 1 MiB')
+
+    payload = json.loads(body)
+    if time.monotonic() >= deadline:
+        raise DiscoveryDeadlineError
+    if not isinstance(payload, dict) or not isinstance(payload.get('data'), list):
+        raise DiscoveryValidationError('response must contain a data array')
+
+    model_ids = []
+    seen = set()
+    for item in payload['data']:
+        if time.monotonic() >= deadline:
+            raise DiscoveryDeadlineError
+        if not isinstance(item, dict) or not isinstance(item.get('id'), str):
+            continue
+        model_id = item['id'].strip()
+        if (
+            not model_id
+            or len(model_id) > 256
+            or any(ord(char) < 32 for char in model_id)
+            or model_id in seen
+        ):
+            continue
+        seen.add(model_id)
+        model_ids.append(model_id)
+    if not model_ids:
+        raise DiscoveryValidationError('response contains no valid model IDs')
+    return model_ids
+
+
+def build_provider(model_ids):
     provider = {
         'npm': '@ai-sdk/openai-compatible',
         'name': 'CLIProxyAPI',
@@ -460,21 +561,18 @@ def build_provider():
     }
     if api_key_is_set:
         provider['options']['apiKey'] = '{env:CLIPROXYAPI_API_KEY}'
-    models = {}
-    if model:
-        models[model] = {'name': f'{model} via CLIProxyAPI'}
-    if small_model and small_model != model:
-        models[small_model] = {'name': f'{small_model} via CLIProxyAPI'}
-    if models:
-        provider['models'] = models
+    provider['models'] = {
+        model_id: {'name': f'{model_id} via CLIProxyAPI'}
+        for model_id in model_ids
+    }
     return provider
 
 
 try:
     with open(config_file, 'r', encoding='utf-8') as f:
         config = json.load(f)
-except Exception as exc:
-    print(f'[entrypoint] WARNING: Skipping CLIProxyAPI provider config: invalid opencode.json ({exc})')
+except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+    print('[entrypoint] WARNING: Skipping CLIProxyAPI provider config: invalid opencode.json')
     sys.exit(0)
 
 if not isinstance(config, dict):
@@ -489,22 +587,45 @@ elif not isinstance(providers, dict):
     sys.exit(0)
 
 current = providers.get(provider_name)
+model_ids = configured_models()
 
 if enabled:
-    next_provider = build_provider()
     if current is not None and not is_holycode_managed(current):
         remove_marker()
         print('[entrypoint] CLIProxyAPI provider exists (not HolyCode-managed), preserving user config')
         sys.exit(0)
+    if not model_ids:
+        try:
+            model_ids = discover_models()
+        except DiscoveryDeadlineError:
+            discovery_status = 'deadline exceeded'
+        except urllib.error.HTTPError as exc:
+            discovery_status = f'HTTP {exc.code}'
+        except (urllib.error.URLError, http.client.HTTPException, OSError):
+            discovery_status = 'network error'
+        except (json.JSONDecodeError, UnicodeDecodeError, DiscoveryValidationError):
+            discovery_status = 'invalid response'
+        except ValueError:
+            discovery_status = 'invalid base URL'
+        if not model_ids:
+            print(
+                '[entrypoint] WARNING: CLIProxyAPI model discovery failed '
+                f'({discovery_status}); set CLIPROXYAPI_MODELS or CLIPROXYAPI_MODEL'
+            )
+            if current is not None:
+                print('[entrypoint] Preserving the last HolyCode-managed CLIProxyAPI provider config')
+            else:
+                remove_marker()
+            sys.exit(0)
+        print(f'[entrypoint] CLIProxyAPI discovered {len(model_ids)} model(s) from /models')
+    next_provider = build_provider(model_ids)
     providers[provider_name] = next_provider
     config['provider'] = providers
     with open(config_file, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=2)
         f.write('\n')
     write_marker(next_provider)
-    if not model:
-        print('[entrypoint] WARNING: CLIPROXYAPI_ENABLED=true but CLIPROXYAPI_MODEL is empty')
-    print('[entrypoint] CLIProxyAPI provider enabled')
+    print(f'[entrypoint] CLIProxyAPI provider enabled with {len(model_ids)} model(s)')
 else:
     if current is None:
         remove_marker()

@@ -14,7 +14,7 @@ ARG LAZYGIT_VERSION=0.65.1
 ARG LAZYGIT_REF=17cb09fa7b08bc96d9f0e81b91f4720fc1a36700
 
 # Rebuild exact release sources with reviewed dependency fixes.
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS github-cli-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:433790e515d27dc6003e847e644cc0af956985cf315c1c58a3b73ee2dd305183 AS github-cli-builder
 ARG GITHUB_CLI_VERSION
 ARG GITHUB_CLI_REF
 ARG TARGETARCH
@@ -43,7 +43,7 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
     go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.42\.0' && \
     go version -m /out/gh | grep -E 'golang.org/x/mod[[:space:]]+v0\.41\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS fzf-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:433790e515d27dc6003e847e644cc0af956985cf315c1c58a3b73ee2dd305183 AS fzf-builder
 ARG FZF_VERSION
 ARG FZF_REF
 ARG TARGETARCH
@@ -74,7 +74,7 @@ RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
       -o /out/fzf && \
     go version -m /out/fzf | grep -E 'golang.org/x/sys[[:space:]]+v0\.44\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS lazygit-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:433790e515d27dc6003e847e644cc0af956985cf315c1c58a3b73ee2dd305183 AS lazygit-builder
 ARG LAZYGIT_VERSION
 ARG LAZYGIT_REF
 ARG TARGETARCH
@@ -101,7 +101,7 @@ RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
     go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
     go version -m /out/lazygit | grep -E 'golang.org/x/sys[[:space:]]+v0\.47\.0'
 
-FROM node:24.21.0-trixie-slim@sha256:d7b4e5c4ad20b327d7bb16fab6aecd60ac20aa50f8514eb75a2b059e89abe48e
+FROM node:24.21.0-trixie-slim@sha256:8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -114,21 +114,21 @@ ARG DELTA_VERSION=0.19.2
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.31
+ARG OPENCODE_VERSION=1.18.32
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.276
+ARG CLAUDE_CODE_VERSION=2.1.281
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.13.1
+ARG OPENSPEC_VERSION=1.13.2
 # renovate: datasource=npm depName=undici
 ARG PAPERCLIP_UNDICI_VERSION=6.28.1
 # renovate: datasource=npm depName=opencode-claude-auth
-ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.0
+ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.1
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
-ARG NPM_VERSION=12.0.2
+ARG NPM_VERSION=12.1.0
 # renovate: datasource=npm depName=brace-expansion
 ARG NPM_BRACE_EXPANSION_VERSION=5.0.12
 # renovate: datasource=npm depName=tar
@@ -138,13 +138,13 @@ ARG NPM_IP_ADDRESS_VERSION=10.7.2
 # renovate: datasource=npm depName=js-yaml
 ARG PM2_JS_YAML_VERSION=4.3.2
 # renovate: datasource=npm depName=tsx
-ARG TSX_VERSION=4.23.13
+ARG TSX_VERSION=4.23.15
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.4.2
+ARG PNPM_VERSION=12.6.0
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.3.0
+ARG VITE_VERSION=8.3.1
 # renovate: datasource=npm depName=prettier
-ARG PRETTIER_VERSION=3.9.8
+ARG PRETTIER_VERSION=3.9.9
 # renovate: datasource=npm depName=prisma
 ARG PRISMA_VERSION=7.10.0
 # renovate: datasource=npm depName=deepmerge-ts
@@ -156,17 +156,17 @@ ARG PRISMA_TYPES_NODE_VERSION=20.19.43
 # renovate: datasource=npm depName=undici-types
 ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
 # renovate: datasource=npm depName=lighthouse
-ARG LIGHTHOUSE_VERSION=13.4.1
+ARG LIGHTHOUSE_VERSION=13.5.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.134.0
+ARG WRANGLER_VERSION=4.138.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20260917.0-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20260921.1-alpha
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.4
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
 ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3
 # renovate: datasource=npm depName=eslint
-ARG ESLINT_VERSION=10.10.0
+ARG ESLINT_VERSION=10.11.0
 # renovate: datasource=pypi depName=numpy
 ARG NUMPY_VERSION=2.5.3
 # renovate: datasource=pypi depName=pip
@@ -179,7 +179,7 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-09-18
+ARG RELEASE_APT_REFRESH=2026-09-24
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -424,7 +424,7 @@ RUN test "$(npm view "tar@${NPM_TAR_VERSION}" dist.integrity)" = \
       "${NPM_TAR_VERSION}" && \
     (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null) && \
     rm -rf /root/.npm
-# npm 12.0.2 resolves ip-address 10.2.0 through socks. Keep the compatible
+# npm 12.1.0 resolves ip-address 10.5.0 through socks. Keep the compatible
 # socks range and replace that nested copy with the fixed 10.7.2 release.
 RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
       "sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==" && \
@@ -461,7 +461,7 @@ RUN npm i -g --ignore-scripts \
     dotenv-cli@11.0.0 \
     "wrangler@${WRANGLER_VERSION}" \
     pm2@7.0.4 \
-    "prisma@${PRISMA_VERSION}" drizzle-kit@0.31.10 \
+    "prisma@${PRISMA_VERSION}" drizzle-kit@0.31.11 \
     "lighthouse@${LIGHTHOUSE_VERSION}" \
     json-server@0.17.4 http-server@14.1.1 && \
     DRIZZLE_DIR=/usr/local/lib/node_modules/drizzle-kit && \
@@ -586,28 +586,28 @@ RUN PM2_JS_YAML_INTEGRITY="sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TI
     rm -rf /tmp/holycode-build-pm2 "$PM2_APP" && \
     rm -rf /root/.npm
 
-# Wrangler 4.134.0 owns Miniflare 5.20260917.0-alpha and workerd 1.20260917.1;
+# Wrangler 4.138.0 owns Miniflare 5.20260921.1-alpha and workerd 1.20260921.1;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260917.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260921.1" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260917.1" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260921.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260917.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260921.1") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260917.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260921.1") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20260917.1" && \
+      "1.20260921.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \
@@ -691,7 +691,7 @@ RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
     rm -rf /root/.npm
 # Package the supported Claude Auth plugin for network-free startup.
 RUN test "$(npm view "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}" dist.integrity)" = \
-      "sha512-EYU6hbP9edKQABn5zKMXPdxT5KZLf/0qII7AgahCW2w/FGgJnSE5bbWU5bTGmlHZTAJXixdy94/3WpBgIlHMaA==" && \
+      "sha512-iEXMVh2J/l8ZlNiMNp7QmtGQtAwjXgaSgXvA2zZzJbUZEOBKvuoq9gKRtqSjYB3faDwOVwwiGAj+S2N/8sgolA==" && \
     CLAUDE_AUTH_TARBALL=$(npm pack --silent --pack-destination /tmp \
       "opencode-claude-auth@${CLAUDE_AUTH_PLUGIN_VERSION}") && \
     CLAUDE_AUTH_DIR=/usr/local/share/holycode/plugins/opencode-claude-auth && \

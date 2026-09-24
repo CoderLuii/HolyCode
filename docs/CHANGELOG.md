@@ -4,6 +4,25 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.3] - 09/24/2026
+
+### Added
+
+- Add a v1.2.3 dependency audit covering the selected runtime, CI, owner-scoped, fixture, compatibility-hold, and pending native release gates
+
+### Changed
+
+- Refresh OpenCode to 1.18.32, Claude Code to 2.1.281, OpenSpec to 1.13.2, `opencode-claude-auth` to 2.2.1, npm to 12.1.0, tsx to 4.23.15, pnpm to 12.6.0, Vite to 8.3.1, Prettier to 3.9.9, Lighthouse to 13.5.0, ESLint to 10.11.0, and drizzle-kit to 0.31.11
+- Refresh Wrangler to 4.138.0 with its Miniflare 5.20260921.1-alpha and workerd 1.20260921.1 graph, and refresh the Drizzle ORM smoke fixture to 0.45.3
+- Refresh the immutable Node 24.21.0 and Go 1.27.1 base-image digests and the protected Renovate validator to 44.112.3
+- Keep Paperclip at 2026.831.1 to preserve the self-hosted native-runner default, TypeScript at 6.0.3 for the current API and tsserver contract, Prisma at 7.10.0, json-server at 0.17.4, and the Python lock graph pending the unreleased pip-tools header fix
+- Keep issue #11 open: `opencode-claude-auth` 2.2.1 does not establish a fix for the reported proactive credential-refresh failure
+- Move the protected release predecessor and rollback image from v1.2.1 to v1.2.2
+
+### Fixed
+
+- Discover models from an enabled external CLIProxyAPI endpoint when no explicit `CLIPROXYAPI_MODELS` allowlist is configured, while keeping explicit lists authoritative and bounding discovery failures
+
 ## [1.2.2] - 09/18/2026
 
 ### Added

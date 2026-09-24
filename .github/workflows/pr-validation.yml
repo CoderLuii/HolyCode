@@ -56,7 +56,7 @@ jobs:
           fi
 
       - name: Renovate configuration
-        run: bash scripts/validate_renovate_extraction.sh 44.97.6
+        run: bash scripts/validate_renovate_extraction.sh 44.112.3
 
   build-and-smoke-test:
     needs: static-validation
