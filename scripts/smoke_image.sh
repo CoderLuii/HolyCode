@@ -11,15 +11,22 @@ image_label() {
 expected_opencode="$(image_label io.holycode.version.opencode)"
 expected_claude="$(image_label io.holycode.version.claude-code)"
 expected_paperclip="$(image_label io.holycode.version.paperclip)"
+expected_paperclip_cursor_sdk="$(image_label io.holycode.version.paperclip-cursor-sdk)"
+expected_paperclip_jsdom="$(image_label io.holycode.version.paperclip-jsdom)"
+expected_paperclip_undici="$(image_label io.holycode.version.paperclip-undici)"
 expected_openspec="$(image_label io.holycode.version.openspec)"
 expected_claude_auth="$(image_label io.holycode.version.claude-auth-plugin)"
 expected_npm="$(image_label io.holycode.version.npm)"
 expected_npm_brace_expansion="$(image_label io.holycode.version.npm-brace-expansion)"
 expected_npm_tar="$(image_label io.holycode.version.npm-tar)"
 expected_npm_ip_address="$(image_label io.holycode.version.npm-ip-address)"
+expected_npm_node_gyp="$(image_label io.holycode.version.npm-node-gyp)"
+expected_npm_node_gyp_undici="$(image_label io.holycode.version.npm-node-gyp-undici)"
 expected_pm2_js_yaml="$(image_label io.holycode.version.pm2-js-yaml)"
+expected_pm2_basic_ftp="$(image_label io.holycode.version.pm2-basic-ftp)"
 expected_pip_vendor_msgpack="$(image_label io.holycode.version.pip-vendor-msgpack)"
 expected_pip_vendor_pkg_resources="$(image_label io.holycode.version.pip-vendor-pkg-resources)"
+expected_pip_vendor_urllib3="$(image_label io.holycode.version.pip-vendor-urllib3)"
 expected_typescript="$(image_label io.holycode.version.typescript)"
 expected_tsx="$(image_label io.holycode.version.tsx)"
 expected_pnpm="$(image_label io.holycode.version.pnpm)"
@@ -40,6 +47,8 @@ expected_s6="$(image_label io.holycode.version.s6-overlay)"
 expected_fzf="$(image_label io.holycode.version.fzf)"
 expected_lazygit="$(image_label io.holycode.version.lazygit)"
 expected_github_cli="$(image_label io.holycode.version.github-cli)"
+expected_release="$(image_label io.holycode.release)"
+expected_platform="linux/$(docker image inspect --format '{{.Architecture}}' "$image")"
 
 secret_pattern='(_API_KEY|TOKEN|SECRET|PASSWORD)=[^[:space:]]+'
 
@@ -57,15 +66,22 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   -e EXPECTED_OPENCODE="$expected_opencode" \
   -e EXPECTED_CLAUDE="$expected_claude" \
   -e EXPECTED_PAPERCLIP="$expected_paperclip" \
+  -e EXPECTED_PAPERCLIP_CURSOR_SDK="$expected_paperclip_cursor_sdk" \
+  -e EXPECTED_PAPERCLIP_JSDOM="$expected_paperclip_jsdom" \
+  -e EXPECTED_PAPERCLIP_UNDICI="$expected_paperclip_undici" \
   -e EXPECTED_OPENSPEC="$expected_openspec" \
   -e EXPECTED_CLAUDE_AUTH="$expected_claude_auth" \
   -e EXPECTED_NPM="$expected_npm" \
   -e EXPECTED_NPM_BRACE_EXPANSION="$expected_npm_brace_expansion" \
   -e EXPECTED_NPM_TAR="$expected_npm_tar" \
   -e EXPECTED_NPM_IP_ADDRESS="$expected_npm_ip_address" \
+  -e EXPECTED_NPM_NODE_GYP="$expected_npm_node_gyp" \
+  -e EXPECTED_NPM_NODE_GYP_UNDICI="$expected_npm_node_gyp_undici" \
   -e EXPECTED_PM2_JS_YAML="$expected_pm2_js_yaml" \
+  -e EXPECTED_PM2_BASIC_FTP="$expected_pm2_basic_ftp" \
   -e EXPECTED_PIP_VENDOR_MSGPACK="$expected_pip_vendor_msgpack" \
   -e EXPECTED_PIP_VENDOR_PKG_RESOURCES="$expected_pip_vendor_pkg_resources" \
+  -e EXPECTED_PIP_VENDOR_URLLIB3="$expected_pip_vendor_urllib3" \
   -e EXPECTED_TYPESCRIPT="$expected_typescript" \
   -e EXPECTED_TSX="$expected_tsx" \
   -e EXPECTED_PNPM="$expected_pnpm" \
@@ -86,6 +102,8 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   -e EXPECTED_FZF="$expected_fzf" \
   -e EXPECTED_LAZYGIT="$expected_lazygit" \
   -e EXPECTED_GITHUB_CLI="$expected_github_cli" \
+  -e EXPECTED_RELEASE="$expected_release" \
+  -e EXPECTED_PLATFORM="$expected_platform" \
   "$image" -lc 'exec sh -eu -s' <<'HOLYCODE_SMOKE'
   set -eu
   test ! -e /root/.npm
@@ -100,10 +118,14 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   node -e "console.log(require(\"/usr/local/lib/node_modules/npm/node_modules/ip-address/package.json\").version)" | grep -Fx "$EXPECTED_NPM_IP_ADDRESS"
   node -e "const pkg=require(\"/usr/local/lib/node_modules/npm/node_modules/socks/package.json\"); if(pkg.version!==\"2.8.9\" || pkg.dependencies[\"ip-address\"]!==\"^10.1.1\") process.exit(1)"
   (cd /usr/local/lib/node_modules/npm && npm ls ip-address --all >/dev/null)
+  node -e "const npm=require('/usr/local/lib/node_modules/npm/package.json'); const gyp=require('/usr/local/lib/node_modules/npm/node_modules/node-gyp/package.json'); const undici=require('/usr/local/lib/node_modules/npm/node_modules/undici/package.json'); if(npm.dependencies['node-gyp']!=='^13.0.0' || gyp.version!==process.env.EXPECTED_NPM_NODE_GYP || gyp.dependencies.undici!=='^8.4.1' || undici.version!==process.env.EXPECTED_NPM_NODE_GYP_UNDICI) process.exit(1)"
+  (cd /usr/local/lib/node_modules/npm && npm ls node-gyp undici --all >/dev/null)
   test "$(npm prefix -g)" = "/usr/local"
   node -e "console.log(require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json\").version)" | grep -Fx "$EXPECTED_PM2_JS_YAML"
   node -e "const pkg=require(\"/usr/local/lib/node_modules/pm2/package.json\"); if(pkg.dependencies[\"js-yaml\"]!==process.env.EXPECTED_PM2_JS_YAML) process.exit(1)"
   (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null)
+  node -e "const getUri=require('/usr/local/lib/node_modules/pm2/node_modules/get-uri/package.json'); const ftp=require('/usr/local/lib/node_modules/pm2/node_modules/basic-ftp/package.json'); if(getUri.version!=='6.0.5' || getUri.dependencies['basic-ftp']!==process.env.EXPECTED_PM2_BASIC_FTP || ftp.version!==process.env.EXPECTED_PM2_BASIC_FTP) process.exit(1)"
+  (cd /usr/local/lib/node_modules/pm2 && npm ls get-uri basic-ftp --all >/dev/null)
   node -e "const yaml=require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml\"); const parsed=yaml.load(\"service:\\n  enabled: true\\n\"); if(parsed.service.enabled!==true) process.exit(1)"
   pm2_app=/tmp/holycode-smoke-pm2-app.js
   printf "setInterval(() => {}, 60000);\n" > "$pm2_app"
@@ -268,8 +290,14 @@ EOF
   rm -rf "$paperclip_catalog_fixture"
   (cd /usr/local/lib/node_modules/paperclipai && npm ls @paperclipai/skills-catalog --all >/dev/null)
   node -e "console.log(require(\"/usr/local/lib/node_modules/paperclipai/package.json\").version)" | grep -Fx "$EXPECTED_PAPERCLIP"
-  (cd /usr/local/lib/node_modules/paperclipai && npm ls undici --all >/dev/null)
+  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK || jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM || jsdom.dependencies.undici!==\"^8.10.2\" || undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) process.exit(1)"
+  test ! -e /usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json
+  test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0
+  test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1
+  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; if(require.resolve(\"undici/package.json\",{paths:[root+\"/jsdom\"]})!==root+\"/undici/package.json\") process.exit(1)"
+  (cd /usr/local/lib/node_modules/paperclipai && npm ls @cursor/sdk jsdom undici --omit=dev --all >/dev/null)
   node --input-type=module -e "const {testEnvironment}=await import(\"file:///usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/adapter-cursor-cloud/dist/server/index.js\"); const result=await testEnvironment({adapterType:\"cursor_cloud\",config:{}}); if(result.status!==\"fail\" || !result.checks.some((check)=>check.code===\"cursor_cloud_api_key_missing\")) process.exit(1)"
+  node -e "const http=require(\"node:http\"); const {JSDOM}=require(\"/usr/local/lib/node_modules/paperclipai/node_modules/jsdom\"); const server=http.createServer((_req,res)=>{res.setHeader(\"content-type\",\"text/html\");res.end(\"<h1>holycode-jsdom</h1>\")}); server.listen(0,\"127.0.0.1\",async()=>{try{const dom=await JSDOM.fromURL(\"http://127.0.0.1:\"+server.address().port+\"/\");if(dom.window.document.querySelector(\"h1\")?.textContent!==\"holycode-jsdom\") process.exitCode=1;dom.window.close()}catch(error){console.error(error);process.exitCode=1}finally{server.close()}})"
   test -f /etc/s6-overlay/user-bundles.d/user/contents.d/opencode
   test -f /etc/s6-overlay/user-bundles.d/user/contents.d/xvfb
   test ! -e /etc/s6-overlay/s6-rc.d/user/contents.d/opencode
@@ -282,6 +310,8 @@ EOF
   test "$(dpkg-query -W -f=\${db:Status-Status} python3-setuptools 2>/dev/null || true)" != installed
   python3 -m pip check
   python3 -c "import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == \"$EXPECTED_PIP_VENDOR_MSGPACK\"; assert msgpack.unpackb(msgpack.packb({\"holycode\": True})) == {\"holycode\": True}"
+  python3 -c "import pip._vendor.urllib3 as urllib3; assert urllib3.__version__ == \"$EXPECTED_PIP_VENDOR_URLLIB3\""
+  grep -F "urllib3==$EXPECTED_PIP_VENDOR_URLLIB3" /usr/local/lib/python3.13/dist-packages/pip/_vendor/vendor.txt
   python3 - <<PY
 import pip._vendor.msgpack as msgpack
 from pip._vendor.msgpack import fallback
@@ -457,10 +487,16 @@ PY
     pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.48.0
   /tmp/holycode-python-seed/bin/python - <<PY
 import importlib.metadata as metadata
+import pip._vendor.msgpack as msgpack
+import pip._vendor.pkg_resources as pkg_resources
+import pip._vendor.urllib3 as urllib3
 assert metadata.version("pip") == "26.2.1"
 assert metadata.version("setuptools") == "84.0.0"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
+assert msgpack.__version__ == "1.2.2"
+assert pkg_resources.get_distribution("pip").version == "26.2.1"
+assert urllib3.__version__ == "2.8.0"
 PY
 
   command -v claude
@@ -568,9 +604,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20260921.1\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20260921.1\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260921.1\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20260930.2\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20260930.2\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260930.2\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -703,7 +739,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260921.1\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260930.2\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))
@@ -724,6 +760,11 @@ EOF
   grep -F "<policy domain=\"coder\" rights=\"read|write\" pattern=\"{GIF,JPEG,PNG,WEBP}\" />" /etc/ImageMagick-7/policy.xml >/dev/null
   chromium --version | grep -E "Chromium (15[1-9]|1[6-9][0-9]|[2-9][0-9]{2})\\."
   test "$(dpkg-query -W -f="\${Version}" chromium)" = "$(dpkg-query -W -f="\${Version}" chromium-sandbox)"
+  test "linux/$(dpkg --print-architecture)" = "$EXPECTED_PLATFORM"
+  for package in chromium chromium-common chromium-sandbox; do
+    installed_version="$(dpkg-query -W -f="\${Version}" "$package")"
+    validate-holycode-chromium-version "$installed_version" "$EXPECTED_PLATFORM" "$EXPECTED_RELEASE" "$(date -u +%F)"
+  done
   test -u /usr/lib/chromium/chrome-sandbox
   runuser -u opencode -- chromium --headless --disable-gpu --disable-dev-shm-usage --dump-dom about:blank | grep -F "<html><head></head><body></body></html>"
   runuser -u opencode -- python3 -c "from playwright.sync_api import sync_playwright; from PIL import Image; p=sync_playwright().start(); b=p.chromium.launch(executable_path=\"/usr/bin/chromium\", args=[\"--disable-gpu\", \"--disable-dev-shm-usage\"]); page=b.new_page(viewport={\"width\": 320, \"height\": 200}); page.set_content(\"<main style=\\\"width:160px;height:100px;background:#d22\\\"></main>\"); page.screenshot(path=\"/tmp/holycode-chromium.png\"); b.close(); p.stop(); image=Image.open(\"/tmp/holycode-chromium.png\").convert(\"RGB\"); assert image.getbbox() and len(image.getcolors(maxcolors=1000000) or []) > 1"
@@ -780,6 +821,15 @@ EOF
     esac
   done
 HOLYCODE_SMOKE
+
+smoke_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+docker run --rm --network none --entrypoint sh \
+  --mount "type=bind,src=$smoke_script_dir/test_get_uri_ftp.mjs,dst=/tmp/test_get_uri_ftp.mjs,readonly" \
+  --mount "type=bind,src=$smoke_script_dir/test_node_gyp_download.mjs,dst=/tmp/test_node_gyp_download.mjs,readonly" \
+  --mount "type=bind,src=$smoke_script_dir/test_node_gyp_native.mjs,dst=/tmp/test_node_gyp_native.mjs,readonly" \
+  --mount "type=bind,src=$smoke_script_dir/test_pip_vendor_urllib3.py,dst=/tmp/test_pip_vendor_urllib3.py,readonly" \
+  --mount "type=bind,src=$smoke_script_dir/verify_pip_vendor_record.py,dst=/tmp/verify_pip_vendor_record.py,readonly" \
+  "$image" -lc 'node /tmp/test_get_uri_ftp.mjs all && node /tmp/test_node_gyp_download.mjs && node /tmp/test_node_gyp_native.mjs && python3 /tmp/verify_pip_vendor_record.py && python3 /tmp/test_pip_vendor_urllib3.py && python3 -m venv /tmp/holycode-repaired-seed && /tmp/holycode-repaired-seed/bin/python -m pip install --no-index --no-deps --find-links /usr/local/share/holycode/python-seed pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.48.0 && /tmp/holycode-repaired-seed/bin/python /tmp/verify_pip_vendor_record.py && /tmp/holycode-repaired-seed/bin/python /tmp/test_pip_vendor_urllib3.py'
 
 cliproxy_network="holycode-cliproxy-smoke-$$"
 cliproxy_mock="holycode-cliproxy-mock-$$"

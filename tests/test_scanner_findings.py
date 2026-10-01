@@ -13,6 +13,8 @@ VALIDATOR = ROOT / "scripts" / "validate_scanner_findings.py"
 def exception_record(expires="2026-08-28"):
     return {
         "release": "v1.1.4",
+        "platform": "linux/arm64",
+        "approvedBy": "CoderLuii",
         "reviewDate": "2026-07-30",
         "exceptions": [
             {
@@ -94,6 +96,10 @@ class ScannerFindingTests(unittest.TestCase):
                 str(report_path),
                 "--as-of",
                 as_of,
+                "--release",
+                "v1.1.4",
+                "--platform",
+                "linux/arm64",
             ]
             if use_exceptions:
                 command.extend(("--exceptions", str(exceptions_path)))
@@ -140,6 +146,18 @@ class ScannerFindingTests(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("expired", result.stderr)
+
+    def test_rejects_exception_on_wrong_release_or_platform(self):
+        for field, value in (
+            ("release", "v1.2.4"),
+            ("platform", "linux/amd64"),
+        ):
+            with self.subTest(field=field):
+                record = exception_record()
+                record[field] = value
+                result = self.run_validator("trivy", trivy_report(), record)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(field, result.stderr)
 
     def test_accepts_empty_reports(self):
         result = self.run_validator("trivy", {"Results": []})

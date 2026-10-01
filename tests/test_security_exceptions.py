@@ -13,6 +13,8 @@ VALIDATOR = ROOT / "scripts" / "validate_security_exceptions.py"
 def valid_record():
     return {
         "release": "v1.1.4",
+        "platform": "linux/arm64",
+        "approvedBy": "CoderLuii",
         "reviewDate": "2026-07-29",
         "exceptions": [
             {
@@ -48,6 +50,8 @@ class SecurityExceptionTests(unittest.TestCase):
                     str(path),
                     "--release",
                     "v1.1.4",
+                    "--platform",
+                    "linux/arm64",
                     "--as-of",
                     "2026-07-29",
                     *extra_args,
@@ -135,6 +139,56 @@ class SecurityExceptionTests(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("installedVersion", result.stderr)
+
+    def test_release_platform_and_approval_are_exact(self):
+        for field, value, expected in (
+            ("release", "v1.2.4", "release must be v1.1.4"),
+            ("platform", "linux/amd64", "platform must be linux/arm64"),
+            ("approvedBy", "someone-else", "approvedBy must be CoderLuii"),
+        ):
+            with self.subTest(field=field):
+                record = valid_record()
+                record[field] = value
+                result = self.run_validator(
+                    record,
+                    "--installed",
+                    "chromium=150.0.7871.181-1~deb13u1",
+                    "--available",
+                    "chromium=150.0.7871.181-1~deb13u1",
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(expected, result.stderr)
+
+    def test_rejects_duplicate_exact_tuple(self):
+        record = valid_record()
+        record["exceptions"].append(dict(record["exceptions"][0]))
+        result = self.run_validator(
+            record,
+            "--installed",
+            "chromium=150.0.7871.181-1~deb13u1",
+            "--available",
+            "chromium=150.0.7871.181-1~deb13u1",
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("duplicates exact tuple", result.stderr)
+
+    def test_accepts_same_cve_for_distinct_packages(self):
+        record = valid_record()
+        second = dict(record["exceptions"][0])
+        second["package"] = "chromium-common"
+        record["exceptions"].append(second)
+        result = self.run_validator(
+            record,
+            "--installed",
+            "chromium=150.0.7871.181-1~deb13u1",
+            "--installed",
+            "chromium-common=150.0.7871.181-1~deb13u1",
+            "--available",
+            "chromium=150.0.7871.181-1~deb13u1",
+            "--available",
+            "chromium-common=150.0.7871.181-1~deb13u1",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == "__main__":

@@ -11,9 +11,15 @@ def load_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def exception_keys(record, as_of):
+def exception_keys(record, release, platform, as_of):
     keys = set()
     errors = []
+    if record.get("release") != release:
+        errors.append(f"exception release must be {release}")
+    if record.get("platform") != platform:
+        errors.append(f"exception platform must be {platform}")
+    if record.get("approvedBy") != "CoderLuii":
+        errors.append("exception approvedBy must be CoderLuii")
     for item in record.get("exceptions", []):
         try:
             expires = date.fromisoformat(item["expires"])
@@ -183,12 +189,23 @@ def main():
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--exceptions", type=Path)
     parser.add_argument("--as-of", required=True)
+    parser.add_argument("--release", required=True)
+    parser.add_argument("--platform", required=True)
     args = parser.parse_args()
 
     try:
         report = load_json(args.report)
         as_of = date.fromisoformat(args.as_of)
-        record = load_json(args.exceptions) if args.exceptions else {"exceptions": []}
+        record = (
+            load_json(args.exceptions)
+            if args.exceptions
+            else {
+                "release": args.release,
+                "platform": args.platform,
+                "approvedBy": "CoderLuii",
+                "exceptions": [],
+            }
+        )
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(error, file=sys.stderr)
         return 2
@@ -202,7 +219,7 @@ def main():
         print(f"invalid scanner report: {report_error}", file=sys.stderr)
         return 2
 
-    allowed, errors = exception_keys(record, as_of)
+    allowed, errors = exception_keys(record, args.release, args.platform, as_of)
     findings = (
         scout_findings(report)
         if args.scanner == "scout"

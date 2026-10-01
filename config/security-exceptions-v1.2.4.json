@@ -1,0 +1,536 @@
+{
+  "release": "v1.2.4",
+  "platform": "linux/arm64",
+  "approvedBy": "CoderLuii",
+  "reviewDate": "2026-10-01",
+  "exceptions": [
+    {
+      "cve": "CVE-2026-102299",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102301",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102304",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102309",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102311",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102318",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102321",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102323",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102324",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102327",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102329",
+      "package": "chromium",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102299",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102301",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102304",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102309",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102311",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102318",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102321",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102323",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102324",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102327",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102329",
+      "package": "chromium-common",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102299",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102301",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102304",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102309",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102311",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102318",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102321",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102323",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102324",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102327",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    },
+    {
+      "cve": "CVE-2026-102329",
+      "package": "chromium-sandbox",
+      "installedVersion": "154.0.8037.57-1~deb13u1",
+      "fixedVersion": "154.0.8037.92-1~deb13u1",
+      "availableVersion": "154.0.8037.57-1~deb13u1",
+      "approvedSource": "Debian Trixie Security ARM64 package index",
+      "reason": "Debian Trixie Security has not published the fixed ARM64 binary package.",
+      "reachability": "Chromium opens content requested by the container user, including untrusted web content; several reviewed findings may permit code execution outside the sandbox.",
+      "controls": [
+        "Avoid untrusted web content and browser automation until the corrected ARM64 package is installed.",
+        "The setuid sandbox, constrained seccomp profile, unprivileged opencode user, and no public browser port remain required, but they do not make these vulnerabilities safe or unreachable."
+      ],
+      "expires": "2026-10-08",
+      "removalTrigger": "Rebuild with 154.0.8037.92-1~deb13u1 or newer and remove this exception when Debian Trixie Security publishes compatible ARM64 packages."
+    }
+  ]
+}

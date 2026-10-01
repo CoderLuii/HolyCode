@@ -35,10 +35,14 @@ def version_key(value):
     return tuple(int(number) for number in numbers[:4])
 
 
-def validate(record, release, as_of, installed, available):
+def validate(record, release, platform, as_of, installed, available):
     errors = []
     if record.get("release") != release:
         errors.append(f"release must be {release}")
+    if record.get("platform") != platform:
+        errors.append(f"platform must be {platform}")
+    if record.get("approvedBy") != "CoderLuii":
+        errors.append("approvedBy must be CoderLuii")
 
     review_date = parse_date(record.get("reviewDate"), "reviewDate", errors)
     if review_date and review_date > as_of:
@@ -61,9 +65,10 @@ def validate(record, release, as_of, installed, available):
 
         cve = exception.get("cve", "")
         package = exception.get("package", "")
-        if cve in seen:
-            errors.append(f"{label}.cve duplicates {cve}")
-        seen.add(cve)
+        exact_tuple = (cve, package, exception.get("installedVersion", ""))
+        if exact_tuple in seen:
+            errors.append(f"{label} duplicates exact tuple {exact_tuple}")
+        seen.add(exact_tuple)
         if not re.fullmatch(r"CVE-\d{4}-\d{4,}", cve):
             errors.append(f"{label}.cve must name one exact CVE; wildcard values are not allowed")
 
@@ -132,6 +137,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", required=True, type=Path)
     parser.add_argument("--release", required=True)
+    parser.add_argument("--platform", required=True)
     parser.add_argument("--as-of", required=True)
     parser.add_argument("--installed", action="append", default=[])
     parser.add_argument("--available", action="append", default=[])
@@ -146,7 +152,9 @@ def main():
         print(error, file=sys.stderr)
         return 2
 
-    errors = validate(record, args.release, as_of, installed, available)
+    errors = validate(
+        record, args.release, args.platform, as_of, installed, available
+    )
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

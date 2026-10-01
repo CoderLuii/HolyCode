@@ -1,16 +1,16 @@
 {
-  "npmVersion": "12.1.0",
+  "npmVersion": "12.2.0",
   "mode": "deny-by-default",
   "allowScripts": {
-    "@anthropic-ai/claude-code@2.1.281": {
+    "@anthropic-ai/claude-code@2.1.286": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-sldhFsGqOnGA8pfOMLjyc+Sc331VkZ1TsP1sdpvMeVFYBikC5x53miTCsnTiE6Bio74IYPn7BIzTNbHcRp5fXQ==",
+      "integrity": "sha512-5UNEDKy2znv81PWqNqgPJO4qPqH5NRenh52XTtx2tT5Q6xIxjI1q0RyucY+AUHMABImzDOlh6ztuj4qNiAaRvA==",
       "scripts": { "postinstall": "node install.cjs" },
       "reason": "Claude Code uses this script to install its pinned platform-native binary."
     },
-    "opencode-ai@1.18.32": {
+    "opencode-ai@1.18.34": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-SCrZWdq44y/EoH2+fE4HLcXS+DzpVqHPzmXk3p2RrufYy8LWvpfhRhKtijb5ktvx8r94ScqToqwHxR0BwS65OQ==",
+      "integrity": "sha512-9WUS2T0t4HHDVzXvuwTHF0nvhXvZ9mQ0r+ozCvKdJu0LVoQpOzqAW4qWTC3ygNc5Oedcc7j+Oct24JYlQYnySA==",
       "scripts": { "postinstall": "node ./postinstall.mjs" },
       "reason": "OpenCode uses this script to hydrate its pinned platform CLI and refuses to start without it."
     },
@@ -32,7 +32,7 @@
       "architectures": ["amd64", "arm64"],
       "integrity": "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
       "scripts": { "postinstall": "node install.js" },
-      "reason": "Wrangler 4.138.0 pins this nested esbuild release; its platform binary is packaged and exercised by Wrangler validation."
+      "reason": "Wrangler 4.145.0 pins this nested esbuild release; its platform binary is packaged and exercised by Wrangler validation."
     },
     "esbuild@0.28.2": {
       "architectures": ["amd64", "arm64"],
@@ -52,15 +52,15 @@
       "scripts": { "postinstall": "node scripts/postinstall.js" },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "workerd@1.20260921.1": {
+    "workerd@1.20260930.2": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-4HyG7G1W4ksa6tUZ8bV2jxDRWuL5PXnHm9+Z1sjFPb9OZNoYtXz4y7QQRh4ibi0BF/lOmlAVjbhkUqsAVZuUKA==",
+      "integrity": "sha512-k1lQzEiGyCDqaRsR5+o9PBT5wVU5omtas6hXx3spbEHHMFo8a7tkAixVCMsWFeiT7xhrmg21Hd6a9jLNrkcUMg==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
     },
-    "pnpm@12.6.0": {
+    "pnpm@12.8.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-PvaPlRyxEawgS0paFvCy3fDaVqluBBPoHYVdnwtV75JnFHCQKOHNAMQFwsX7e56OxNxGd3yAXQNzwvL/AP0g7A==",
+      "integrity": "sha512-9kupB1B/XOr+BsjTjmBS0BeURFgOwSed3Vv8EctIqoomRLZlmOB+dh2oSHKp/FfV+QK4f6SdAkGY1VhhKqu+RQ==",
       "scripts": { "preinstall": "node install.js", "postinstall": "node install.js" },
       "reason": "The packaged pnpm launchers work with lifecycle hydration blocked and are exercised by the offline project fixture."
     },

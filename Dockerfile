@@ -4,8 +4,8 @@
 # ==============================================================================
 
 # renovate: datasource=github-releases depName=cli/cli
-ARG GITHUB_CLI_VERSION=2.101.0
-ARG GITHUB_CLI_REF=0cf1092493af067646fc5f3db9421c6a6ec9c938
+ARG GITHUB_CLI_VERSION=2.102.0
+ARG GITHUB_CLI_REF=fc4b137cdef0a6bd28fd461b7cf9c84a5812a8cd
 # renovate: datasource=github-releases depName=junegunn/fzf
 ARG FZF_VERSION=0.74.4
 ARG FZF_REF=a140afeb4d733cad3c96a56bf6db7e26853b6757
@@ -14,7 +14,7 @@ ARG LAZYGIT_VERSION=0.65.1
 ARG LAZYGIT_REF=17cb09fa7b08bc96d9f0e81b91f4720fc1a36700
 
 # Rebuild exact release sources with reviewed dependency fixes.
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:433790e515d27dc6003e847e644cc0af956985cf315c1c58a3b73ee2dd305183 AS github-cli-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:3b77fc618ec235a1ab412de7737f120dd507c57e8d87de4cbb7994fb94275ed5 AS github-cli-builder
 ARG GITHUB_CLI_VERSION
 ARG GITHUB_CLI_REF
 ARG TARGETARCH
@@ -25,7 +25,7 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
     test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
     test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.83.2" && \
     test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.42.0" && \
-    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.20.0" && \
+    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.20.1" && \
     test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.41.0" && \
     go mod verify && \
     mkdir -p /tmp/gh-test && \
@@ -39,11 +39,11 @@ RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
       GOOS=linux GOARCH="${GH_GOARCH}" CGO_ENABLED=0 && \
     install -D -m 0755 bin/gh /out/gh && \
     go version -m /out/gh | grep -F "go1.27.1" && \
-    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.20\.0' && \
+    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.20\.1' && \
     go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.42\.0' && \
     go version -m /out/gh | grep -E 'golang.org/x/mod[[:space:]]+v0\.41\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:433790e515d27dc6003e847e644cc0af956985cf315c1c58a3b73ee2dd305183 AS fzf-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:3b77fc618ec235a1ab412de7737f120dd507c57e8d87de4cbb7994fb94275ed5 AS fzf-builder
 ARG FZF_VERSION
 ARG FZF_REF
 ARG TARGETARCH
@@ -74,7 +74,7 @@ RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
       -o /out/fzf && \
     go version -m /out/fzf | grep -E 'golang.org/x/sys[[:space:]]+v0\.44\.0'
 
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:433790e515d27dc6003e847e644cc0af956985cf315c1c58a3b73ee2dd305183 AS lazygit-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:3b77fc618ec235a1ab412de7737f120dd507c57e8d87de4cbb7994fb94275ed5 AS lazygit-builder
 ARG LAZYGIT_VERSION
 ARG LAZYGIT_REF
 ARG TARGETARCH
@@ -114,35 +114,45 @@ ARG DELTA_VERSION=0.19.2
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.32
+ARG OPENCODE_VERSION=1.18.34
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.281
+ARG CLAUDE_CODE_VERSION=2.1.286
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
+# renovate: datasource=npm depName=@cursor/sdk
+ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.35
+# renovate: datasource=npm depName=jsdom
+ARG PAPERCLIP_JSDOM_VERSION=30.1.1
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.13.2
+ARG OPENSPEC_VERSION=1.14.0
 # renovate: datasource=npm depName=undici
-ARG PAPERCLIP_UNDICI_VERSION=6.28.1
+ARG PAPERCLIP_UNDICI_VERSION=8.11.2
 # renovate: datasource=npm depName=opencode-claude-auth
 ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.1
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
-ARG NPM_VERSION=12.1.0
+ARG NPM_VERSION=12.2.0
 # renovate: datasource=npm depName=brace-expansion
 ARG NPM_BRACE_EXPANSION_VERSION=5.0.12
 # renovate: datasource=npm depName=tar
 ARG NPM_TAR_VERSION=7.5.22
 # renovate: datasource=npm depName=ip-address
 ARG NPM_IP_ADDRESS_VERSION=10.7.2
+# renovate: datasource=npm depName=node-gyp
+ARG NPM_NODE_GYP_VERSION=13.0.2
+# renovate: datasource=npm depName=undici
+ARG NPM_NODE_GYP_UNDICI_VERSION=8.11.2
 # renovate: datasource=npm depName=js-yaml
 ARG PM2_JS_YAML_VERSION=4.3.2
+# renovate: datasource=npm depName=basic-ftp
+ARG PM2_BASIC_FTP_VERSION=6.2.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.15
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.6.0
+ARG PNPM_VERSION=12.8.1
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.3.1
+ARG VITE_VERSION=8.3.2
 # renovate: datasource=npm depName=prettier
 ARG PRETTIER_VERSION=3.9.9
 # renovate: datasource=npm depName=prisma
@@ -150,7 +160,7 @@ ARG PRISMA_VERSION=7.10.0
 # renovate: datasource=npm depName=deepmerge-ts
 ARG PRISMA_DEEPMERGE_VERSION=8.0.2
 # renovate: datasource=npm depName=mysql2
-ARG PRISMA_MYSQL2_VERSION=3.24.4
+ARG PRISMA_MYSQL2_VERSION=3.24.5
 # renovate: datasource=npm depName=@types/node
 ARG PRISMA_TYPES_NODE_VERSION=20.19.43
 # renovate: datasource=npm depName=undici-types
@@ -158,9 +168,9 @@ ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.5.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.138.0
+ARG WRANGLER_VERSION=4.145.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20260921.1-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20260930.0-alpha
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.4
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
@@ -177,25 +187,38 @@ ARG PIP_VENDOR_MSGPACK_SHA256=9eb0b0e602064527a045ea28c4f174ed69383587e29cebe289
 # pip 26.2.1 vendors pkg_resources from vulnerable setuptools 70.3.0.
 ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
+# renovate: datasource=pypi depName=urllib3
+ARG PIP_VENDOR_URLLIB3_VERSION=2.8.0
+ARG PIP_VENDOR_URLLIB3_WHEEL_SHA256=0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3
+ARG PIP_VENDOR_URLLIB3_ARCHIVE_SHA256=c64eb33b95a5cbd0afd35cadfb3778da6e7c979efa634312f39a392ca3cb11f2
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-09-24
+ARG RELEASE_APT_REFRESH=2026-10-01
+ARG RELEASE_VERSION=v1.2.4
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
+    io.holycode.release=${RELEASE_VERSION} \
     io.holycode.version.github-cli=${GITHUB_CLI_VERSION} \
     io.holycode.version.opencode=${OPENCODE_VERSION} \
     io.holycode.version.claude-code=${CLAUDE_CODE_VERSION} \
     io.holycode.version.paperclip=${PAPERCLIP_VERSION} \
+    io.holycode.version.paperclip-cursor-sdk=${PAPERCLIP_CURSOR_SDK_VERSION} \
+    io.holycode.version.paperclip-jsdom=${PAPERCLIP_JSDOM_VERSION} \
+    io.holycode.version.paperclip-undici=${PAPERCLIP_UNDICI_VERSION} \
     io.holycode.version.openspec=${OPENSPEC_VERSION} \
     io.holycode.version.claude-auth-plugin=${CLAUDE_AUTH_PLUGIN_VERSION} \
     io.holycode.version.npm=${NPM_VERSION} \
     io.holycode.version.npm-brace-expansion=${NPM_BRACE_EXPANSION_VERSION} \
     io.holycode.version.npm-tar=${NPM_TAR_VERSION} \
     io.holycode.version.npm-ip-address=${NPM_IP_ADDRESS_VERSION} \
+    io.holycode.version.npm-node-gyp=${NPM_NODE_GYP_VERSION} \
+    io.holycode.version.npm-node-gyp-undici=${NPM_NODE_GYP_UNDICI_VERSION} \
     io.holycode.version.pm2-js-yaml=${PM2_JS_YAML_VERSION} \
+    io.holycode.version.pm2-basic-ftp=${PM2_BASIC_FTP_VERSION} \
     io.holycode.version.pip-vendor-msgpack=${PIP_VENDOR_MSGPACK_VERSION} \
     io.holycode.version.pip-vendor-pkg-resources=${PIP_VENDOR_PKG_RESOURCES_VERSION} \
+    io.holycode.version.pip-vendor-urllib3=${PIP_VENDOR_URLLIB3_VERSION} \
     io.holycode.version.typescript=${TYPESCRIPT_VERSION} \
     io.holycode.version.tsx=${TSX_VERSION} \
     io.holycode.version.pnpm=${PNPM_VERSION} \
@@ -332,12 +355,18 @@ RUN EZA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64";; *) echo "x86_64";; 
     rm /tmp/eza.tar.gz
 
 # ---------- Headless browser (Chromium + Xvfb + fonts) ----------
+COPY --chmod=0755 scripts/validate_chromium_version.sh /usr/local/bin/validate-holycode-chromium-version
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium chromium-sandbox \
     xvfb \
     fonts-liberation2 fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji \
     && test -u /usr/lib/chromium/chrome-sandbox \
     && dpkg-query -W -f='${Version}\n' chromium | grep -E '^(15[1-9]|1[6-9][0-9]|[2-9][0-9]{2})\.' \
+    && test "$(dpkg --print-architecture)" = "$TARGETARCH" \
+    && for package in chromium chromium-common chromium-sandbox; do \
+      installed_version=$(dpkg-query -W -f='${Version}' "$package"); \
+      validate-holycode-chromium-version "$installed_version" "linux/$TARGETARCH" "$RELEASE_VERSION" "$(date -u +%F)" || { echo "$package $installed_version violates the Chromium release policy" >&2; exit 1; }; \
+    done \
     && test "$(dpkg-query -W -f='${Version}' chromium)" = "$(dpkg-query -W -f='${Version}' chromium-sandbox)" \
     && rm -rf /var/lib/apt/lists/*
 
@@ -345,6 +374,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY config/python-requirements.lock /usr/local/share/holycode/python-requirements.lock
 COPY config/python-seed-requirements.lock /usr/local/share/holycode/python-seed-requirements.lock
 COPY patches/pip-vendored-pkg-resources-78.1.1.patch /tmp/pip-vendored-pkg-resources.patch
+COPY patches/pip-vendored-urllib3-2.8.0.tar.gz /tmp/pip-vendored-urllib3-2.8.0.tar.gz
+COPY patches/pip-vendored-bom-26.2.1-urllib3-2.8.0.cdx.json /tmp/pip-vendored-bom.cdx.json
+COPY scripts/verify_pip_vendor_record.py /tmp/verify-pip-vendor-record.py
+COPY scripts/test_pip_vendor_urllib3.py /tmp/test_pip_vendor_urllib3.py
 RUN python3 -m venv /tmp/holycode-pip-bootstrap && \
     /tmp/holycode-pip-bootstrap/bin/python -m pip install --no-cache-dir --upgrade \
       --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock && \
@@ -371,30 +404,47 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/setuptools.tar.gz \
       "https://files.pythonhosted.org/packages/81/9c/42314ee079a3e9c24b27515f9fbc7a3c1d29992c33451779011c74488375/setuptools-${PIP_VENDOR_PKG_RESOURCES_VERSION}.tar.gz" && \
     echo "${PIP_VENDOR_PKG_RESOURCES_SHA256}  /tmp/setuptools.tar.gz" | sha256sum -c - && \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/urllib3.whl \
+      "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-${PIP_VENDOR_URLLIB3_VERSION}-py3-none-any.whl" && \
+    echo "${PIP_VENDOR_URLLIB3_WHEEL_SHA256}  /tmp/urllib3.whl" | sha256sum -c - && \
+    echo "${PIP_VENDOR_URLLIB3_ARCHIVE_SHA256}  /tmp/pip-vendored-urllib3-2.8.0.tar.gz" | sha256sum -c - && \
+    echo "4e645472781870c87c896be33c1c3e0f93b2f8efeaf8ef780f629cad7d960e75  /tmp/pip-vendored-bom.cdx.json" | sha256sum -c - && \
     mkdir -p /tmp/msgpack /tmp/setuptools && \
     tar -xzf /tmp/msgpack.tar.gz -C /tmp/msgpack --strip-components=1 && \
     tar -xzf /tmp/setuptools.tar.gz -C /tmp/setuptools --strip-components=1 && \
     (cd /tmp/setuptools && patch -p1 < /tmp/pip-vendored-pkg-resources.patch) && \
     PIP_VENDOR_DIR="$(python3 -c 'import pathlib,pip._vendor; print(pathlib.Path(pip._vendor.__file__).parent)')" && \
-    rm -rf "$PIP_VENDOR_DIR/msgpack" "$PIP_VENDOR_DIR/pkg_resources" && \
+    rm -rf "$PIP_VENDOR_DIR/msgpack" "$PIP_VENDOR_DIR/pkg_resources" "$PIP_VENDOR_DIR/urllib3" && \
     cp -a /tmp/msgpack/msgpack "$PIP_VENDOR_DIR/msgpack" && \
     cp -a /tmp/setuptools/pkg_resources "$PIP_VENDOR_DIR/pkg_resources" && \
+    tar -xzf /tmp/pip-vendored-urllib3-2.8.0.tar.gz -C "$PIP_VENDOR_DIR" && \
     cp /tmp/msgpack/COPYING "$PIP_VENDOR_DIR/msgpack/COPYING" && \
     cp /tmp/setuptools/LICENSE "$PIP_VENDOR_DIR/pkg_resources/LICENSE" && \
+    cp /tmp/pip-vendored-bom.cdx.json "$PIP_VENDOR_DIR/bom.cdx.json" && \
+    python3 -c 'import pathlib,sys,zipfile; archive=zipfile.ZipFile(sys.argv[1]); wheel_license=archive.read("urllib3-2.8.0.dist-info/licenses/LICENSE.txt"); vendored_license=pathlib.Path(sys.argv[2]).read_bytes(); assert wheel_license==vendored_license' \
+      /tmp/urllib3.whl "$PIP_VENDOR_DIR/urllib3/LICENSE.txt" && \
     rm -rf "$PIP_VENDOR_DIR/pkg_resources/tests" "$PIP_VENDOR_DIR/pkg_resources/api_tests.txt" && \
     sed -i \
-      "s/^msgpack==.*/msgpack==${PIP_VENDOR_MSGPACK_VERSION}/; s/^setuptools==.*/setuptools==${PIP_VENDOR_PKG_RESOURCES_VERSION}/" \
+      "s/^msgpack==.*/msgpack==${PIP_VENDOR_MSGPACK_VERSION}/; s/^setuptools==.*/setuptools==${PIP_VENDOR_PKG_RESOURCES_VERSION}/; s/urllib3==.*/urllib3==${PIP_VENDOR_URLLIB3_VERSION}/" \
       "$PIP_VENDOR_DIR/vendor.txt" && \
-    python3 -c 'import json,pathlib,sys; path=pathlib.Path(sys.argv[1]); data=json.loads(path.read_text()); versions={"msgpack":sys.argv[2],"setuptools":sys.argv[3]}; [(component.update(version=versions[component["name"]],purl="pkg:pypi/{0}@{1}".format(component["name"],versions[component["name"]])) if component.get("name") in versions else None) for component in data.get("components",[])]; path.write_text(json.dumps(data,indent=2)+"\n")' \
+    python3 -c 'import functools,json,pathlib,sys; path=pathlib.Path(sys.argv[1]); text=path.read_text(); versions={"msgpack":("1.1.2",sys.argv[2]),"setuptools":("70.3.0",sys.argv[3])}; replacements={"pkg:pypi/{0}@{1}".format(name,old):"pkg:pypi/{0}@{1}".format(name,new) for name,(old,new) in versions.items()}; assert all(old in text for old in replacements); assert "pkg:pypi/urllib3@2.8.0" in text and "pkg:pypi/urllib3@2.7.0" not in text; data=json.loads(functools.reduce(lambda value,pair:value.replace(*pair),replacements.items(),text)); [(component.update(version=versions[component["name"]][1]) if component.get("name") in versions else None) for component in data.get("components",[])]; path.write_text(json.dumps(data,indent=2)+"\n")' \
       "$PIP_VENDOR_DIR/bom.cdx.json" "$PIP_VENDOR_MSGPACK_VERSION" "$PIP_VENDOR_PKG_RESOURCES_VERSION" && \
+    PIP_DIST_INFO="/usr/local/lib/python3.13/dist-packages/pip-${PIP_VERSION}.dist-info" && \
+    install -m 0644 "$PIP_VENDOR_DIR/msgpack/COPYING" "$PIP_DIST_INFO/licenses/src/pip/_vendor/msgpack/COPYING" && \
+    install -m 0644 "$PIP_VENDOR_DIR/pkg_resources/LICENSE" "$PIP_DIST_INFO/licenses/src/pip/_vendor/pkg_resources/LICENSE" && \
+    install -m 0644 "$PIP_VENDOR_DIR/urllib3/LICENSE.txt" "$PIP_DIST_INFO/licenses/src/pip/_vendor/urllib3/LICENSE.txt" && \
+    python3 /tmp/verify-pip-vendor-record.py --refresh && \
     rm -rf /tmp/msgpack /tmp/setuptools /tmp/msgpack.tar.gz /tmp/setuptools.tar.gz \
-      /tmp/pip-vendored-pkg-resources.patch && \
+      /tmp/pip-vendored-pkg-resources.patch /tmp/pip-vendored-urllib3-2.8.0.tar.gz \
+      /tmp/urllib3.whl /tmp/pip-vendored-bom.cdx.json /tmp/verify-pip-vendor-record.py && \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip --version | grep -F "pip ${PIP_VERSION}" && \
-    python3 -c 'import pip._vendor.msgpack as msgpack; assert msgpack.__version__ == "1.2.2"; assert msgpack.unpackb(msgpack.packb({"holycode": True})) == {"holycode": True}; import pip._vendor.pkg_resources' && \
+    python3 -c 'import pip._vendor.msgpack as msgpack; import pip._vendor.urllib3 as urllib3; assert msgpack.__version__ == "1.2.2"; assert urllib3.__version__ == "2.8.0"; assert msgpack.unpackb(msgpack.packb({"holycode": True})) == {"holycode": True}; import pip._vendor.pkg_resources' && \
     _PIP_USE_IMPORTLIB_METADATA=0 python3 -m pip list --format=json >/dev/null && \
     python3 -c 'import setuptools; assert setuptools.__version__ == "84.0.0"' && \
-    python3 -m pip check
+    python3 -m pip check && \
+    python3 /tmp/test_pip_vendor_urllib3.py && \
+    rm /tmp/test_pip_vendor_urllib3.py
 
 RUN rm -f /usr/local/bin/dotenv
 
@@ -424,7 +474,7 @@ RUN test "$(npm view "tar@${NPM_TAR_VERSION}" dist.integrity)" = \
       "${NPM_TAR_VERSION}" && \
     (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null) && \
     rm -rf /root/.npm
-# npm 12.1.0 resolves ip-address 10.5.0 through socks. Keep the compatible
+# npm 12.2.0 resolves ip-address through socks. Keep the compatible
 # socks range and replace that nested copy with the fixed 10.7.2 release.
 RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
       "sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==" && \
@@ -441,6 +491,39 @@ RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
       "${NPM_IP_ADDRESS_VERSION}" && \
     (cd /usr/local/lib/node_modules/npm && npm ls ip-address --all >/dev/null) && \
     test "$(npm prefix -g)" = "/usr/local" && \
+    rm -rf /root/.npm
+# npm 12.2.0 bundles node-gyp 13.0.0 with Undici 6.28.0. Its declared
+# compatible node-gyp 13.0.2 release consumes the patched Undici 8 line.
+COPY scripts/test_node_gyp_download.mjs /tmp/test_node_gyp_download.mjs
+COPY scripts/test_node_gyp_native.mjs /tmp/test_node_gyp_native.mjs
+RUN NPM_NODE_GYP_INTEGRITY="sha512-SXTvw3PxznpowYhJSOD9mVQBgDaCTWXffX+wQZsQ7PbcTV86TsXCUcSZhHnskFQvrvn/OdSzJPMsptT2pIj9ww==" && \
+    NPM_NODE_GYP_UNDICI_INTEGRITY="sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==" && \
+    test "$(npm view "node-gyp@${NPM_NODE_GYP_VERSION}" dist.integrity)" = "$NPM_NODE_GYP_INTEGRITY" && \
+    test "$(npm view "undici@${NPM_NODE_GYP_UNDICI_VERSION}" dist.integrity)" = "$NPM_NODE_GYP_UNDICI_INTEGRITY" && \
+    NPM_PACKAGE=/usr/local/lib/node_modules/npm/package.json && \
+    NPM_NODE_GYP_DIR=/usr/local/lib/node_modules/npm/node_modules/node-gyp && \
+    NPM_NODE_GYP_UNDICI_DIR=/usr/local/lib/node_modules/npm/node_modules/undici && \
+    node -e 'const npm=require(process.argv[1]); const gyp=require(process.argv[2]); if(npm.version!=="12.2.0" || npm.dependencies["node-gyp"]!=="^13.0.0" || gyp.version!=="13.0.0" || gyp.dependencies.undici!=="^6.25.0") process.exit(1)' \
+      "$NPM_PACKAGE" "$NPM_NODE_GYP_DIR/package.json" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/undici/package.json").version')" = "6.28.0" && \
+    NPM_NODE_GYP_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp "node-gyp@${NPM_NODE_GYP_VERSION}") && \
+    NPM_NODE_GYP_UNDICI_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp "undici@${NPM_NODE_GYP_UNDICI_VERSION}") && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); for(let i=1;i<process.argv.length;i+=2) { const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[i])).digest("base64")}`; if(actual!==process.argv[i+1]) process.exit(1) }' \
+      "/tmp/${NPM_NODE_GYP_TARBALL}" "$NPM_NODE_GYP_INTEGRITY" \
+      "/tmp/${NPM_NODE_GYP_UNDICI_TARBALL}" "$NPM_NODE_GYP_UNDICI_INTEGRITY" && \
+    rm -rf "$NPM_NODE_GYP_DIR" "$NPM_NODE_GYP_UNDICI_DIR" && \
+    mkdir "$NPM_NODE_GYP_DIR" "$NPM_NODE_GYP_UNDICI_DIR" && \
+    tar -xzf "/tmp/${NPM_NODE_GYP_TARBALL}" -C "$NPM_NODE_GYP_DIR" --strip-components=1 && \
+    tar -xzf "/tmp/${NPM_NODE_GYP_UNDICI_TARBALL}" -C "$NPM_NODE_GYP_UNDICI_DIR" --strip-components=1 && \
+    rm "/tmp/${NPM_NODE_GYP_TARBALL}" "/tmp/${NPM_NODE_GYP_UNDICI_TARBALL}" && \
+    node -e 'const gyp=require(process.argv[1]); const undici=require(process.argv[2]); if(gyp.version!==process.argv[3] || gyp.dependencies.undici!=="^8.4.1" || undici.version!==process.argv[4]) process.exit(1)' \
+      "$NPM_NODE_GYP_DIR/package.json" "$NPM_NODE_GYP_UNDICI_DIR/package.json" \
+      "$NPM_NODE_GYP_VERSION" "$NPM_NODE_GYP_UNDICI_VERSION" && \
+    (cd /usr/local/lib/node_modules/npm && npm ls node-gyp undici --all >/dev/null) && \
+    node -e 'const {request}=require("/usr/local/lib/node_modules/npm/node_modules/undici"); if(typeof request!=="function") process.exit(1)' && \
+    node /tmp/test_node_gyp_download.mjs && \
+    node /tmp/test_node_gyp_native.mjs && \
+    rm /tmp/test_node_gyp_download.mjs /tmp/test_node_gyp_native.mjs && \
     rm -rf /root/.npm
 
 # ---------- OpenCode (AI coding agent) ----------
@@ -485,7 +568,7 @@ RUN PRISMA_TYPES_NODE_INTEGRITY="sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLn
     test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)" = \
       "sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==" && \
     test "$(npm view "mysql2@${PRISMA_MYSQL2_VERSION}" dist.integrity)" = \
-      "sha512-A2olluVlj0mvgyIRRISMEzXc51m+21mRtcMVjJyIpt2GG98+XrC9m9HzsqcMsX2LcnfccJvY5NB22g8fENBnOA==" && \
+      "sha512-X6Ujsr2QSkkLpkQGjxzpKRAPn9nu4axpR63ntBzquFVEvPOArgbUQ1sJjFKI7hnaYtiVZxa17Z7q18KSubW0IQ==" && \
     test "$(npm view "@types/node@${PRISMA_TYPES_NODE_VERSION}" dist.integrity)" = "$PRISMA_TYPES_NODE_INTEGRITY" && \
     test "$(npm view "undici-types@${PRISMA_UNDICI_TYPES_VERSION}" dist.integrity)" = "$PRISMA_UNDICI_TYPES_INTEGRITY" && \
     test "$(npm view "@prisma/config@${PRISMA_VERSION}" dependencies.deepmerge-ts)" = "7.1.5" && \
@@ -586,28 +669,52 @@ RUN PM2_JS_YAML_INTEGRITY="sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TI
     rm -rf /tmp/holycode-build-pm2 "$PM2_APP" && \
     rm -rf /root/.npm
 
-# Wrangler 4.138.0 owns Miniflare 5.20260921.1-alpha and workerd 1.20260921.1;
+# PM2's get-uri 6.0.5 declares basic-ftp ^5.0.2, which has no fixed v5.
+# Bind only that owner to 6.2.1; the FTP consumer is exercised below.
+COPY scripts/test_get_uri_ftp.mjs /tmp/test_get_uri_ftp.mjs
+RUN PM2_BASIC_FTP_INTEGRITY="sha512-bK67isD+lKq46AU8vNtjvMaT2ZqAOAmNCbxUHlFBRD4k15NWxyEjmaKtZPlgce58So4BNTjITGQOVTjL9y0ECA==" && \
+    test "$(npm view "basic-ftp@${PM2_BASIC_FTP_VERSION}" dist.integrity)" = "$PM2_BASIC_FTP_INTEGRITY" && \
+    PM2_ROOT=/usr/local/lib/node_modules/pm2 && \
+    PM2_GET_URI_PACKAGE="$PM2_ROOT/node_modules/get-uri/package.json" && \
+    PM2_BASIC_FTP_DIR="$PM2_ROOT/node_modules/basic-ftp" && \
+    node -e 'const getUri=require(process.argv[1]); const ftp=require(process.argv[2]); if(getUri.version!=="6.0.5" || getUri.dependencies["basic-ftp"]!=="^5.0.2" || ftp.version!=="5.3.1") process.exit(1)' \
+      "$PM2_GET_URI_PACKAGE" "$PM2_BASIC_FTP_DIR/package.json" && \
+    PM2_BASIC_FTP_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp "basic-ftp@${PM2_BASIC_FTP_VERSION}") && \
+    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
+      "/tmp/${PM2_BASIC_FTP_TARBALL}" "$PM2_BASIC_FTP_INTEGRITY" && \
+    rm -rf "$PM2_BASIC_FTP_DIR" && mkdir "$PM2_BASIC_FTP_DIR" && \
+    tar -xzf "/tmp/${PM2_BASIC_FTP_TARBALL}" -C "$PM2_BASIC_FTP_DIR" --strip-components=1 && \
+    node -e 'const fs=require("fs"); const file=process.argv[1]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies["basic-ftp"]!=="^5.0.2") process.exit(1); pkg.dependencies["basic-ftp"]=process.argv[2]; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
+      "$PM2_GET_URI_PACKAGE" "$PM2_BASIC_FTP_VERSION" && \
+    node -e 'const getUri=require(process.argv[1]); const ftp=require(process.argv[2]); if(getUri.dependencies["basic-ftp"]!==process.argv[3] || ftp.version!==process.argv[3]) process.exit(1)' \
+      "$PM2_GET_URI_PACKAGE" "$PM2_BASIC_FTP_DIR/package.json" "$PM2_BASIC_FTP_VERSION" && \
+    (cd "$PM2_ROOT" && npm ls get-uri basic-ftp --all >/dev/null) && \
+    node /tmp/test_get_uri_ftp.mjs all && \
+    rm "/tmp/${PM2_BASIC_FTP_TARBALL}" /tmp/test_get_uri_ftp.mjs && \
+    rm -rf /root/.npm
+
+# Wrangler 4.145.0 owns Miniflare 5.20260930.0-alpha and workerd 1.20260930.2;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260921.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260930.2" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260921.1" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260930.2" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260921.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260930.2") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260921.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260930.2") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20260921.1" && \
+      "1.20260930.2" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \
@@ -671,22 +778,23 @@ RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn
 RUN npm i -g --ignore-scripts \
     "paperclipai@${PAPERCLIP_VERSION}" && \
     rm -rf /root/.npm
-# Paperclip's Cursor adapter currently resolves Undici 5 through Connect 1.x.
-# Keep Paperclip stable while replacing that HTTP client with the first fixed
-# 6.x release; remove this reviewed compatibility patch when Paperclip updates Connect.
-RUN test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
-      "sha512-zWpdTVD54H48CIybL0rWQ3ukpb9d23wM7eH5RtfdmeP70cWHNjtfo7P4vZX+5CoDcO53J4Pu5uXp7lNfjc6DRA==" && \
-    UNDICI_TARBALL=$(npm pack --silent --pack-destination /tmp "undici@${PAPERCLIP_UNDICI_VERSION}") && \
-    UNDICI_DIR=/usr/local/lib/node_modules/paperclipai/node_modules/undici && \
+# Paperclip's current Cursor SDK no longer installs Connect's Node transport.
+# The remaining Undici is jsdom's 8.x dependency; guard the resolved owners.
+RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrity)" = \
+      "sha512-CJQR4ocRFm74N1miSqSSrhWyEbvTRIJGyMfHQvZlcBIYzLMXCVPmb1bV82L4NJ8mG9TyvbckEjERjbnzpG5akQ==" && \
+    test "$(npm view "jsdom@${PAPERCLIP_JSDOM_VERSION}" dist.integrity)" = \
+      "sha512-FahmoPK5vbPc+jxV1iErMHmAZypCZ942NHF4+qqaWAuvaKKTBZxawnmAtrbGWLU7MtlxfqIP0qw6aSI+aWGtLg==" && \
+    test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
+      "sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==" && \
     CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
-    rm -rf "$UNDICI_DIR" && mkdir "$UNDICI_DIR" && \
-    tar -xzf "/tmp/${UNDICI_TARBALL}" -C "$UNDICI_DIR" --strip-components=1 && \
-    rm "/tmp/${UNDICI_TARBALL}" && \
-    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); pkg.dependencies.undici=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
-      "$CONNECT_NODE_PACKAGE" "^${PAPERCLIP_UNDICI_VERSION}" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/paperclipai/node_modules/undici/package.json").version')" = \
-      "${PAPERCLIP_UNDICI_VERSION}" && \
-    (cd /usr/local/lib/node_modules/paperclipai && npm ls undici --all >/dev/null) && \
+    test ! -e "$CONNECT_NODE_PACKAGE" && \
+    test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0 && \
+    test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1 && \
+    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.version!==process.argv[1] || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1" || jsdom.version!==process.argv[2] || jsdom.dependencies.undici!=="^8.10.2" || undici.version!==process.argv[3]) process.exit(1)' \
+      "${PAPERCLIP_CURSOR_SDK_VERSION}" "${PAPERCLIP_JSDOM_VERSION}" "${PAPERCLIP_UNDICI_VERSION}" && \
+    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; if(require.resolve("undici/package.json",{paths:[`${root}/jsdom`]})!==`${root}/undici/package.json`) process.exit(1)' && \
+    (cd /usr/local/lib/node_modules/paperclipai && npm ls @cursor/sdk jsdom undici --omit=dev --all >/dev/null) && \
+    node -e 'const fs=require("fs"); const root="/usr/local/lib/node_modules/paperclipai/node_modules/@cursor/sdk"; const {Agent,Cursor}=require(root); const agentTypes=fs.readFileSync(`${root}/dist/esm/agent.d.ts`,"utf8"); const runTypes=fs.readFileSync(`${root}/dist/esm/run.d.ts`,"utf8"); if([Agent.create,Agent.resume,Agent.getRun,Cursor.me,Cursor.models?.list].some(fn=>typeof fn!=="function") || !agentTypes.includes("send(message:") || !agentTypes.includes("[Symbol.asyncDispose]()") || !runTypes.includes("supports(operation:") || !runTypes.includes("stream():") || !runTypes.includes("wait():")) process.exit(1)' && \
     node --input-type=module -e 'const {testEnvironment}=await import("file:///usr/local/lib/node_modules/paperclipai/node_modules/@paperclipai/adapter-cursor-cloud/dist/server/index.js"); const result=await testEnvironment({adapterType:"cursor_cloud",config:{}}); if(result.status!=="fail" || !result.checks.some((check)=>check.code==="cursor_cloud_api_key_missing")) process.exit(1)' && \
     rm -rf /root/.npm
 # Package the supported Claude Auth plugin for network-free startup.
@@ -737,10 +845,27 @@ RUN python3 /usr/local/bin/validate-npm-script-policy \
     node -e 'const ssh2=require("/usr/local/lib/node_modules/paperclipai/node_modules/ssh2"); if(typeof ssh2.Client!=="function") process.exit(1)' && \
     rm -rf /root/.npm
 
+COPY scripts/rebuild_pip_seed_wheel.py /tmp/rebuild_pip_seed_wheel.py
+COPY scripts/verify_pip_vendor_record.py /tmp/verify_pip_vendor_record.py
+COPY scripts/test_pip_vendor_urllib3.py /tmp/test_pip_vendor_urllib3.py
 RUN mkdir -p /usr/local/share/holycode/python-seed && \
     python3 -m pip download --no-deps --only-binary=:all: \
       --dest /usr/local/share/holycode/python-seed \
-      --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock
+      --require-hashes -r /usr/local/share/holycode/python-seed-requirements.lock && \
+    PIP_SEED=/usr/local/share/holycode/python-seed/pip-${PIP_VERSION}-py3-none-any.whl && \
+    python3 /tmp/rebuild_pip_seed_wheel.py "$PIP_SEED" \
+      /usr/local/lib/python3.13/dist-packages /tmp/pip-repaired-seed.whl && \
+    mv /tmp/pip-repaired-seed.whl "$PIP_SEED" && \
+    python3 -m venv /tmp/holycode-pip-seed-check && \
+    /tmp/holycode-pip-seed-check/bin/python -m pip install --no-index --no-deps \
+      --find-links /usr/local/share/holycode/python-seed \
+      "pip==${PIP_VERSION}" "setuptools==${SETUPTOOLS_VERSION}" \
+      "packaging==26.3" "wheel==0.48.0" && \
+    /tmp/holycode-pip-seed-check/bin/python /tmp/verify_pip_vendor_record.py && \
+    /tmp/holycode-pip-seed-check/bin/python /tmp/test_pip_vendor_urllib3.py && \
+    /tmp/holycode-pip-seed-check/bin/python -c 'import pip._vendor.msgpack as m,pip._vendor.urllib3 as u; import pip._vendor.pkg_resources as p; assert m.__version__=="1.2.2" and u.__version__=="2.8.0" and p.get_distribution("pip").version=="26.2.1"' && \
+    rm -rf /tmp/holycode-pip-seed-check \
+      /tmp/rebuild_pip_seed_wheel.py /tmp/verify_pip_vendor_record.py /tmp/test_pip_vendor_urllib3.py
 
 RUN mkdir -p /usr/local/share/holycode && \
     dpkg-query -W -f='${binary:Package}\t${Version}\n' | sort > /usr/local/share/holycode/dpkg-inventory.txt

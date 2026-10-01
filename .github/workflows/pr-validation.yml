@@ -40,7 +40,9 @@ jobs:
         run: python scripts/validate_chromium_seccomp.py
 
       - name: JSON syntax
-        run: python -m json.tool renovate.json >/tmp/renovate.json
+        run: |
+          python -m json.tool renovate.json >/tmp/renovate.json
+          python -m json.tool config/security-exceptions-v1.2.4.json >/tmp/security-exceptions.json
 
       - name: Workflow YAML syntax
         run: ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
@@ -56,7 +58,7 @@ jobs:
           fi
 
       - name: Renovate configuration
-        run: bash scripts/validate_renovate_extraction.sh 44.112.3
+        run: bash scripts/validate_renovate_extraction.sh 44.129.0
 
   build-and-smoke-test:
     needs: static-validation
@@ -68,16 +70,16 @@ jobs:
             platform: linux/amd64
             suffix: amd64
             scout_arch: amd64
-            scout_sha256: f4e2814bd61040365153d5b964b144cb2dc6ee536a68b5bac4cadf00fc0ec34b
+            scout_sha256: 47daa9ac442816316c65389f516b847146bb9f45e8d6afdcbb9ce835c4e138bd
             trivy_arch: 64bit
-            trivy_sha256: 2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a
+            trivy_sha256: c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
             suffix: arm64
             scout_arch: arm64
-            scout_sha256: 8b21594c72d4d9403a82a49e9dbdfc04c27c6a21933906f1eefbb0beabe22d58
+            scout_sha256: 34282a50d6787eec46e44a377a1ed9e70342adf078135cca8617c9199852725c
             trivy_arch: ARM64
-            trivy_sha256: b94ce1976bbf3c15b514b605ee88be7c6d94a29be2302847ff01cb794d47aad5
+            trivy_sha256: a1ee9f6ffb7d112b64ff726a2a0717c21175c1114361391f4a132956751a13b3
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -104,6 +106,50 @@ jobs:
 
       - name: Validate plugin pin modes
         run: bash scripts/test_plugin_modes.sh "holycode-pr-test:${{ matrix.suffix }}"
+
+      - name: Validate time-limited ARM64 Chromium exceptions
+        run: |
+          set -euo pipefail
+          image="holycode-pr-test:${{ matrix.suffix }}"
+          actual_arch="$(docker run --rm --entrypoint dpkg "$image" --print-architecture)"
+          [ "linux/$actual_arch" = "${{ matrix.platform }}" ]
+
+          installed_args=()
+          available_args=()
+          uses_exception=false
+          for package in chromium chromium-common chromium-sandbox; do
+            installed="$(docker run --rm --entrypoint dpkg-query "$image" -W -f='${Version}' "$package")"
+            available="$(docker run --rm --entrypoint sh "$image" -lc \
+              "apt-get update --error-on=any >/dev/null && apt-cache policy '$package' | awk '/Candidate:/ {print \$2}'")"
+            [ -n "$installed" ]
+            [ -n "$available" ]
+            installed_args+=(--installed "$package=$installed")
+            available_args+=(--available "$package=$available")
+            if [ "$installed" = "154.0.8037.57-1~deb13u1" ]; then
+              uses_exception=true
+            else
+              bash scripts/validate_chromium_version.sh \
+                "$installed" "${{ matrix.platform }}" v1.2.4 "$(date -u +%F)"
+            fi
+            printf '%s installed=%s available=%s platform=%s\n' \
+              "$package" "$installed" "$available" "${{ matrix.platform }}"
+          done
+
+          if [ "$uses_exception" = true ]; then
+            [ "${{ matrix.platform }}" = "linux/arm64" ]
+            python scripts/validate_security_exceptions.py \
+              --file config/security-exceptions-v1.2.4.json \
+              --release v1.2.4 \
+              --platform "${{ matrix.platform }}" \
+              --as-of "$(date -u +%F)" \
+              "${installed_args[@]}" \
+              "${available_args[@]}"
+            echo "USE_ARM64_CHROMIUM_EXCEPTION=true" >> "$GITHUB_ENV"
+            echo "33 security exception(s) applied for ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "USE_ARM64_CHROMIUM_EXCEPTION=false" >> "$GITHUB_ENV"
+            echo "0 security exception(s) applied for ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Smoke test Paperclip skills catalog
         run: |
@@ -194,7 +240,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           TRIVY_SHA256: ${{ matrix.trivy_sha256 }}
-          TRIVY_VERSION: 0.74.0
+          TRIVY_VERSION: 0.75.0
         run: |
           set -euo pipefail
 
@@ -215,7 +261,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.74.0
+          version: v0.75.0
           skip-setup-trivy: true
           image-ref: holycode-pr-test:${{ matrix.suffix }}
           format: spdx-json
@@ -225,7 +271,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           SCOUT_SHA256: ${{ matrix.scout_sha256 }}
-          SCOUT_VERSION: 1.24.0
+          SCOUT_VERSION: 1.26.0
         run: |
           set -euo pipefail
 
@@ -278,16 +324,23 @@ jobs:
           set -euo pipefail
 
           jq -e '.runs | type == "array" and length > 0' "$SCOUT_FIXABLE_REPORT" >/dev/null
+          exception_args=()
+          if [ "$USE_ARM64_CHROMIUM_EXCEPTION" = true ]; then
+            exception_args=(--exceptions config/security-exceptions-v1.2.4.json)
+          fi
           python scripts/validate_scanner_findings.py \
             --scanner scout \
             --report "$SCOUT_FIXABLE_REPORT" \
+            --release v1.2.4 \
+            --platform "${{ matrix.platform }}" \
+            "${exception_args[@]}" \
             --as-of "$(date -u +%F)"
 
       - name: Generate pre-tag Trivy vulnerability report
         if: github.event_name == 'workflow_dispatch'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.74.0
+          version: v0.75.0
           skip-setup-trivy: true
           image-ref: holycode-pr-test:${{ matrix.suffix }}
           format: json
@@ -301,7 +354,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.74.0
+          version: v0.75.0
           skip-setup-trivy: true
           image-ref: holycode-pr-test:${{ matrix.suffix }}
           format: json
@@ -318,9 +371,16 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
+          exception_args=()
+          if [ "$USE_ARM64_CHROMIUM_EXCEPTION" = true ]; then
+            exception_args=(--exceptions config/security-exceptions-v1.2.4.json)
+          fi
           python scripts/validate_scanner_findings.py \
             --scanner trivy \
             --report "holycode-${{ matrix.suffix }}.trivy-fixable.json" \
+            --release v1.2.4 \
+            --platform "${{ matrix.platform }}" \
+            "${exception_args[@]}" \
             --as-of "$(date -u +%F)"
 
       - name: Collect pre-tag architecture evidence

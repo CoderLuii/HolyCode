@@ -4,6 +4,24 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.4] - 10/01/2026
+
+### Added
+
+- Add a v1.2.4 dependency audit with selected package graphs, compatibility holds, the unresolved Claude Auth issue, and pending native release gates
+
+### Changed
+
+- Disclose and gate a temporary ARM64-only Chromium exception for `chromium`, `chromium-common`, and `chromium-sandbox` `154.0.8037.57-1~deb13u1`, expiring `2026-10-08`. Debian's published fix is `154.0.8037.92-1~deb13u1`, but the compatible ARM64 binary is not available yet. Avoid untrusted web content and browser automation on ARM64 until the corrected package ships. The required sandbox, seccomp profile, unprivileged user, and closed browser port remain required, but this mitigation does not make the known vulnerabilities safe or unreachable; rebuild and remove the exception when Debian publishes the corrected ARM64 packages
+- Refresh OpenCode to 1.18.34, Claude Code to 2.1.286, OpenSpec to 1.14.0, npm to 12.2.0, pnpm to 12.8.1, Vite to 8.3.2, and Wrangler to 4.145.0 with its Miniflare 5.20260930.0-alpha and workerd 1.20260930.2 graph
+- Refresh GitHub CLI to 2.102.0 from its signed release commit, the Go 1.27.1 builder index, Prisma-owned mysql2 to 3.24.5, and CI validation pins for Renovate 44.129.0, Trivy 0.75.0, and Docker Scout 1.26.0
+- Keep Paperclip 2026.831.1, TypeScript 6.0.3, Prisma 7.10.0, json-server 0.17.4, the Python locks, and `opencode-claude-auth` 2.2.1 on their compatibility boundaries; issue #11 remains open
+- Move the protected release predecessor and rollback image to v1.2.3
+
+### Fixed
+
+- Remove Paperclip's obsolete Undici 6 overlay after its current Cursor SDK stopped installing Connect's Node transport; guard the resolved SDK 1.0.35 and jsdom/Undici 30.1.1/8.11.2 graph with package and loopback checks
+
 ## [1.2.3] - 09/24/2026
 
 ### Added
