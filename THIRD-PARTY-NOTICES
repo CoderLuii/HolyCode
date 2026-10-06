@@ -67,8 +67,8 @@ distribute or modify this plugin.
 
 - License: MIT
 - Source: https://github.com/Fission-AI/OpenSpec
-- npm: https://www.npmjs.com/package/@fission-ai/openspec/v/1.14.0
-- Version: 1.14.0
+- npm: https://www.npmjs.com/package/@fission-ai/openspec/v/1.14.1
+- Version: 1.14.1
 
 Installed as the pinned global CLI. Telemetry is disabled in the image, and
 project initialization occurs only when you explicitly run
@@ -218,12 +218,12 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.286
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.286.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.290
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.290.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.286
+- Version: 2.1.290
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.286`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.290`.
 The immutable registry tarball contains a 147-byte `LICENSE.md` legal-agreements
 notice. Final native image validation must prove that the installed CLI and
 Linux native payload carry the same notice. This is artifact evidence, not a
@@ -246,26 +246,26 @@ architecture, and lifecycle-script body before running the exact embedded Postgr
 postinstall needed to hydrate its packaged library symlinks. Paperclip then runs as
 an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 
-### Paperclip-scoped Cursor SDK 1.0.35
+### Paperclip-scoped Cursor SDK 1.0.36
 
 - License: Cursor SDK License (use subject to Cursor's Terms of Service)
 - Copyright: Anysphere Inc.
 - Source: https://github.com/cursor/cursor
-- npm: https://www.npmjs.com/package/@cursor/sdk/v/1.0.35
+- npm: https://www.npmjs.com/package/@cursor/sdk/v/1.0.36
 
 The published npm payload includes `LICENSE.md` with the Cursor SDK License
-notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.0.35` through its
+notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.0.36` through its
 `^1.0.28` declaration. The installed SDK no longer declares Connect's Node
 transport. This records the bundled notice; it is not legal clearance for
 Cursor service use.
 
-### Paperclip-scoped jsdom 30.1.1 and Undici 8.11.2
+### Paperclip-scoped jsdom 30.1.2 and Undici 8.11.2
 
 - License: MIT (each package includes its own license text)
 - Sources: https://github.com/jsdom/jsdom and https://github.com/nodejs/undici
-- npm: https://www.npmjs.com/package/jsdom/v/30.1.1 and https://www.npmjs.com/package/undici/v/8.11.2
+- npm: https://www.npmjs.com/package/jsdom/v/30.1.2 and https://www.npmjs.com/package/undici/v/8.11.2
 
-Paperclip's server resolves jsdom 30.1.1; jsdom declares `undici ^8.10.2` and
+Paperclip's server resolves jsdom 30.1.2; jsdom declares `undici ^8.11.2` and
 currently resolves Undici 8.11.2. HolyCode checks that owner graph and exercises
 jsdom's loopback URL fetch. It no longer replaces Undici or changes an installed
 Connect dependency declaration.
@@ -275,19 +275,20 @@ Connect dependency declaration.
 - License: MIT
 - Copyright: GitHub, Inc.
 - Source: https://github.com/cli/cli
-- Version: 2.102.0 (`fc4b137cdef0a6bd28fd461b7cf9c84a5812a8cd`)
+- Version: 2.102.0
 
-Built from the exact upstream release commit with Go 1.27.1 and its verified module graph.
+Installed from the official upstream Linux release archive after SHA-256
+verification.
 
 ## lazygit
 
 - License: MIT
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
-- Version: 0.65.1 (`17cb09fa7b08bc96d9f0e81b91f4720fc1a36700`)
+- Version: 0.66.0
 
-Built from the exact upstream release commit with the reviewed x/text 0.41.0 module
-update.
+Installed from the official upstream Linux release archive after SHA-256
+verification.
 
 ## NumPy
 
@@ -358,9 +359,9 @@ vendor repairs.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.145.0
+- Version: 4.147.0
 
-Wrangler owns Miniflare 5.20260930.0-alpha and workerd 1.20260930.2. The
+Wrangler owns Miniflare 5.20261001.0-alpha and workerd 1.20261001.1. The
 installed package manifests declare MIT for Miniflare and Apache-2.0 for
 workerd. Their selected npm package roots do not include license files, so this
 notice does not claim bundled license text for them. The final AMD64 and ARM64
@@ -370,7 +371,7 @@ images must verify the installed package roots and separate workerd payloads.
 
 - License: MIT
 - Source: https://github.com/pnpm/pnpm
-- Version: 12.8.1
+- Version: 12.9.1
 
 The selected package manifest declares MIT. Its npm package has no license file
 at the package root, so this notice does not claim one is bundled.
@@ -403,7 +404,7 @@ at the package root, so this notice does not claim one is bundled.
 
 - License: MIT
 - Source: https://github.com/eslint/eslint
-- Version: 10.11.0
+- Version: 10.12.0
 
 ## drizzle-kit
 
@@ -427,6 +428,7 @@ LGPL-3.0-or-later.
 - License: MIT
 - Copyright: Dan Davison
 - Source: https://github.com/dandavison/delta
+- Version: 0.20.1
 
 ## eza
 
@@ -451,10 +453,10 @@ LGPL-3.0-or-later.
 - License: MIT
 - Copyright: Junegunn Choi
 - Source: https://github.com/junegunn/fzf
-- Version: 0.74.4 (`a140afeb4d733cad3c96a56bf6db7e26853b6757`)
+- Version: 0.74.4
 
-Built from the exact upstream tag with the reviewed x/sys 0.44.0 module
-update.
+Installed from the official upstream Linux release archive after SHA-256
+verification.
 
 ## bat
 

@@ -34,7 +34,14 @@ def exception_record(expires="2026-08-28"):
     }
 
 
-def trivy_report(cve="CVE-2026-16804", package="chromium", version="150.0.7871.181-1~deb13u1"):
+def trivy_report(
+    cve="CVE-2026-16804",
+    package="chromium",
+    version="150.0.7871.181-1~deb13u1",
+    purl=None,
+):
+    if purl is None:
+        purl = f"pkg:deb/debian/{package}@{version}"
     return {
         "Results": [
             {
@@ -44,6 +51,7 @@ def trivy_report(cve="CVE-2026-16804", package="chromium", version="150.0.7871.1
                         "VulnerabilityID": cve,
                         "PkgName": package,
                         "InstalledVersion": version,
+                        "PkgIdentifier": {"PURL": purl},
                         "FixedVersion": "150.0.7871.186",
                         "Severity": "HIGH",
                     }
@@ -109,6 +117,41 @@ class ScannerFindingTests(unittest.TestCase):
                 text=True,
                 check=False,
             )
+
+    def run_advisory_validator(self, scanner, report):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            report_path = temp / "report.json"
+            accepted_path = temp / "accepted.json"
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(VALIDATOR),
+                    "--scanner",
+                    scanner,
+                    "--report",
+                    str(report_path),
+                    "--as-of",
+                    "2026-10-05",
+                    "--release",
+                    "v1.2.5",
+                    "--platform",
+                    "linux/arm64",
+                    "--accept-upstream-vulnerabilities",
+                    "--accepted-findings",
+                    str(accepted_path),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            accepted = (
+                json.loads(accepted_path.read_text(encoding="utf-8"))
+                if accepted_path.is_file()
+                else None
+            )
+            return result, accepted
 
     def test_accepts_exact_trivy_exception(self):
         result = self.run_validator("trivy", trivy_report())
@@ -300,6 +343,133 @@ class ScannerFindingTests(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("unexcepted", result.stderr)
+
+    def test_advisory_mode_records_validated_third_party_findings(self):
+        for scanner, report in (
+            ("trivy", trivy_report()),
+            ("scout", scout_report()),
+        ):
+            with self.subTest(scanner=scanner):
+                result, accepted = self.run_advisory_validator(scanner, report)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(accepted["release"], "v1.2.5")
+                self.assertEqual(accepted["platform"], "linux/arm64")
+                self.assertEqual(accepted["scanner"], scanner)
+                self.assertEqual(accepted["asOf"], "2026-10-05")
+                self.assertEqual(
+                    accepted["findings"],
+                    [
+                        {
+                            "vulnerability": "CVE-2026-16804",
+                            "package": "chromium",
+                            "installedVersion": "150.0.7871.181-1~deb13u1",
+                            "purl": "pkg:deb/debian/chromium@150.0.7871.181-1~deb13u1",
+                        }
+                    ],
+                )
+                self.assertIn("accepted 1 upstream", result.stdout)
+
+    def test_advisory_mode_matches_debian_epoch_qualifier(self):
+        report = trivy_report(
+            package="bsdutils",
+            version="1:2.41.5-0+deb13u1",
+            purl=(
+                "pkg:deb/debian/bsdutils@2.41.5-0%2Bdeb13u1"
+                "?arch=amd64&distro=debian-13.7&epoch=1"
+            ),
+        )
+        result, accepted = self.run_advisory_validator("trivy", report)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            accepted["findings"][0]["installedVersion"],
+            "1:2.41.5-0+deb13u1",
+        )
+
+    def test_advisory_mode_rejects_secrets(self):
+        report = {
+            "Results": [
+                {
+                    "Target": "rootfs",
+                    "Secrets": [{"RuleID": "private-key", "Target": "/app/key"}],
+                }
+            ]
+        }
+        result, accepted = self.run_advisory_validator("trivy", report)
+        self.assertEqual(result.returncode, 1)
+        self.assertIsNone(accepted)
+        self.assertIn("secret finding", result.stderr)
+
+    def test_advisory_mode_rejects_missing_or_unrecognized_package_provenance(self):
+        reports = (
+            trivy_report(purl=""),
+            trivy_report(purl="pkg:generic/vendor/chromium@150.0.7871.181"),
+            scout_report(package="chromium", version=""),
+        )
+        for report in reports:
+            scanner = "trivy" if "Results" in report else "scout"
+            with self.subTest(scanner=scanner, report=report):
+                result, accepted = self.run_advisory_validator(scanner, report)
+                self.assertEqual(result.returncode, 1)
+                self.assertIsNone(accepted)
+                self.assertIn("unclassified finding", result.stderr)
+
+    def test_advisory_mode_rejects_project_owned_packages(self):
+        for scanner, report in (
+            (
+                "trivy",
+                trivy_report(
+                    package="holycode",
+                    version="1.2.5",
+                    purl="pkg:npm/%40coderluii/holycode@1.2.5",
+                ),
+            ),
+            (
+                "scout",
+                scout_report(
+                    package="holycode",
+                    version="1.2.5",
+                ),
+            ),
+            (
+                "scout",
+                scout_report(
+                    package="holycode-utils",
+                    version="1.2.5",
+                ),
+            ),
+        ):
+            with self.subTest(scanner=scanner):
+                result, accepted = self.run_advisory_validator(scanner, report)
+                self.assertEqual(result.returncode, 1)
+                self.assertIsNone(accepted)
+                self.assertIn("project-owned finding", result.stderr)
+
+    def test_advisory_mode_requires_an_evidence_output(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            report_path = Path(temp_dir) / "report.json"
+            report_path.write_text(json.dumps(trivy_report()), encoding="utf-8")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(VALIDATOR),
+                    "--scanner",
+                    "trivy",
+                    "--report",
+                    str(report_path),
+                    "--as-of",
+                    "2026-10-05",
+                    "--release",
+                    "v1.2.5",
+                    "--platform",
+                    "linux/amd64",
+                    "--accept-upstream-vulnerabilities",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--accepted-findings", result.stderr)
 
 
 if __name__ == "__main__":

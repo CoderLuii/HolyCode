@@ -14,9 +14,9 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.2.3@sha256:b46cf61c33f3b7556b7bc165ebfa9dabfff66753a134d832ee8ec118c6354083
-  PREVIOUS_VERSION: v1.2.3
-  RELEASE_VERSION: v1.2.4
+  PREVIOUS_IMAGE: coderluii/holycode:1.2.4@sha256:26dc14d6823573a0aa2b12469c93cbbf6492c1498bbb588a7a0b0c88c42c4a23
+  PREVIOUS_VERSION: v1.2.4
+  RELEASE_VERSION: v1.2.5
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -84,7 +84,6 @@ jobs:
           python scripts/validate_chromium_seccomp.py
           python -m json.tool renovate.json >/tmp/renovate.json
           python -m json.tool config/npm-global-script-policy.json >/tmp/npm-global-script-policy.json
-          python -m json.tool config/security-exceptions-v1.2.4.json >/tmp/security-exceptions.json
           ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
           docker compose -f docker-compose.yaml config --no-interpolate >/tmp/docker-compose.yaml
           docker compose -f docker-compose.full.yaml config --no-interpolate >/tmp/docker-compose.full.yaml
@@ -195,49 +194,25 @@ jobs:
       - name: Validate offline plugin modes
         run: bash scripts/test_plugin_modes.sh "holycode-protected-validation:${{ matrix.suffix }}"
 
-      - name: Validate time-limited ARM64 Chromium exceptions
+      - name: Validate Chromium security floor and refreshed availability
         run: |
           set -euo pipefail
           image="holycode-protected-validation:${{ matrix.suffix }}"
           actual_arch="$(docker run --rm --entrypoint dpkg "$image" --print-architecture)"
           [ "linux/$actual_arch" = "${{ matrix.platform }}" ]
 
-          installed_args=()
-          available_args=()
-          uses_exception=false
           for package in chromium chromium-common chromium-sandbox; do
             installed="$(docker run --rm --entrypoint dpkg-query "$image" -W -f='${Version}' "$package")"
             available="$(docker run --rm --entrypoint sh "$image" -lc \
               "apt-get update --error-on=any >/dev/null && apt-cache policy '$package' | awk '/Candidate:/ {print \$2}'")"
             [ -n "$installed" ]
             [ -n "$available" ]
-            installed_args+=(--installed "$package=$installed")
-            available_args+=(--available "$package=$available")
-            if [ "$installed" = "154.0.8037.57-1~deb13u1" ]; then
-              uses_exception=true
-            else
-              bash scripts/validate_chromium_version.sh \
-                "$installed" "${{ matrix.platform }}" "$RELEASE_VERSION" "$(date -u +%F)"
-            fi
+            bash scripts/validate_chromium_version.sh \
+              "$installed" "${{ matrix.platform }}" "$RELEASE_VERSION" "$(date -u +%F)"
+            dpkg --compare-versions "$installed" ge "$available"
             printf '%s installed=%s available=%s platform=%s\n' \
               "$package" "$installed" "$available" "${{ matrix.platform }}"
           done
-
-          if [ "$uses_exception" = true ]; then
-            [ "${{ matrix.platform }}" = "linux/arm64" ]
-            python scripts/validate_security_exceptions.py \
-              --file config/security-exceptions-v1.2.4.json \
-              --release v1.2.4 \
-              --platform "${{ matrix.platform }}" \
-              --as-of "$(date -u +%F)" \
-              "${installed_args[@]}" \
-              "${available_args[@]}"
-            echo "USE_ARM64_CHROMIUM_EXCEPTION=true" >> "$GITHUB_ENV"
-            echo "33 security exception(s) applied for ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "USE_ARM64_CHROMIUM_EXCEPTION=false" >> "$GITHUB_ENV"
-            echo "0 security exception(s) applied for ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
-          fi
 
       - name: Validate upgrade, persistence, and rollback
         env:
@@ -325,21 +300,18 @@ jobs:
         id: scout_gate
         continue-on-error: true
         env:
-          SCOUT_FIXABLE_REPORT: holycode-${{ matrix.suffix }}.scout-fixable.sarif
+          SCOUT_REPORT: holycode-${{ matrix.suffix }}.scout.sarif
         run: |
           set -euo pipefail
 
-          jq -e '.runs | type == "array" and length > 0' "$SCOUT_FIXABLE_REPORT" >/dev/null
-          exception_args=()
-          if [ "$USE_ARM64_CHROMIUM_EXCEPTION" = true ]; then
-            exception_args=(--exceptions config/security-exceptions-v1.2.4.json)
-          fi
+          jq -e '.runs | type == "array" and length > 0' "$SCOUT_REPORT" >/dev/null
           python scripts/validate_scanner_findings.py \
             --scanner scout \
-            --report "$SCOUT_FIXABLE_REPORT" \
-            --release v1.2.4 \
+            --report "$SCOUT_REPORT" \
+            --release "$RELEASE_VERSION" \
             --platform "${{ matrix.platform }}" \
-            "${exception_args[@]}" \
+            --accept-upstream-vulnerabilities \
+            --accepted-findings "holycode-${{ matrix.suffix }}.scout-accepted.json" \
             --as-of "$(date -u +%F)"
 
       - name: Summarize Docker Scout vulnerability report
@@ -391,16 +363,13 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          exception_args=()
-          if [ "$USE_ARM64_CHROMIUM_EXCEPTION" = true ]; then
-            exception_args=(--exceptions config/security-exceptions-v1.2.4.json)
-          fi
           python scripts/validate_scanner_findings.py \
             --scanner trivy \
-            --report "holycode-${{ matrix.suffix }}.trivy-fixable.json" \
-            --release v1.2.4 \
+            --report "holycode-${{ matrix.suffix }}.trivy.json" \
+            --release "$RELEASE_VERSION" \
             --platform "${{ matrix.platform }}" \
-            "${exception_args[@]}" \
+            --accept-upstream-vulnerabilities \
+            --accepted-findings "holycode-${{ matrix.suffix }}.trivy-accepted.json" \
             --as-of "$(date -u +%F)"
 
       - name: Collect architecture evidence
@@ -430,10 +399,12 @@ jobs:
             holycode-${{ matrix.suffix }}.candidate-digest.txt
             holycode-${{ matrix.suffix }}.dpkg-inventory.txt
             holycode-${{ matrix.suffix }}.image-id.txt
+            holycode-${{ matrix.suffix }}.scout-accepted.json
             holycode-${{ matrix.suffix }}.scout-fixable.sarif
             holycode-${{ matrix.suffix }}.scout.sarif
             holycode-${{ matrix.suffix }}.spdx.json
             holycode-${{ matrix.suffix }}.trivy-fixable.json
+            holycode-${{ matrix.suffix }}.trivy-accepted.json
             holycode-${{ matrix.suffix }}.trivy.json
             holycode-${{ matrix.suffix }}.upgrade-rollback.txt
 

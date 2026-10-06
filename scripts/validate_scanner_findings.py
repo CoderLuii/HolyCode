@@ -4,7 +4,22 @@ import json
 import sys
 from datetime import date
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import parse_qs, unquote
+
+
+THIRD_PARTY_PURL_TYPES = {
+    "apk",
+    "cargo",
+    "composer",
+    "deb",
+    "gem",
+    "golang",
+    "maven",
+    "npm",
+    "nuget",
+    "pypi",
+    "rpm",
+}
 
 
 def load_json(path):
@@ -65,6 +80,20 @@ def validate_trivy_report(report):
                         return (
                             f"Trivy Results[{result_index}].{key}[{item_index}]"
                             f".{field} must be a string"
+                        )
+                identifier = item.get("PkgIdentifier")
+                if identifier is not None:
+                    if not isinstance(identifier, dict):
+                        return (
+                            f"Trivy Results[{result_index}].{key}[{item_index}]"
+                            ".PkgIdentifier must be an object"
+                        )
+                    if "PURL" in identifier and not isinstance(
+                        identifier["PURL"], str
+                    ):
+                        return (
+                            f"Trivy Results[{result_index}].{key}[{item_index}]"
+                            ".PkgIdentifier.PURL must be a string"
                         )
     return None
 
@@ -135,21 +164,25 @@ def trivy_findings(report):
         target = result.get("Target", "unknown target")
         for item in result.get("Vulnerabilities") or []:
             findings.append(
-                (
-                    item.get("VulnerabilityID", ""),
-                    item.get("PkgName", ""),
-                    item.get("InstalledVersion", ""),
-                    target,
-                )
+                {
+                    "kind": "vulnerability",
+                    "vulnerability": item.get("VulnerabilityID", ""),
+                    "package": item.get("PkgName", ""),
+                    "installedVersion": item.get("InstalledVersion", ""),
+                    "purl": item.get("PkgIdentifier", {}).get("PURL", ""),
+                    "target": target,
+                }
             )
         for item in result.get("Secrets") or []:
             findings.append(
-                (
-                    item.get("RuleID", "secret"),
-                    "secret",
-                    "",
-                    item.get("Target") or target,
-                )
+                {
+                    "kind": "secret",
+                    "vulnerability": item.get("RuleID", "secret"),
+                    "package": "secret",
+                    "installedVersion": "",
+                    "purl": "",
+                    "target": item.get("Target") or target,
+                }
             )
     return findings
 
@@ -166,21 +199,112 @@ def scout_findings(report):
             rule = rules.get(cve, {})
             purls = rule.get("properties", {}).get("purls") or []
             if not purls:
-                findings.append((cve, "", "", "SARIF result without package metadata"))
+                findings.append(
+                    {
+                        "kind": "vulnerability",
+                        "vulnerability": cve,
+                        "package": "",
+                        "installedVersion": "",
+                        "purl": "",
+                        "target": "SARIF result without package metadata",
+                    }
+                )
                 continue
             for purl in purls:
-                package, version = parse_purl(purl)
-                findings.append((cve, package, version, purl))
+                parsed = parse_purl(purl)
+                findings.append(
+                    {
+                        "kind": "vulnerability",
+                        "vulnerability": cve,
+                        "package": parsed[2] if parsed else "",
+                        "installedVersion": parsed[3] if parsed else "",
+                        "purl": purl,
+                        "target": purl,
+                    }
+                )
     return findings
 
 
 def parse_purl(value):
     purl = unquote(value)
-    package_version = purl.split("?", 1)[0].split("#", 1)[0]
-    if "@" not in package_version:
-        return package_version.rsplit("/", 1)[-1], ""
+    if not purl.startswith("pkg:"):
+        return None
+    purl_body = purl[4:].split("#", 1)[0]
+    package_version, _, query = purl_body.partition("?")
+    if "/" not in package_version or "@" not in package_version:
+        return None
     package_path, version = package_version.rsplit("@", 1)
-    return package_path.rsplit("/", 1)[-1], version
+    package_type, path = package_path.split("/", 1)
+    path_parts = [part for part in path.split("/") if part]
+    if not package_type or not path_parts or not version:
+        return None
+    namespace = "/".join(path_parts[:-1])
+    epoch = (parse_qs(query).get("epoch") or [""])[0]
+    if epoch:
+        version = f"{epoch}:{version}"
+    return package_type.lower(), namespace, path_parts[-1], version
+
+
+def project_owned_package(package, namespace):
+    values = [package, *namespace.split("/")]
+    normalized = {value.lower().lstrip("@").replace("_", "-") for value in values}
+    return (
+        "coderluii" in normalized
+        or any(value == "holycode" or value.startswith("holycode-") for value in normalized)
+    )
+
+
+def classify_upstream_finding(finding):
+    if finding["kind"] == "secret":
+        return "secret finding"
+    required = (
+        finding["vulnerability"],
+        finding["package"],
+        finding["installedVersion"],
+        finding["purl"],
+    )
+    if not all(isinstance(value, str) and value.strip() for value in required):
+        return "unclassified finding"
+    parsed = parse_purl(finding["purl"])
+    if not parsed:
+        return "unclassified finding"
+    package_type, namespace, purl_package, purl_version = parsed
+    if package_type not in THIRD_PARTY_PURL_TYPES:
+        return "unclassified finding"
+    if purl_version != finding["installedVersion"]:
+        return "unclassified finding"
+    reported_package = finding["package"].lower().lstrip("@")
+    purl_names = {
+        purl_package.lower().lstrip("@"),
+        "/".join(value for value in (namespace, purl_package) if value)
+        .lower()
+        .lstrip("@"),
+    }
+    if reported_package not in purl_names:
+        return "unclassified finding"
+    if project_owned_package(finding["package"], namespace):
+        return "project-owned finding"
+    return None
+
+
+def write_accepted_findings(path, scanner, release, platform, as_of, findings):
+    record = {
+        "release": release,
+        "platform": platform,
+        "scanner": scanner,
+        "asOf": as_of.isoformat(),
+        "policy": "accepted upstream vulnerabilities",
+        "findings": [
+            {
+                "vulnerability": finding["vulnerability"],
+                "package": finding["package"],
+                "installedVersion": finding["installedVersion"],
+                "purl": finding["purl"],
+            }
+            for finding in findings
+        ],
+    }
+    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
 
 
 def main():
@@ -191,7 +315,14 @@ def main():
     parser.add_argument("--as-of", required=True)
     parser.add_argument("--release", required=True)
     parser.add_argument("--platform", required=True)
+    parser.add_argument("--accept-upstream-vulnerabilities", action="store_true")
+    parser.add_argument("--accepted-findings", type=Path)
     args = parser.parse_args()
+
+    if args.accept_upstream_vulnerabilities and not args.accepted_findings:
+        parser.error("--accepted-findings is required with --accept-upstream-vulnerabilities")
+    if args.accept_upstream_vulnerabilities and args.exceptions:
+        parser.error("--exceptions cannot be combined with --accept-upstream-vulnerabilities")
 
     try:
         report = load_json(args.report)
@@ -225,13 +356,53 @@ def main():
         if args.scanner == "scout"
         else trivy_findings(report)
     )
-    unexcepted = [finding for finding in findings if finding[:3] not in allowed]
+    if args.accept_upstream_vulnerabilities:
+        blocked = []
+        for finding in findings:
+            reason = classify_upstream_finding(finding)
+            if reason:
+                blocked.append((reason, finding))
+        for reason, finding in blocked:
+            print(
+                f"{reason}: {finding['vulnerability']} "
+                f"{finding['package']}@{finding['installedVersion']} "
+                f"({finding['target']})",
+                file=sys.stderr,
+            )
+        if blocked:
+            return 1
+        try:
+            write_accepted_findings(
+                args.accepted_findings,
+                args.scanner,
+                args.release,
+                args.platform,
+                as_of,
+                findings,
+            )
+        except OSError as error:
+            print(error, file=sys.stderr)
+            return 2
+        print(f"accepted {len(findings)} upstream {args.scanner} finding(s)")
+        return 0
+
+    unexcepted = [
+        finding
+        for finding in findings
+        if (
+            finding["vulnerability"],
+            finding["package"],
+            finding["installedVersion"],
+        ) not in allowed
+    ]
     for error in errors:
         print(error, file=sys.stderr)
-    for cve, package, version, target in unexcepted:
+    for finding in unexcepted:
         print(
             f"unexcepted {args.scanner} finding: "
-            f"{cve} {package}@{version} ({target})",
+            f"{finding['vulnerability']} "
+            f"{finding['package']}@{finding['installedVersion']} "
+            f"({finding['target']})",
             file=sys.stderr,
         )
     if errors or unexcepted:

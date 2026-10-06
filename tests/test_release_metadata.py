@@ -13,11 +13,11 @@ class ReleaseMetadataTests(unittest.TestCase):
 
     def test_previous_image_and_version_match_released_baseline(self):
         publish = (ROOT / ".github/workflows/docker-publish.yml").read_text()
-        self.assertIn("PREVIOUS_VERSION: v1.2.3", publish)
-        self.assertIn("RELEASE_VERSION: v1.2.4", publish)
+        self.assertIn("PREVIOUS_VERSION: v1.2.4", publish)
+        self.assertIn("RELEASE_VERSION: v1.2.5", publish)
         self.assertIn(
-            "PREVIOUS_IMAGE: coderluii/holycode:1.2.3@sha256:"
-            "b46cf61c33f3b7556b7bc165ebfa9dabfff66753a134d832ee8ec118c6354083",
+            "PREVIOUS_IMAGE: coderluii/holycode:1.2.4@sha256:"
+            "26dc14d6823573a0aa2b12469c93cbbf6492c1498bbb588a7a0b0c88c42c4a23",
             publish,
         )
 

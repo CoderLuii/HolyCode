@@ -2,9 +2,9 @@
   "npmVersion": "12.2.0",
   "mode": "deny-by-default",
   "allowScripts": {
-    "@anthropic-ai/claude-code@2.1.286": {
+    "@anthropic-ai/claude-code@2.1.290": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-5UNEDKy2znv81PWqNqgPJO4qPqH5NRenh52XTtx2tT5Q6xIxjI1q0RyucY+AUHMABImzDOlh6ztuj4qNiAaRvA==",
+      "integrity": "sha512-N1VOjg+2Bc0unJztexfNYMTi+XkghzLe1m7Z2vswj6geJAto7mib7FeRbhuSAYHz6lmtWz1XZhLqwT+ugUaxhQ==",
       "scripts": { "postinstall": "node install.cjs" },
       "reason": "Claude Code uses this script to install its pinned platform-native binary."
     },
@@ -32,7 +32,7 @@
       "architectures": ["amd64", "arm64"],
       "integrity": "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
       "scripts": { "postinstall": "node install.js" },
-      "reason": "Wrangler 4.145.0 pins this nested esbuild release; its platform binary is packaged and exercised by Wrangler validation."
+      "reason": "Wrangler 4.147.0 pins this nested esbuild release; its platform binary is packaged and exercised by Wrangler validation."
     },
     "esbuild@0.28.2": {
       "architectures": ["amd64", "arm64"],
@@ -52,15 +52,15 @@
       "scripts": { "postinstall": "node scripts/postinstall.js" },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "workerd@1.20260930.2": {
+    "workerd@1.20261001.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-k1lQzEiGyCDqaRsR5+o9PBT5wVU5omtas6hXx3spbEHHMFo8a7tkAixVCMsWFeiT7xhrmg21Hd6a9jLNrkcUMg==",
+      "integrity": "sha512-d/SIYHFO0PT/wiFZg8in4NpRIxYuFwslX1HdylOtWkBIIUmSpkGFhK820cV84XACFylwJ48xuRoWW/8DWDPsPQ==",
       "scripts": { "postinstall": "node install.js" },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
     },
-    "pnpm@12.8.1": {
+    "pnpm@12.9.1": {
       "architectures": ["amd64", "arm64"],
-      "integrity": "sha512-9kupB1B/XOr+BsjTjmBS0BeURFgOwSed3Vv8EctIqoomRLZlmOB+dh2oSHKp/FfV+QK4f6SdAkGY1VhhKqu+RQ==",
+      "integrity": "sha512-BrBV//XNINwSeB3hc87TMQzglRvy7GICEaFgRdVETVyTpmMhB2TvKaZTphBFm6A2jw50+E2AxUcjz5Wq57wNbQ==",
       "scripts": { "preinstall": "node install.js", "postinstall": "node install.js" },
       "reason": "The packaged pnpm launchers work with lifecycle hydration blocked and are exercised by the offline project fixture."
     },

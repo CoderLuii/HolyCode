@@ -46,6 +46,7 @@ expected_lighthouse="$(image_label io.holycode.version.lighthouse)"
 expected_s6="$(image_label io.holycode.version.s6-overlay)"
 expected_fzf="$(image_label io.holycode.version.fzf)"
 expected_lazygit="$(image_label io.holycode.version.lazygit)"
+expected_delta="$(image_label io.holycode.version.delta)"
 expected_github_cli="$(image_label io.holycode.version.github-cli)"
 expected_release="$(image_label io.holycode.release)"
 expected_platform="linux/$(docker image inspect --format '{{.Architecture}}' "$image")"
@@ -101,6 +102,7 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   -e EXPECTED_S6="$expected_s6" \
   -e EXPECTED_FZF="$expected_fzf" \
   -e EXPECTED_LAZYGIT="$expected_lazygit" \
+  -e EXPECTED_DELTA="$expected_delta" \
   -e EXPECTED_GITHUB_CLI="$expected_github_cli" \
   -e EXPECTED_RELEASE="$expected_release" \
   -e EXPECTED_PLATFORM="$expected_platform" \
@@ -138,6 +140,8 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   test -d "/package/admin/s6-overlay-$EXPECTED_S6"
   fzf --version | grep -E "^$EXPECTED_FZF([[:space:]]|$)"
   test "$(printf "alpha\nneedle-result\nomega\n" | fzf --filter=needle --select-1 --exit-0)" = "needle-result"
+  delta --version | grep -Fx "delta $EXPECTED_DELTA"
+  printf "diff --git a/example b/example\n--- a/example\n+++ b/example\n@@ -1 +1 @@\n-old\n+new\n" | delta --color-only --paging=never | grep -F "new"
   lazygit --version | grep -F "version=$EXPECTED_LAZYGIT"
   lazygit_home="$(mktemp -d)"
   lazygit_repo="$(mktemp -d)"
@@ -290,7 +294,7 @@ EOF
   rm -rf "$paperclip_catalog_fixture"
   (cd /usr/local/lib/node_modules/paperclipai && npm ls @paperclipai/skills-catalog --all >/dev/null)
   node -e "console.log(require(\"/usr/local/lib/node_modules/paperclipai/package.json\").version)" | grep -Fx "$EXPECTED_PAPERCLIP"
-  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK || jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM || jsdom.dependencies.undici!==\"^8.10.2\" || undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) process.exit(1)"
+  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK || jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM || jsdom.dependencies.undici!==\"^8.11.2\" || undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) process.exit(1)"
   test ! -e /usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1
@@ -604,9 +608,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20260930.2\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20260930.2\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260930.2\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261001.1\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261001.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261001.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -739,7 +743,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20260930.2\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261001.1\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))

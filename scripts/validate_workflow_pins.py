@@ -89,14 +89,18 @@ def collect_errors() -> list[str]:
         "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.75.0",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.2.3@sha256:b46cf61c33f3b7556b7bc165ebfa9dabfff66753a134d832ee8ec118c6354083",
-        "PREVIOUS_VERSION: v1.2.3",
-        "RELEASE_VERSION: v1.2.4",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.2.4@sha256:"
+        "26dc14d6823573a0aa2b12469c93cbbf6492c1498bbb588a7a0b0c88c42c4a23",
+        "PREVIOUS_VERSION: v1.2.4",
+        "RELEASE_VERSION: v1.2.5",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
         "bash scripts/validate_renovate_extraction.sh 44.129.0",
         "scripts/validate_scanner_findings.py",
+        "Validate Chromium security floor and refreshed availability",
+        "holycode-${{ matrix.suffix }}.scout-accepted.json",
+        "holycode-${{ matrix.suffix }}.trivy-accepted.json",
         "bash scripts/test_plugin_modes.sh",
         'ref: ${{ github.sha }}',
         'git rev-parse origin/main',
@@ -109,6 +113,18 @@ def collect_errors() -> list[str]:
         errors.append("docker-publish.yml must run both Trivy gates with vuln and secret scanners")
     if protected_text.count("skip-setup-trivy: true") != 3:
         errors.append("docker-publish.yml must use the integrity-bound Trivy installation")
+    if protected_text.count("--accept-upstream-vulnerabilities") != 2:
+        errors.append(
+            "docker-publish.yml must apply the upstream vulnerability policy to both scanners"
+        )
+    if protected_text.count("--accepted-findings") != 2:
+        errors.append("docker-publish.yml must emit accepted findings from both scanners")
+    for forbidden in (
+        "USE_ARM64_CHROMIUM_EXCEPTION",
+        "config/security-exceptions-v1.2.4.json",
+    ):
+        if forbidden in protected_text:
+            errors.append(f"docker-publish.yml must not use expired policy {forbidden!r}")
     if "trivyignores:" in protected_text:
         errors.append("docker-publish.yml must not bypass the fixable critical/high gate")
     if "eceasy/cli-proxy-api" in protected_text:
@@ -147,7 +163,12 @@ def collect_errors() -> list[str]:
         "holycode-${{ matrix.suffix }}.dpkg-inventory.txt",
         "holycode-${{ matrix.suffix }}.image-id.txt",
         "holycode-${{ matrix.suffix }}.scout-fixable.sarif",
+        "holycode-${{ matrix.suffix }}.scout-accepted.json",
         "holycode-${{ matrix.suffix }}.trivy-fixable.json",
+        "holycode-${{ matrix.suffix }}.trivy-accepted.json",
+        "Validate Chromium security floor and refreshed availability",
+        "--accept-upstream-vulnerabilities",
+        "--accepted-findings",
         "SCOUT_GATE_OUTCOME: ${{ steps.scout_gate.outcome }}",
         "TRIVY_GATE_OUTCOME: ${{ steps.trivy_gate.outcome }}",
         'test "$SCOUT_GATE_OUTCOME" = "success"',
@@ -163,6 +184,18 @@ def collect_errors() -> list[str]:
         errors.append("manual pre-tag validation must run both Trivy gates with vuln and secret scanners")
     if pr_text.count("skip-setup-trivy: true") != 3:
         errors.append("manual pre-tag validation must use the integrity-bound Trivy installation")
+    if pr_text.count("--accept-upstream-vulnerabilities") != 2:
+        errors.append(
+            "manual pre-tag validation must apply the upstream vulnerability policy to both scanners"
+        )
+    if pr_text.count("--accepted-findings") != 2:
+        errors.append("manual pre-tag validation must emit accepted findings from both scanners")
+    for forbidden in (
+        "USE_ARM64_CHROMIUM_EXCEPTION",
+        "config/security-exceptions-v1.2.4.json",
+    ):
+        if forbidden in pr_text:
+            errors.append(f"pr-validation.yml must not use expired policy {forbidden!r}")
     manual_steps = (
         "Install Trivy CLI",
         "Generate pre-tag SPDX SBOM for Docker Scout",

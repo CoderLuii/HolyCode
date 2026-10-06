@@ -4,6 +4,22 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.5] - 10/05/2026
+
+### Changed
+
+- Refresh Claude Code to 2.1.290, OpenSpec to 1.14.1, pnpm to 12.9.1, ESLint to 10.12.0, and Wrangler to 4.147.0 with Miniflare 5.20261001.0-alpha and workerd 1.20261001.1
+- Refresh the Paperclip-resolved Cursor SDK and jsdom packages to 1.0.36 and 30.1.2 without changing Paperclip 2026.831.1 or its user settings
+- Use official checksum-verified GitHub CLI 2.102.0, fzf 0.74.4, lazygit 0.66.0, and delta 0.20.1 release binaries; remove the custom Go build stages
+- Keep full scanner reports and record validated third-party package findings as accepted upstream vulnerabilities; secrets, project-owned findings, unknown package provenance, invalid reports, and scanner errors still block delivery
+- Move the protected release predecessor and rollback image to v1.2.4; keep Claude Auth issue #11 open and preserve the documented compatibility holds
+
+### Fixed
+
+- Require Debian Chromium 154.0.8037.92-1~deb13u1 or newer on both native platforms and remove the active ARM64-only .57 exception
+- Point the security policy at the current dependency audit and correct the contribution guide for disabled Discussions
+- Add the missing v1.2.4 npm, PM2, and pip fixes to the changelog
+
 ## [1.2.4] - 10/01/2026
 
 ### Added
@@ -21,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Fixed
 
 - Remove Paperclip's obsolete Undici 6 overlay after its current Cursor SDK stopped installing Connect's Node transport; guard the resolved SDK 1.0.35 and jsdom/Undici 30.1.1/8.11.2 graph with package and loopback checks
+- Update npm-owned node-gyp and Undici, PM2-owned basic-ftp, and pip-vendored urllib3 in both the installed pip and offline seed; this entry records the fixes already published in the v1.2.4 release notes
 
 ## [1.2.3] - 09/24/2026
 

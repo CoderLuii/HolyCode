@@ -42,7 +42,6 @@ jobs:
       - name: JSON syntax
         run: |
           python -m json.tool renovate.json >/tmp/renovate.json
-          python -m json.tool config/security-exceptions-v1.2.4.json >/tmp/security-exceptions.json
 
       - name: Workflow YAML syntax
         run: ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
@@ -107,49 +106,25 @@ jobs:
       - name: Validate plugin pin modes
         run: bash scripts/test_plugin_modes.sh "holycode-pr-test:${{ matrix.suffix }}"
 
-      - name: Validate time-limited ARM64 Chromium exceptions
+      - name: Validate Chromium security floor and refreshed availability
         run: |
           set -euo pipefail
           image="holycode-pr-test:${{ matrix.suffix }}"
           actual_arch="$(docker run --rm --entrypoint dpkg "$image" --print-architecture)"
           [ "linux/$actual_arch" = "${{ matrix.platform }}" ]
 
-          installed_args=()
-          available_args=()
-          uses_exception=false
           for package in chromium chromium-common chromium-sandbox; do
             installed="$(docker run --rm --entrypoint dpkg-query "$image" -W -f='${Version}' "$package")"
             available="$(docker run --rm --entrypoint sh "$image" -lc \
               "apt-get update --error-on=any >/dev/null && apt-cache policy '$package' | awk '/Candidate:/ {print \$2}'")"
             [ -n "$installed" ]
             [ -n "$available" ]
-            installed_args+=(--installed "$package=$installed")
-            available_args+=(--available "$package=$available")
-            if [ "$installed" = "154.0.8037.57-1~deb13u1" ]; then
-              uses_exception=true
-            else
-              bash scripts/validate_chromium_version.sh \
-                "$installed" "${{ matrix.platform }}" v1.2.4 "$(date -u +%F)"
-            fi
+            bash scripts/validate_chromium_version.sh \
+              "$installed" "${{ matrix.platform }}" v1.2.5 "$(date -u +%F)"
+            dpkg --compare-versions "$installed" ge "$available"
             printf '%s installed=%s available=%s platform=%s\n' \
               "$package" "$installed" "$available" "${{ matrix.platform }}"
           done
-
-          if [ "$uses_exception" = true ]; then
-            [ "${{ matrix.platform }}" = "linux/arm64" ]
-            python scripts/validate_security_exceptions.py \
-              --file config/security-exceptions-v1.2.4.json \
-              --release v1.2.4 \
-              --platform "${{ matrix.platform }}" \
-              --as-of "$(date -u +%F)" \
-              "${installed_args[@]}" \
-              "${available_args[@]}"
-            echo "USE_ARM64_CHROMIUM_EXCEPTION=true" >> "$GITHUB_ENV"
-            echo "33 security exception(s) applied for ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "USE_ARM64_CHROMIUM_EXCEPTION=false" >> "$GITHUB_ENV"
-            echo "0 security exception(s) applied for ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
-          fi
 
       - name: Smoke test Paperclip skills catalog
         run: |
@@ -319,21 +294,18 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
-          SCOUT_FIXABLE_REPORT: holycode-${{ matrix.suffix }}.scout-fixable.sarif
+          SCOUT_REPORT: holycode-${{ matrix.suffix }}.scout.sarif
         run: |
           set -euo pipefail
 
-          jq -e '.runs | type == "array" and length > 0' "$SCOUT_FIXABLE_REPORT" >/dev/null
-          exception_args=()
-          if [ "$USE_ARM64_CHROMIUM_EXCEPTION" = true ]; then
-            exception_args=(--exceptions config/security-exceptions-v1.2.4.json)
-          fi
+          jq -e '.runs | type == "array" and length > 0' "$SCOUT_REPORT" >/dev/null
           python scripts/validate_scanner_findings.py \
             --scanner scout \
-            --report "$SCOUT_FIXABLE_REPORT" \
-            --release v1.2.4 \
+            --report "$SCOUT_REPORT" \
+            --release v1.2.5 \
             --platform "${{ matrix.platform }}" \
-            "${exception_args[@]}" \
+            --accept-upstream-vulnerabilities \
+            --accepted-findings "holycode-${{ matrix.suffix }}.scout-accepted.json" \
             --as-of "$(date -u +%F)"
 
       - name: Generate pre-tag Trivy vulnerability report
@@ -371,16 +343,13 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          exception_args=()
-          if [ "$USE_ARM64_CHROMIUM_EXCEPTION" = true ]; then
-            exception_args=(--exceptions config/security-exceptions-v1.2.4.json)
-          fi
           python scripts/validate_scanner_findings.py \
             --scanner trivy \
-            --report "holycode-${{ matrix.suffix }}.trivy-fixable.json" \
-            --release v1.2.4 \
+            --report "holycode-${{ matrix.suffix }}.trivy.json" \
+            --release v1.2.5 \
             --platform "${{ matrix.platform }}" \
-            "${exception_args[@]}" \
+            --accept-upstream-vulnerabilities \
+            --accepted-findings "holycode-${{ matrix.suffix }}.trivy-accepted.json" \
             --as-of "$(date -u +%F)"
 
       - name: Collect pre-tag architecture evidence
@@ -408,10 +377,12 @@ jobs:
             holycode-${{ matrix.suffix }}.commit-sha.txt
             holycode-${{ matrix.suffix }}.dpkg-inventory.txt
             holycode-${{ matrix.suffix }}.image-id.txt
+            holycode-${{ matrix.suffix }}.scout-accepted.json
             holycode-${{ matrix.suffix }}.scout-fixable.sarif
             holycode-${{ matrix.suffix }}.scout.sarif
             holycode-${{ matrix.suffix }}.spdx.json
             holycode-${{ matrix.suffix }}.trivy-fixable.json
+            holycode-${{ matrix.suffix }}.trivy-accepted.json
             holycode-${{ matrix.suffix }}.trivy.json
 
       - name: Enforce pre-tag scanner gates

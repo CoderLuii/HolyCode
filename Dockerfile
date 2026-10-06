@@ -5,101 +5,10 @@
 
 # renovate: datasource=github-releases depName=cli/cli
 ARG GITHUB_CLI_VERSION=2.102.0
-ARG GITHUB_CLI_REF=fc4b137cdef0a6bd28fd461b7cf9c84a5812a8cd
 # renovate: datasource=github-releases depName=junegunn/fzf
 ARG FZF_VERSION=0.74.4
-ARG FZF_REF=a140afeb4d733cad3c96a56bf6db7e26853b6757
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.65.1
-ARG LAZYGIT_REF=17cb09fa7b08bc96d9f0e81b91f4720fc1a36700
-
-# Rebuild exact release sources with reviewed dependency fixes.
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:3b77fc618ec235a1ab412de7737f120dd507c57e8d87de4cbb7994fb94275ed5 AS github-cli-builder
-ARG GITHUB_CLI_VERSION
-ARG GITHUB_CLI_REF
-ARG TARGETARCH
-RUN git clone --branch "v${GITHUB_CLI_VERSION}" --depth 1 \
-      https://github.com/cli/cli.git /src && \
-    cd /src && \
-    test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}" && \
-    test "$(git describe --tags --exact-match HEAD)" = "v${GITHUB_CLI_VERSION}" && \
-    test "$(go list -m -f '{{.Version}}' google.golang.org/grpc)" = "v1.83.2" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.42.0" && \
-    test "$(go list -m -f '{{.Version}}' github.com/klauspost/compress)" = "v1.20.1" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/mod)" = "v0.41.0" && \
-    go mod verify && \
-    mkdir -p /tmp/gh-test && \
-    chown -R nobody:nogroup /src /tmp/gh-test && \
-    su -s /bin/sh nobody -c \
-      'HOME=/tmp/gh-test GOCACHE=/tmp/gh-test/go-cache GOPATH=/tmp/gh-test/go go test ./...' && \
-    git config --global --add safe.directory /src && \
-    GH_GOARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
-    SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
-      GH_VERSION="${GITHUB_CLI_VERSION}" go run ./script/build.go bin/gh \
-      GOOS=linux GOARCH="${GH_GOARCH}" CGO_ENABLED=0 && \
-    install -D -m 0755 bin/gh /out/gh && \
-    go version -m /out/gh | grep -F "go1.27.1" && \
-    go version -m /out/gh | grep -E 'github.com/klauspost/compress[[:space:]]+v1\.20\.1' && \
-    go version -m /out/gh | grep -E 'golang.org/x/text[[:space:]]+v0\.42\.0' && \
-    go version -m /out/gh | grep -E 'golang.org/x/mod[[:space:]]+v0\.41\.0'
-
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:3b77fc618ec235a1ab412de7737f120dd507c57e8d87de4cbb7994fb94275ed5 AS fzf-builder
-ARG FZF_VERSION
-ARG FZF_REF
-ARG TARGETARCH
-COPY patches/fzf-x-sys-0.44.0.patch /tmp/fzf-x-sys-0.44.0.patch
-RUN git clone --branch "v${FZF_VERSION}" --depth 1 \
-      https://github.com/junegunn/fzf.git /src && \
-    cd /src && \
-    test "$(git rev-parse HEAD)" = "${FZF_REF}" && \
-    test "$(git describe --tags --exact-match HEAD)" = "v${FZF_VERSION}" && \
-    git apply --check /tmp/fzf-x-sys-0.44.0.patch && \
-    git apply /tmp/fzf-x-sys-0.44.0.patch && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/sys)" = "v0.44.0" && \
-    for attempt in 1 2 3; do \
-      if go mod download; then break; fi; \
-      test "$attempt" -lt 3; \
-      sleep 2; \
-    done && \
-    go mod verify && \
-    SHELL=/bin/sh go test \
-      github.com/junegunn/fzf/src \
-      github.com/junegunn/fzf/src/algo \
-      github.com/junegunn/fzf/src/tui \
-      github.com/junegunn/fzf/src/util && \
-    mkdir -p /out && \
-    FZF_GOARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
-    GOOS=linux GOARCH="${FZF_GOARCH}" CGO_ENABLED=0 go build -a -trimpath \
-      -ldflags "-s -w -X main.version=${FZF_VERSION} -X main.revision=$(git rev-parse --short=8 HEAD)" \
-      -o /out/fzf && \
-    go version -m /out/fzf | grep -E 'golang.org/x/sys[[:space:]]+v0\.44\.0'
-
-FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:3b77fc618ec235a1ab412de7737f120dd507c57e8d87de4cbb7994fb94275ed5 AS lazygit-builder
-ARG LAZYGIT_VERSION
-ARG LAZYGIT_REF
-ARG TARGETARCH
-RUN git clone --branch "v${LAZYGIT_VERSION}" --depth 1 \
-      https://github.com/jesseduffield/lazygit.git /src && \
-    cd /src && \
-    test "$(git rev-parse HEAD)" = "${LAZYGIT_REF}" && \
-    test "$(git describe --tags --exact-match HEAD)" = "v${LAZYGIT_VERSION}" && \
-    export GOFLAGS=-mod=mod && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/text)" = "v0.41.0" && \
-    test "$(go list -m -f '{{.Version}}' golang.org/x/sys)" = "v0.47.0" && \
-    go mod verify && \
-    LAZYGIT_MODULE_FILES_SHA256="$(sha256sum go.mod go.sum)" && \
-    go mod vendor && \
-    test "$(sha256sum go.mod go.sum)" = "${LAZYGIT_MODULE_FILES_SHA256}" && \
-    export GOFLAGS=-mod=vendor && \
-    go test ./... && \
-    mkdir -p /out && \
-    LAZYGIT_GOARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "amd64";; esac) && \
-    BUILD_DATE="$(git show -s --format=%cI HEAD)" && \
-    GOOS=linux GOARCH="${LAZYGIT_GOARCH}" CGO_ENABLED=0 go build -trimpath \
-      -ldflags "-s -w -X main.version=${LAZYGIT_VERSION} -X main.commit=${LAZYGIT_REF} -X main.date=${BUILD_DATE} -X main.buildSource=binaryRelease" \
-      -o /out/lazygit && \
-    go version -m /out/lazygit | grep -E 'golang.org/x/text[[:space:]]+v0\.41\.0' && \
-    go version -m /out/lazygit | grep -E 'golang.org/x/sys[[:space:]]+v0\.47\.0'
+ARG LAZYGIT_VERSION=0.66.0
 
 FROM node:24.21.0-trixie-slim@sha256:8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe
 
@@ -110,21 +19,21 @@ ARG LAZYGIT_VERSION
 # renovate: datasource=github-releases depName=just-containers/s6-overlay
 ARG S6_OVERLAY_VERSION=3.2.3.2
 # renovate: datasource=github-releases depName=dandavison/delta
-ARG DELTA_VERSION=0.19.2
+ARG DELTA_VERSION=0.20.1
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
 ARG OPENCODE_VERSION=1.18.34
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.286
+ARG CLAUDE_CODE_VERSION=2.1.290
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@cursor/sdk
-ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.35
+ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.36
 # renovate: datasource=npm depName=jsdom
-ARG PAPERCLIP_JSDOM_VERSION=30.1.1
+ARG PAPERCLIP_JSDOM_VERSION=30.1.2
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.14.0
+ARG OPENSPEC_VERSION=1.14.1
 # renovate: datasource=npm depName=undici
 ARG PAPERCLIP_UNDICI_VERSION=8.11.2
 # renovate: datasource=npm depName=opencode-claude-auth
@@ -150,7 +59,7 @@ ARG PM2_BASIC_FTP_VERSION=6.2.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.15
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.8.1
+ARG PNPM_VERSION=12.9.1
 # renovate: datasource=npm depName=vite
 ARG VITE_VERSION=8.3.2
 # renovate: datasource=npm depName=prettier
@@ -168,15 +77,15 @@ ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.5.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.145.0
+ARG WRANGLER_VERSION=4.147.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20260930.0-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20261001.0-alpha
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.4
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
 ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3
 # renovate: datasource=npm depName=eslint
-ARG ESLINT_VERSION=10.11.0
+ARG ESLINT_VERSION=10.12.0
 # renovate: datasource=pypi depName=numpy
 ARG NUMPY_VERSION=2.5.3
 # renovate: datasource=pypi depName=pip
@@ -193,8 +102,8 @@ ARG PIP_VENDOR_URLLIB3_WHEEL_SHA256=0cf3cae568d36aa9576b28dfb35f11328f1cb974ca76
 ARG PIP_VENDOR_URLLIB3_ARCHIVE_SHA256=c64eb33b95a5cbd0afd35cadfb3778da6e7c979efa634312f39a392ca3cb11f2
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-10-01
-ARG RELEASE_VERSION=v1.2.4
+ARG RELEASE_APT_REFRESH=2026-10-05
+ARG RELEASE_VERSION=v1.2.5
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -233,6 +142,7 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.s6-overlay=${S6_OVERLAY_VERSION} \
     io.holycode.version.fzf=${FZF_VERSION} \
     io.holycode.version.lazygit=${LAZYGIT_VERSION} \
+    io.holycode.version.delta=${DELTA_VERSION} \
     io.holycode.version.wrangler=${WRANGLER_VERSION} \
     io.holycode.version.wrangler-miniflare=${WRANGLER_MINIFLARE_VERSION} \
     io.holycode.version.wrangler-sharp=${WRANGLER_SHARP_VERSION} \
@@ -310,7 +220,17 @@ RUN chmod u+s /usr/bin/bwrap
 RUN ln -sf /usr/bin/batcat /usr/local/bin/bat 2>/dev/null || true
 
 # ---------- fzf ----------
-COPY --from=fzf-builder /out/fzf /usr/local/bin/fzf
+RUN FZF_SHA256=$(case "$TARGETARCH" in \
+      arm64) echo "5d673b849f494f0d64ec471d8640b153ca8849e3846a31da17abdcfce8df6b46";; \
+      *) echo "05e6813a337cc722c3ed07e54a764b75cc5d671e2e60459db0ba696ee5fa7504";; \
+    esac) && \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/fzf.tar.gz \
+      "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${TARGETARCH}.tar.gz" && \
+    echo "${FZF_SHA256}  /tmp/fzf.tar.gz" | sha256sum -c - && \
+    tar -C /tmp -xzf /tmp/fzf.tar.gz fzf && \
+    install -m 0755 /tmp/fzf /usr/local/bin/fzf && \
+    rm /tmp/fzf /tmp/fzf.tar.gz && \
+    fzf --version | grep -F "${FZF_VERSION}"
 
 # ---------- Python 3 (for user projects) ----------
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -322,18 +242,37 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- GitHub CLI ----------
-COPY --from=github-cli-builder /out/gh /usr/local/bin/gh
-RUN gh --version | grep -F "gh version ${GITHUB_CLI_VERSION}"
+RUN GH_SHA256=$(case "$TARGETARCH" in \
+      arm64) echo "7862c86c72f43df3a2d93ddde6f473285b4e2af61b494849846827e513ef6484";; \
+      *) echo "bb766f710eef8ede859c18578c72c327597cd4c8a85b06001b1f3843c6019386";; \
+    esac) && \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/gh.tar.gz \
+      "https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_${TARGETARCH}.tar.gz" && \
+    echo "${GH_SHA256}  /tmp/gh.tar.gz" | sha256sum -c - && \
+    tar -C /tmp -xzf /tmp/gh.tar.gz && \
+    install -m 0755 "/tmp/gh_${GITHUB_CLI_VERSION}_linux_${TARGETARCH}/bin/gh" /usr/local/bin/gh && \
+    rm -rf /tmp/gh.tar.gz "/tmp/gh_${GITHUB_CLI_VERSION}_linux_${TARGETARCH}" && \
+    gh --version | grep -F "gh version ${GITHUB_CLI_VERSION}"
 
 # ---------- lazygit ----------
-COPY --from=lazygit-builder /out/lazygit /usr/local/bin/lazygit
-RUN lazygit --version | grep -F "version=${LAZYGIT_VERSION}"
+RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
+    LAZYGIT_SHA256=$(case "$TARGETARCH" in \
+      arm64) echo "9a4fc4656897ac9f7877b835473ce1a75620cc267f554c57fc4ff266407f3257";; \
+      *) echo "5b45541155d20bd32bf2cc5ab5b7e3d91c2eebf0fb1242281350edc27d59d2b7";; \
+    esac) && \
+    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/lazygit.tar.gz \
+      "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_${LAZYGIT_ARCH}.tar.gz" && \
+    echo "${LAZYGIT_SHA256}  /tmp/lazygit.tar.gz" | sha256sum -c - && \
+    tar -C /tmp -xzf /tmp/lazygit.tar.gz lazygit && \
+    install -m 0755 /tmp/lazygit /usr/local/bin/lazygit && \
+    rm /tmp/lazygit /tmp/lazygit.tar.gz && \
+    lazygit --version | grep -F "version=${LAZYGIT_VERSION}"
 
 # ---------- delta (git diff pager) ----------
 RUN DELTA_ARCH=$(case "$TARGETARCH" in arm64) echo "aarch64-unknown-linux-gnu";; *) echo "x86_64-unknown-linux-gnu";; esac) && \
     DELTA_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "0bfce159a5cddd5feb3d6db4a616d883ff51253ce08ac7ec11cb1d208cfaab9e";; \
-      *) echo "8e695c5f586a8c53d6c3b01be0b4a422ed218bfed2a56191caebe373a1c18ab2";; \
+      arm64) echo "da7f4338f593572ff426ae153e0870e2fdc72729416eff551b40cdeb67940db8";; \
+      *) echo "50f08c879f84c81ceb220e476491a7f492d2c9c671e79918cc44badf961a6240";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/delta.tar.gz \
       "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-${DELTA_ARCH}.tar.gz" && \
@@ -693,28 +632,28 @@ RUN PM2_BASIC_FTP_INTEGRITY="sha512-bK67isD+lKq46AU8vNtjvMaT2ZqAOAmNCbxUHlFBRD4k
     rm "/tmp/${PM2_BASIC_FTP_TARBALL}" /tmp/test_get_uri_ftp.mjs && \
     rm -rf /root/.npm
 
-# Wrangler 4.145.0 owns Miniflare 5.20260930.0-alpha and workerd 1.20260930.2;
+# Wrangler 4.147.0 owns Miniflare 5.20261001.0-alpha and workerd 1.20261001.1;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260930.2" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261001.1" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260930.2" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261001.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20260930.2") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261001.1") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20260930.2") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261001.1") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20260930.2" && \
+      "1.20261001.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \
@@ -781,16 +720,16 @@ RUN npm i -g --ignore-scripts \
 # Paperclip's current Cursor SDK no longer installs Connect's Node transport.
 # The remaining Undici is jsdom's 8.x dependency; guard the resolved owners.
 RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrity)" = \
-      "sha512-CJQR4ocRFm74N1miSqSSrhWyEbvTRIJGyMfHQvZlcBIYzLMXCVPmb1bV82L4NJ8mG9TyvbckEjERjbnzpG5akQ==" && \
+      "sha512-1Fpd644iTGNEoH5nEp5oYVlWgxSObL0VZfTZcCXhOB5MSJLc34vIvP6yx1udqSnpN+Rbpejvmxd9yoyjxhFVuw==" && \
     test "$(npm view "jsdom@${PAPERCLIP_JSDOM_VERSION}" dist.integrity)" = \
-      "sha512-FahmoPK5vbPc+jxV1iErMHmAZypCZ942NHF4+qqaWAuvaKKTBZxawnmAtrbGWLU7MtlxfqIP0qw6aSI+aWGtLg==" && \
+      "sha512-0FFE/jE1rppmVfUrJUgxqXjcwolZYIGtAgj1pTussMhNZxIxi7W/PvfWaMNroGi2B36X1IKHbexpZ9DhkoOPiQ==" && \
     test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
       "sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==" && \
     CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
     test ! -e "$CONNECT_NODE_PACKAGE" && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0 && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1 && \
-    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.version!==process.argv[1] || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1" || jsdom.version!==process.argv[2] || jsdom.dependencies.undici!=="^8.10.2" || undici.version!==process.argv[3]) process.exit(1)' \
+    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.version!==process.argv[1] || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1" || jsdom.version!==process.argv[2] || jsdom.dependencies.undici!=="^8.11.2" || undici.version!==process.argv[3]) process.exit(1)' \
       "${PAPERCLIP_CURSOR_SDK_VERSION}" "${PAPERCLIP_JSDOM_VERSION}" "${PAPERCLIP_UNDICI_VERSION}" && \
     node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; if(require.resolve("undici/package.json",{paths:[`${root}/jsdom`]})!==`${root}/undici/package.json`) process.exit(1)' && \
     (cd /usr/local/lib/node_modules/paperclipai && npm ls @cursor/sdk jsdom undici --omit=dev --all >/dev/null) && \

@@ -25,4 +25,4 @@ Contributions welcome. Here's how.
 
 ## Questions?
 
-Open an issue or start a discussion. We're friendly.
+Open an issue. Discussions are disabled in this repository.

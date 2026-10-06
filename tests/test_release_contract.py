@@ -43,7 +43,7 @@ class ReleaseContractTests(unittest.TestCase):
         cls.dockerhub = (ROOT / "docs" / "dockerhub-description.md").read_text(encoding="utf-8")
         cls.changelog = (ROOT / "docs" / "CHANGELOG.md").read_text(encoding="utf-8")
         cls.dependency_audit = (
-            ROOT / "docs" / "dependency-audit-v1.2.4.md"
+            ROOT / "docs" / "dependency-audit-v1.2.5.md"
         )
         cls.security_exceptions = json.loads(
             (ROOT / "config" / "security-exceptions-v1.2.4.json").read_text(
@@ -90,13 +90,13 @@ class ReleaseContractTests(unittest.TestCase):
             "ARG S6_OVERLAY_VERSION=3.2.3.2",
             "ARG GITHUB_CLI_VERSION=2.102.0",
             "ARG FZF_VERSION=0.74.4",
-            "ARG LAZYGIT_VERSION=0.65.1",
+            "ARG LAZYGIT_VERSION=0.66.0",
             "ARG OPENCODE_VERSION=1.18.34",
-            "ARG CLAUDE_CODE_VERSION=2.1.286",
+            "ARG CLAUDE_CODE_VERSION=2.1.290",
             "ARG PAPERCLIP_VERSION=2026.831.1",
-            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.35",
-            "ARG PAPERCLIP_JSDOM_VERSION=30.1.1",
-            "ARG OPENSPEC_VERSION=1.14.0",
+            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.36",
+            "ARG PAPERCLIP_JSDOM_VERSION=30.1.2",
+            "ARG OPENSPEC_VERSION=1.14.1",
             "ARG PAPERCLIP_UNDICI_VERSION=8.11.2",
             "ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.1",
             "ARG TYPESCRIPT_VERSION=6.0.3",
@@ -108,18 +108,18 @@ class ReleaseContractTests(unittest.TestCase):
             "ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1",
             "ARG SETUPTOOLS_VERSION=84.0.0",
             "ARG TSX_VERSION=4.23.15",
-            "ARG PNPM_VERSION=12.8.1",
+            "ARG PNPM_VERSION=12.9.1",
             "ARG VITE_VERSION=8.3.2",
             "ARG PRETTIER_VERSION=3.9.9",
             "ARG PRISMA_VERSION=7.10.0",
             "ARG PRISMA_DEEPMERGE_VERSION=8.0.2",
             "ARG PRISMA_MYSQL2_VERSION=3.24.5",
             "ARG LIGHTHOUSE_VERSION=13.5.0",
-            "ARG WRANGLER_VERSION=4.145.0",
-            "ARG WRANGLER_MINIFLARE_VERSION=5.20260930.0-alpha",
+            "ARG WRANGLER_VERSION=4.147.0",
+            "ARG WRANGLER_MINIFLARE_VERSION=5.20261001.0-alpha",
             "ARG WRANGLER_SHARP_VERSION=0.35.4",
             "ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3",
-            "ARG ESLINT_VERSION=10.11.0",
+            "ARG ESLINT_VERSION=10.12.0",
             "requests==2.34.2",
             "pillow==12.3.0",
             "postgresql-client-17 redis-tools sqlite3",
@@ -260,96 +260,30 @@ class ReleaseContractTests(unittest.TestCase):
             with self.subTest(instruction=instruction.splitlines()[0]):
                 self.assertIn("rm -rf /root/.npm", instruction)
 
-    def test_github_cli_is_rebuilt_with_fixed_go_toolchain(self):
-        go_builder = (
-            "FROM --platform=$BUILDPLATFORM golang:1.27.1-trixie@sha256:"
-            "3b77fc618ec235a1ab412de7737f120dd507c57e8d87de4cbb7994fb94275ed5"
-        )
-        self.assertEqual(self.dockerfile.count(go_builder), 3)
-        self.assertIn(f"{go_builder} AS github-cli-builder", self.dockerfile)
+    def test_github_cli_uses_official_release_archive(self):
+        self.assertNotIn("AS github-cli-builder", self.dockerfile)
         self.assertIn("ARG GITHUB_CLI_VERSION=2.102.0", self.dockerfile)
-        self.assertIn(
-            "ARG GITHUB_CLI_REF=fc4b137cdef0a6bd28fd461b7cf9c84a5812a8cd",
-            self.dockerfile,
-        )
-        self.assertIn('test "$(git rev-parse HEAD)" = "${GITHUB_CLI_REF}"', self.dockerfile)
-        self.assertIn('go version -m /out/gh | grep -F "go1.27.1"', self.dockerfile)
-        self.assertIn(
-            'test "$(go list -m -f \'{{.Version}}\' google.golang.org/grpc)" = "v1.83.2"',
-            self.dockerfile,
-        )
-        self.assertIn(
-            'test "$(go list -m -f \'{{.Version}}\' golang.org/x/mod)" = "v0.41.0"',
-            self.dockerfile,
-        )
-        self.assertNotIn("go get golang.org/x/mod@", self.dockerfile)
-        self.assertIn(
-            "go version -m /out/gh | grep -E "
-            "'github.com/klauspost/compress[[:space:]]+v1\\.20\\.1'",
-            self.dockerfile,
-        )
-        self.assertIn(
-            "go version -m /out/gh | grep -E "
-            "'golang.org/x/text[[:space:]]+v0\\.42\\.0'",
-            self.dockerfile,
-        )
-        self.assertIn(
-            "go version -m /out/gh | grep -E "
-            "'golang.org/x/mod[[:space:]]+v0\\.41\\.0'",
-            self.dockerfile,
-        )
-        self.assertNotIn("github-cli-modules.patch", self.dockerfile)
+        self.assertIn("${GH_SHA256}  /tmp/gh.tar.gz", self.dockerfile)
         self.assertIn(
             "FROM node:24.21.0-trixie-slim@sha256:"
             "8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe",
             self.dockerfile,
         )
-        self.assertIn("COPY --from=github-cli-builder /out/gh /usr/local/bin/gh", self.dockerfile)
+        self.assertIn("gh_${GITHUB_CLI_VERSION}_linux_${TARGETARCH}.tar.gz", self.dockerfile)
         self.assertNotIn("https://cli.github.com/packages", self.dockerfile)
         self.assertIn("expected_github_cli", self.smoke)
         self.assertIn('test "$(command -v gh)" = "/usr/local/bin/gh"', self.smoke)
         self.assertIn('gh version $EXPECTED_GITHUB_CLI', self.smoke)
         self.assertIn("! dpkg-query -W gh", self.smoke)
 
-    def test_fzf_and_lazygit_are_rebuilt_from_exact_release_sources(self):
-        self.assertIn(
-            "ARG FZF_REF=a140afeb4d733cad3c96a56bf6db7e26853b6757",
-            self.dockerfile,
-        )
-        self.assertIn(
-            "ARG LAZYGIT_REF=17cb09fa7b08bc96d9f0e81b91f4720fc1a36700",
-            self.dockerfile,
-        )
-        self.assertIn(
-            "go version -m /out/fzf | grep -E "
-            "'golang.org/x/sys[[:space:]]+v0\\.44\\.0'",
-            self.dockerfile,
-        )
-        self.assertIn(
-            "go version -m /out/lazygit | grep -E "
-            "'golang.org/x/text[[:space:]]+v0\\.41\\.0'",
-            self.dockerfile,
-        )
-        self.assertIn(
-            "go version -m /out/lazygit | grep -E "
-            "'golang.org/x/sys[[:space:]]+v0\\.47\\.0'",
-            self.dockerfile,
-        )
+    def test_fzf_and_lazygit_use_official_release_archives(self):
+        self.assertNotIn("AS fzf-builder", self.dockerfile)
+        self.assertNotIn("AS lazygit-builder", self.dockerfile)
         self.assertNotIn("lazygit-x-text-0.39.0.patch", self.dockerfile)
-        self.assertIn(
-            'LAZYGIT_MODULE_FILES_SHA256="$(sha256sum go.mod go.sum)"',
-            self.dockerfile,
-        )
-        self.assertIn(
-            'test "$(sha256sum go.mod go.sum)" = "${LAZYGIT_MODULE_FILES_SHA256}"',
-            self.dockerfile,
-        )
-        self.assertNotIn("git diff --exit-code -- go.mod go.sum", self.dockerfile)
-        self.assertIn("COPY --from=fzf-builder /out/fzf /usr/local/bin/fzf", self.dockerfile)
-        self.assertIn(
-            "COPY --from=lazygit-builder /out/lazygit /usr/local/bin/lazygit",
-            self.dockerfile,
-        )
+        self.assertIn("fzf-${FZF_VERSION}-linux_${TARGETARCH}.tar.gz", self.dockerfile)
+        self.assertIn("lazygit_${LAZYGIT_VERSION}_linux_${LAZYGIT_ARCH}.tar.gz", self.dockerfile)
+        self.assertIn("${FZF_SHA256}  /tmp/fzf.tar.gz", self.dockerfile)
+        self.assertIn("${LAZYGIT_SHA256}  /tmp/lazygit.tar.gz", self.dockerfile)
 
     def test_vulnerable_bundled_tools_are_removed(self):
         for value in (
@@ -417,8 +351,16 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn('pip --version | grep -F "pip 26.2.1"', self.smoke)
         self.assertIn("-f=\\${db:Status-Status} python3-pip", self.smoke)
         self.assertIn("-f=\\${db:Status-Status} python3-setuptools", self.smoke)
-        self.assertIn("for attempt in 1 2 3", self.dockerfile)
-        self.assertIn("if go mod download; then break; fi", self.dockerfile)
+        self.assertNotIn("AS github-cli-builder", self.dockerfile)
+        self.assertNotIn("AS fzf-builder", self.dockerfile)
+        self.assertNotIn("AS lazygit-builder", self.dockerfile)
+        for patch_name in (
+            "fzf-x-sys-0.44.0.patch",
+            "github-cli-modules.patch",
+            "lazygit-x-text-0.39.0.patch",
+        ):
+            with self.subTest(obsolete_patch=patch_name):
+                self.assertFalse((ROOT / "patches" / patch_name).exists())
         self.assertIn("ARG PRISMA_DEEPMERGE_VERSION=8.0.2", self.dockerfile)
         self.assertIn("io.holycode.version.prisma-deepmerge-ts", self.dockerfile)
         self.assertIn("io.holycode.version.prisma-mysql2", self.dockerfile)
@@ -536,15 +478,15 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_paperclip_resolved_owner_graph_is_guarded_without_obsolete_overlay(self):
         for value in (
-            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.35",
-            "ARG PAPERCLIP_JSDOM_VERSION=30.1.1",
+            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.36",
+            "ARG PAPERCLIP_JSDOM_VERSION=30.1.2",
             "ARG PAPERCLIP_UNDICI_VERSION=8.11.2",
-            "sha512-CJQR4ocRFm74N1miSqSSrhWyEbvTRIJGyMfHQvZlcBIYzLMXCVPmb1bV82L4NJ8mG9TyvbckEjERjbnzpG5akQ==",
-            "sha512-FahmoPK5vbPc+jxV1iErMHmAZypCZ942NHF4+qqaWAuvaKKTBZxawnmAtrbGWLU7MtlxfqIP0qw6aSI+aWGtLg==",
+            "sha512-1Fpd644iTGNEoH5nEp5oYVlWgxSObL0VZfTZcCXhOB5MSJLc34vIvP6yx1udqSnpN+Rbpejvmxd9yoyjxhFVuw==",
+            "sha512-0FFE/jE1rppmVfUrJUgxqXjcwolZYIGtAgj1pTussMhNZxIxi7W/PvfWaMNroGi2B36X1IKHbexpZ9DhkoOPiQ==",
             "sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==",
             'adapter.dependencies["@cursor/sdk"]!=="^1.0.28"',
             'sdk.dependencies["@connectrpc/connect-node"]!==undefined',
-            'jsdom.dependencies.undici!=="^8.10.2"',
+            'jsdom.dependencies.undici!=="^8.11.2"',
             'test ! -e "$CONNECT_NODE_PACKAGE"',
             'npm ls @cursor/sdk jsdom undici --omit=dev --all',
             "cursor_cloud_api_key_missing",
@@ -671,7 +613,7 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_wrangler_miniflare_sharp_is_native_and_owner_guarded_without_overlay(self):
         for value in (
-            "ARG WRANGLER_MINIFLARE_VERSION=5.20260930.0-alpha",
+            "ARG WRANGLER_MINIFLARE_VERSION=5.20261001.0-alpha",
             "ARG WRANGLER_SHARP_VERSION=0.35.4",
             "ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3",
             "io.holycode.version.wrangler-miniflare",
@@ -683,8 +625,8 @@ class ReleaseContractTests(unittest.TestCase):
             "sha512-4vKmvAst9nrowcqquKFAyZJUDolUaIp8uRiN0mWFguJ1IplC9/pitXtlnnlU4aa/eJw3J7i67V+pwUL+wZGdsA==",
             "sha512-0DaL0A6Xu6sQSQFwe4iVCrKWU2cCTItnRsYsCdxAMm9NF6twAA9BKnoqy4hqz4+azQ0JHuA26qiUKsf1XJ/v5A==",
             'npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}"',
-            'npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20260930.2"',
-            'npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20260930.2"',
+            'npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261001.1"',
+            'npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261001.1"',
             'dependencies.sharp!==process.argv[3]',
             "WRANGLER_SHARP_TARBALL",
             "WRANGLER_SHARP_NATIVE_TARBALL",
@@ -739,7 +681,7 @@ class ReleaseContractTests(unittest.TestCase):
             "EXPECTED_WRANGLER_SHARP_LIBVIPS",
             "/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json",
             "/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json",
-            'pkg.version!==\\"1.20260930.2\\"',
+            'pkg.version!==\\"1.20261001.1\\"',
             "workerd_count=0",
             '$(find /usr/local/lib/node_modules -path "*/workerd/package.json" -type f | sort)',
             'test "$workerd_count" -gt 0',
@@ -885,12 +827,15 @@ class ReleaseContractTests(unittest.TestCase):
             "curl --disable --retry 8 --retry-all-errors --retry-max-time 300 "
             "--remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/"
         )
-        self.assertEqual(self.dockerfile.count(retry_flags), 7)
+        self.assertEqual(self.dockerfile.count(retry_flags), 10)
         self.assertNotIn("--retry-delay", self.dockerfile)
         self.assertNotIn("curl -fsSL -o /tmp/", self.dockerfile)
         for checksum in (
             "5379750ed30a84bbd2e2dd74847ba6b5bd29cd0b2e3ea2ec58049b57eb2eda12",
             "${S6_ARCH_SHA256}",
+            "${GH_SHA256}",
+            "${FZF_SHA256}",
+            "${LAZYGIT_SHA256}",
             "${DELTA_SHA256}",
             "${EZA_SHA256}",
             "${PIP_VENDOR_MSGPACK_SHA256}",
@@ -946,11 +891,11 @@ class ReleaseContractTests(unittest.TestCase):
 
         audit = self.dependency_audit.read_text(encoding="utf-8")
         self.assertIn(
-            "synthetic-auth startup and marketplace/path-containment regression coverage are required release gates through `scripts/smoke_image.sh`",
+            "native AMD64 and ARM64 image smokes and plugin modes",
             audit,
         )
         self.assertNotIn("remains pending a separate fixture investigation", audit)
-        self.assertIn("no live account, provider, OAuth, or billing claim", audit)
+        self.assertIn("does not establish a live account, provider, OAuth, or billing result", audit)
 
     def test_oh_my_openagent_managed_install_is_suspended(self):
         self.assertNotIn("OH_MY_OPENAGENT_PLUGIN_VERSION", self.entrypoint)
@@ -1033,20 +978,15 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertEqual(item["availableVersion"], "154.0.8037.57-1~deb13u1")
             self.assertEqual(item["expires"], "2026-10-08")
 
-    def test_chromium_floor_exception_is_arm64_release_and_expiry_bound(self):
-        for value in (
-            "154.0.8037.57-1~deb13u1",
-            "154.0.8037.92-1~deb13u1",
-            "linux/arm64",
-            "v1.2.4",
-            "2026-10-08",
-        ):
-            self.assertIn(value, self.chromium_version)
+    def test_chromium_floor_is_unconditional(self):
+        self.assertIn("154.0.8037.92-1~deb13u1", self.chromium_version)
+        for value in ("154.0.8037.57-1~deb13u1", "v1.2.4", "2026-10-08"):
+            self.assertNotIn(value, self.chromium_version)
         self.assertIn("validate-holycode-chromium-version", self.dockerfile)
         self.assertIn("validate-holycode-chromium-version", self.smoke)
 
         cases = (
-            ("154.0.8037.57-1~deb13u1", "linux/arm64", "v1.2.4", "2026-10-01", 0),
+            ("154.0.8037.57-1~deb13u1", "linux/arm64", "v1.2.4", "2026-10-01", 1),
             ("154.0.8037.57-1~deb13u1", "linux/amd64", "v1.2.4", "2026-10-01", 1),
             ("154.0.8037.57-1~deb13u1", "linux/arm64", "v1.2.5", "2026-10-01", 1),
             ("154.0.8037.57-1~deb13u1", "linux/arm64", "v1.2.4", "2026-10-09", 1),
@@ -1075,24 +1015,23 @@ class ReleaseContractTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, expected, result.stderr)
 
-    def test_native_workflows_refresh_and_bind_chromium_exception(self):
+    def test_native_workflows_refresh_and_enforce_chromium_floor(self):
         for workflow in (self.pr_validation, self.protected):
             for value in (
-                "Validate time-limited ARM64 Chromium exceptions",
+                "Validate Chromium security floor and refreshed availability",
                 "chromium chromium-common chromium-sandbox",
                 "apt-get update --error-on=any >/dev/null && apt-cache policy",
                 "apt-cache policy",
                 "awk '/Candidate:/ {print \\$2}'",
-                "--release v1.2.4",
-                '--platform "${{ matrix.platform }}"',
-                "config/security-exceptions-v1.2.4.json",
+                'dpkg --compare-versions "$installed" ge "$available"',
+                "--accept-upstream-vulnerabilities",
+                "--accepted-findings",
                 "--scanner scout",
                 "--scanner trivy",
             ):
                 self.assertIn(value, workflow)
-            self.assertIn('[ "${{ matrix.platform }}" = "linux/arm64" ]', workflow)
-        self.assertIn("security exception(s) applied", self.pr_validation)
-        self.assertIn("security exception(s) applied", self.protected)
+            self.assertNotIn("config/security-exceptions-v1.2.4.json", workflow)
+            self.assertNotIn("USE_ARM64_CHROMIUM_EXCEPTION", workflow)
 
     def test_release_waits_for_verified_publication_without_weakening_binding(self):
         self.assertIn("for _ in $(seq 1 180); do", self.publish)
@@ -1113,6 +1052,8 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn('TRIVY_GATE_OUTCOME: ${{ steps.trivy_gate.outcome }}', self.protected)
         self.assertIn('test "$SCOUT_GATE_OUTCOME" = "success"', self.protected)
         self.assertIn('test "$TRIVY_GATE_OUTCOME" = "success"', self.protected)
+        self.assertIn("holycode-${{ matrix.suffix }}.scout-accepted.json", self.protected)
+        self.assertIn("holycode-${{ matrix.suffix }}.trivy-accepted.json", self.protected)
 
     def test_chromium_security_floor_rejects_old_debian_package(self):
         if not shutil.which("bash"):
@@ -1147,11 +1088,11 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("chromium-sandbox", self.dockerfile)
         self.assertIn("test -u /usr/lib/chromium/chrome-sandbox", self.dockerfile)
 
-    def test_v1_2_4_uses_v1_2_3_as_its_git_predecessor(self):
-        self.assertIn("RELEASE_VERSION: v1.2.4", self.protected)
-        self.assertIn("PREVIOUS_VERSION: v1.2.3", self.protected)
+    def test_v1_2_5_uses_v1_2_4_as_its_git_predecessor(self):
+        self.assertIn("RELEASE_VERSION: v1.2.5", self.protected)
+        self.assertIn("PREVIOUS_VERSION: v1.2.4", self.protected)
         self.assertIn(
-            "coderluii/holycode:1.2.3@sha256:b46cf61c33f3b7556b7bc165ebfa9dabfff66753a134d832ee8ec118c6354083",
+            "coderluii/holycode:1.2.4@sha256:26dc14d6823573a0aa2b12469c93cbbf6492c1498bbb588a7a0b0c88c42c4a23",
             self.protected,
         )
         self.assertIn("needs: protected-validation", self.publish)
@@ -1161,70 +1102,56 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertEqual(self.publish.count("docker/build-push-action"), 1)
         self.assertNotIn("config/security-exceptions-v1.1.4.json", self.protected)
 
-    def test_v1_2_4_release_metadata_is_documented(self):
-        self.assertRegex(self.changelog, r"(?m)^## \[1\.2\.4\] - 10/01/2026$")
+    def test_v1_2_5_release_metadata_is_documented(self):
+        self.assertRegex(self.changelog, r"(?m)^## \[1\.2\.5\] - 10/05/2026$")
         self.assertTrue(self.dependency_audit.is_file())
         audit = self.dependency_audit.read_text(encoding="utf-8")
-        self.assertIn("Git predecessor `v1.2.3`", audit)
+        self.assertIn("release predecessor is `v1.2.4`", audit)
         self.assertIn(
-            "`coderluii/holycode:1.2.3@sha256:b46cf61c33f3b7556b7bc165ebfa9dabfff66753a134d832ee8ec118c6354083`",
+            "`coderluii/holycode:1.2.4@sha256:26dc14d6823573a0aa2b12469c93cbbf6492c1498bbb588a7a0b0c88c42c4a23`",
             audit,
         )
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.1.9.md").is_file())
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.2.0.md").is_file())
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.2.1.md").is_file())
-        self.assertIn("v1.2.4 release pins", self.readme)
-        self.assertIn("dependency-audit-v1.2.4.md", self.readme)
-        self.assertIn("v1.2.4", self.dockerhub)
-        for document in (self.readme, self.dockerhub):
-            with self.subTest(document="current release copy"):
-                self.assertIn("@anthropic-ai/claude-code@2.1.286", document)
-                self.assertNotIn("@anthropic-ai/claude-code@2.1.270", document)
-        self.assertIn("Python 3.13.15", audit)
-        self.assertIn("pip 26.2.1", audit)
+        self.assertIn("v1.2.5 release pins", self.readme)
+        self.assertIn("dependency-audit-v1.2.5.md", self.readme)
+        self.assertIn("v1.2.5", self.dockerhub)
+        self.assertIn("@anthropic-ai/claude-code@2.1.290", self.readme)
+        self.assertIn("@anthropic-ai/claude-code@2.1.290", self.dockerhub)
         self.assertIn("pip-tools 7.6.1", audit)
-        self.assertIn("Click 8.4.2", audit)
-        self.assertIn("Product `click==8.5.0`", audit)
-        self.assertIn("Automatic pip-tools lock updates are therefore still blocked", audit)
-        self.assertIn("native ARM64", audit)
-        self.assertIn("`opencode-claude-auth 2.2.1`", audit)
+        self.assertIn("Do not add a manual workaround or extend pip vendor repairs", audit)
+        self.assertIn("native AMD64 and ARM64", audit)
+        self.assertIn("Claude Auth 2.2.1", audit)
         for value in (
-            "| Paperclip | 2026.831.1 | 2026.916.1 |",
-            "supported narrow self-hosted control preserves explicit user choices",
-            "| TypeScript | 6.0.3 | 7.0.2 |",
-            "| Prisma | 7.10.0 | 8.0.0-rc.19 |",
-            "| json-server | 0.17.4 | 1.0.0-beta.15 |",
-            "| PM2-owned js-yaml | 4.3.2 | 5.4.2 |",
-            "| Paperclip/jsdom Undici | 8.11.2 | 6.29.0 overlay |",
-            "Drizzle ORM 0.45.3 is a fixture-only compatibility dependency",
-            "16 local entries with 27 verified local files",
-            "one optional pinned remote descriptor with 79 metadata records",
-            "does not claim the release has shipped",
+            "Paperclip 2026.831.1",
+            "TypeScript 6.0.3",
+            "Prisma 7.10.0 / json-server 0.17.4",
+            "Existing npm/PM2 owner replacements",
+            "does not establish publication or native runtime verification",
         ):
             with self.subTest(dependency_hold=value):
                 self.assertIn(value, audit)
 
-    def test_v1_2_4_public_docs_disclose_arm64_chromium_risk(self):
+    def test_v1_2_5_public_docs_define_chromium_fix_boundary(self):
         audit = self.dependency_audit.read_text(encoding="utf-8")
         for name, document in (
             ("README", self.readme),
-            ("Docker Hub", self.dockerhub),
             ("changelog", self.changelog),
             ("dependency audit", audit),
         ):
             with self.subTest(document=name):
                 for value in (
-                    "154.0.8037.57-1~deb13u1",
                     "154.0.8037.92-1~deb13u1",
-                    "2026-10-08",
-                    "untrusted web content",
-                    "does not make",
+                    "v1.2.4",
                 ):
                     self.assertIn(value, document)
+        self.assertIn("154.0.8037.57-1~deb13u1", self.dockerhub)
+        self.assertIn("154.0.8037.92-1~deb13u1", self.dockerhub)
         self.assertIn("issue #11 remains open", self.changelog)
         self.assertIn("js-yaml 4.3.2", self.notices)
-        self.assertIn("Paperclip-scoped Cursor SDK 1.0.35", self.notices)
-        self.assertIn("Paperclip-scoped jsdom 30.1.1 and Undici 8.11.2", self.notices)
+        self.assertIn("Paperclip-scoped Cursor SDK 1.0.36", self.notices)
+        self.assertIn("Paperclip-scoped jsdom 30.1.2 and Undici 8.11.2", self.notices)
         self.assertNotIn("Undici 6.29.0 replacement", self.readme)
         self.assertIn("brace-expansion 5.0.12", self.notices)
         self.assertIn("ip-address 10.7.2", self.notices)
@@ -1236,22 +1163,18 @@ class ReleaseContractTests(unittest.TestCase):
             with self.subTest(prisma_peer_notice=value):
                 self.assertIn(value, self.notices)
         for value in (
-            "@types/node 20.19.43",
-            "undici-types 6.21.0",
-            "Lighthouse 13.5.0",
-            "@paulirish/trace_engine 0.0.65",
-            "third-party-web 0.30.0",
-            "legacy-javascript 0.0.1",
-            "not a universal clean-tree claim",
+            "Trivy and Docker Scout continue to produce their full Critical/High reports",
+            "Acceptance permits delivery; it does not mean the vulnerability is fixed",
+            "scanner execution failures still block release",
         ):
-            with self.subTest(prisma_peer_audit=value):
+            with self.subTest(security_policy=value):
                 self.assertIn(value, audit)
         for value in (
-            "@anthropic-ai/claude-code@2.1.286",
-            "0.65.1 (`17cb09fa7b08bc96d9f0e81b91f4720fc1a36700`)",
-            "Wrangler owns Miniflare 5.20260930.0-alpha and workerd 1.20260930.2",
-            "0.74.4 (`a140afeb4d733cad3c96a56bf6db7e26853b6757`)",
-            "2.102.0 (`fc4b137cdef0a6bd28fd461b7cf9c84a5812a8cd`)",
+            "@anthropic-ai/claude-code@2.1.290",
+            "Version: 0.66.0",
+            "Wrangler owns Miniflare 5.20261001.0-alpha and workerd 1.20261001.1",
+            "Version: 0.74.4",
+            "Version: 2.102.0",
             "Playwright",
             "Version: 1.63.0",
             "pandas",
@@ -1260,37 +1183,37 @@ class ReleaseContractTests(unittest.TestCase):
             with self.subTest(notice=value):
                 self.assertIn(value, self.notices)
 
-    def test_current_translation_summaries_match_v1_2_4(self):
+    def test_current_translation_summaries_match_v1_2_5(self):
         for path in sorted((ROOT / "docs" / "translations").glob("README.*.md")):
             translation = path.read_text(encoding="utf-8")
             with self.subTest(translation=path.name):
                 for value in (
-                    "v1.2.4",
+                    "v1.2.5",
                     "OpenCode 1.18.34",
-                    "OpenSpec 1.14.0",
-                    "Claude Code 2.1.286",
+                    "OpenSpec 1.14.1",
+                    "Claude Code 2.1.290",
                     "Undici 8.11.2",
-                    "pnpm 12.8.1",
+                    "pnpm 12.9.1",
                     "Prettier 3.9.9",
-                    "Wrangler 4.145.0",
-                    "Miniflare 5.20260930.0-alpha",
-                    "workerd 1.20260930.2",
+                    "Wrangler 4.147.0",
+                    "Miniflare 5.20261001.0-alpha",
+                    "workerd 1.20261001.1",
                     "Playwright 1.63.0",
                     "pandas 3.0.6",
                     "Matplotlib 3.11.2",
                     "tqdm 4.70.1",
                     "Uvicorn 0.53.0",
-                    "`1.2.3`",
+                    "`1.2.4`",
                 ):
                     self.assertIn(value, translation)
 
     def test_release_apt_refresh_matches_preparation_date(self):
-        self.assertIn("ARG RELEASE_APT_REFRESH=2026-10-01", self.dockerfile)
+        self.assertIn("ARG RELEASE_APT_REFRESH=2026-10-05", self.dockerfile)
 
     def test_openspec_is_pinned_installed_and_telemetry_disabled(self):
         self.assertIn(
             "# renovate: datasource=npm depName=@fission-ai/openspec\n"
-            "ARG OPENSPEC_VERSION=1.14.0",
+            "ARG OPENSPEC_VERSION=1.14.1",
             self.dockerfile,
         )
         self.assertIn(
@@ -1592,7 +1515,9 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("Trivy fixable critical and high gate", self.protected)
         self.assertIn("Docker Scout fixable critical and high gate", self.protected)
         self.assertIn("severity: CRITICAL,HIGH", self.protected)
-        self.assertIn("exception_args=(--exceptions config/security-exceptions-v1.2.4.json)", self.protected)
+        self.assertEqual(self.protected.count("--accept-upstream-vulnerabilities"), 2)
+        self.assertEqual(self.protected.count("--accepted-findings"), 2)
+        self.assertNotIn("--exceptions", self.protected)
         self.assertIn("format: json", self.protected)
         self.assertIn("trivy-fixable.json", self.protected)
 
@@ -1622,7 +1547,9 @@ class ReleaseContractTests(unittest.TestCase):
             "holycode-${{ matrix.suffix }}.dpkg-inventory.txt",
             "holycode-${{ matrix.suffix }}.image-id.txt",
             "holycode-${{ matrix.suffix }}.scout-fixable.sarif",
+            "holycode-${{ matrix.suffix }}.scout-accepted.json",
             "holycode-${{ matrix.suffix }}.trivy-fixable.json",
+            "holycode-${{ matrix.suffix }}.trivy-accepted.json",
         ):
             with self.subTest(value=value):
                 self.assertIn(value, self.pr_validation)
@@ -1873,6 +1800,12 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("io.holycode.version.lazygit=${LAZYGIT_VERSION}", self.dockerfile)
         self.assertIn("EXPECTED_LAZYGIT", self.smoke)
 
+    def test_delta_runtime_version_and_pager_are_exercised(self):
+        self.assertIn("io.holycode.version.delta=${DELTA_VERSION}", self.dockerfile)
+        self.assertIn("EXPECTED_DELTA", self.smoke)
+        self.assertIn("delta --version", self.smoke)
+        self.assertIn("delta --color-only --paging=never", self.smoke)
+
     def test_runtime_python_stack_is_exercised(self):
         for value in (
             "import numpy as np",
@@ -1902,11 +1835,11 @@ class ReleaseContractTests(unittest.TestCase):
         policy = json.loads((ROOT / "config" / "npm-global-script-policy.json").read_text(encoding="utf-8"))
         self.assertEqual(policy["npmVersion"], "12.2.0")
         self.assertEqual(
-            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.286"]["integrity"],
-            "sha512-5UNEDKy2znv81PWqNqgPJO4qPqH5NRenh52XTtx2tT5Q6xIxjI1q0RyucY+AUHMABImzDOlh6ztuj4qNiAaRvA==",
+            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.290"]["integrity"],
+            "sha512-N1VOjg+2Bc0unJztexfNYMTi+XkghzLe1m7Z2vswj6geJAto7mib7FeRbhuSAYHz6lmtWz1XZhLqwT+ugUaxhQ==",
         )
         self.assertEqual(
-            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.286"]["scripts"],
+            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.290"]["scripts"],
             {"postinstall": "node install.cjs"},
         )
         self.assertEqual(
@@ -1917,19 +1850,19 @@ class ReleaseContractTests(unittest.TestCase):
             policy["blockedScripts"]["esbuild@0.28.1"]["integrity"],
             "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
         )
-        self.assertIn("Wrangler 4.145.0", policy["blockedScripts"]["esbuild@0.28.1"]["reason"])
+        self.assertIn("Wrangler 4.147.0", policy["blockedScripts"]["esbuild@0.28.1"]["reason"])
         self.assertIn("esbuild@0.28.2", policy["blockedScripts"])
         self.assertEqual(
-            policy["blockedScripts"]["workerd@1.20260930.2"]["integrity"],
-            "sha512-k1lQzEiGyCDqaRsR5+o9PBT5wVU5omtas6hXx3spbEHHMFo8a7tkAixVCMsWFeiT7xhrmg21Hd6a9jLNrkcUMg==",
+            policy["blockedScripts"]["workerd@1.20261001.1"]["integrity"],
+            "sha512-d/SIYHFO0PT/wiFZg8in4NpRIxYuFwslX1HdylOtWkBIIUmSpkGFhK820cV84XACFylwJ48xuRoWW/8DWDPsPQ==",
         )
         self.assertEqual(
-            policy["blockedScripts"]["pnpm@12.8.1"]["scripts"],
+            policy["blockedScripts"]["pnpm@12.9.1"]["scripts"],
             {"preinstall": "node install.js", "postinstall": "node install.js"},
         )
         self.assertEqual(
-            policy["blockedScripts"]["pnpm@12.8.1"]["integrity"],
-            "sha512-9kupB1B/XOr+BsjTjmBS0BeURFgOwSed3Vv8EctIqoomRLZlmOB+dh2oSHKp/FfV+QK4f6SdAkGY1VhhKqu+RQ==",
+            policy["blockedScripts"]["pnpm@12.9.1"]["integrity"],
+            "sha512-BrBV//XNINwSeB3hc87TMQzglRvy7GICEaFgRdVETVyTpmMhB2TvKaZTphBFm6A2jw50+E2AxUcjz5Wq57wNbQ==",
         )
         self.assertIn("prisma@7.10.0", policy["blockedScripts"])
         self.assertIn("@prisma/engines@7.10.0", policy["blockedScripts"])
