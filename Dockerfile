@@ -23,13 +23,13 @@ ARG DELTA_VERSION=0.20.1
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.34
+ARG OPENCODE_VERSION=1.18.35
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.290
+ARG CLAUDE_CODE_VERSION=2.1.296
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@cursor/sdk
-ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.36
+ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.37
 # renovate: datasource=npm depName=jsdom
 ARG PAPERCLIP_JSDOM_VERSION=30.1.2
 # renovate: datasource=npm depName=@fission-ai/openspec
@@ -59,9 +59,9 @@ ARG PM2_BASIC_FTP_VERSION=6.2.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.15
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.9.1
+ARG PNPM_VERSION=12.10.1
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.3.2
+ARG VITE_VERSION=8.3.4
 # renovate: datasource=npm depName=prettier
 ARG PRETTIER_VERSION=3.9.9
 # renovate: datasource=npm depName=prisma
@@ -77,13 +77,13 @@ ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.5.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.147.0
+ARG WRANGLER_VERSION=4.149.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20261001.0-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20261006.1-alpha
 # renovate: datasource=npm depName=sharp
-ARG WRANGLER_SHARP_VERSION=0.35.4
+ARG WRANGLER_SHARP_VERSION=0.35.5
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
-ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.3
+ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.4
 # renovate: datasource=npm depName=eslint
 ARG ESLINT_VERSION=10.12.0
 # renovate: datasource=pypi depName=numpy
@@ -102,8 +102,8 @@ ARG PIP_VENDOR_URLLIB3_WHEEL_SHA256=0cf3cae568d36aa9576b28dfb35f11328f1cb974ca76
 ARG PIP_VENDOR_URLLIB3_ARCHIVE_SHA256=c64eb33b95a5cbd0afd35cadfb3778da6e7c979efa634312f39a392ca3cb11f2
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-10-05
-ARG RELEASE_VERSION=v1.2.5
+ARG RELEASE_APT_REFRESH=2026-10-10
+ARG RELEASE_VERSION=v1.2.6
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -632,37 +632,38 @@ RUN PM2_BASIC_FTP_INTEGRITY="sha512-bK67isD+lKq46AU8vNtjvMaT2ZqAOAmNCbxUHlFBRD4k
     rm "/tmp/${PM2_BASIC_FTP_TARBALL}" /tmp/test_get_uri_ftp.mjs && \
     rm -rf /root/.npm
 
-# Wrangler 4.147.0 owns Miniflare 5.20261001.0-alpha and workerd 1.20261001.1;
+# Wrangler 4.149.0 owns Miniflare 5.20261006.1-alpha and workerd 1.20261006.1;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
-RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==" && \
+RUN WRANGLER_SHARP_INTEGRITY="sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261001.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261006.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.esbuild)" = "0.28.2" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261001.1" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261006.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261001.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261006.1" || pkg.dependencies.esbuild!=="0.28.2") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261001.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261006.1") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20261001.1" && \
+      "1.20261006.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \
       amd64) WRANGLER_SHARP_ARCH=x64; \
-        WRANGLER_SHARP_NATIVE_INTEGRITY="sha512-9qvvEAuk8k89TfWUoX2htWjbAMX8p+NxCppjpcg5k6xMsjhBQPTsoIh36h9Qde4WRuGpJeYnOjdosDn/cnv+OA=="; \
-        WRANGLER_SHARP_LIBVIPS_INTEGRITY="sha512-4vKmvAst9nrowcqquKFAyZJUDolUaIp8uRiN0mWFguJ1IplC9/pitXtlnnlU4aa/eJw3J7i67V+pwUL+wZGdsA==";; \
+        WRANGLER_SHARP_NATIVE_INTEGRITY="sha512-SxFtLTeJInhAA9Q836kux2vZNeOBQEx658qvbboZScr0wIARym3IcGmW7KpVD5sbVg0Ojy+udFQdayYIZyoNog=="; \
+        WRANGLER_SHARP_LIBVIPS_INTEGRITY="sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw==";; \
       arm64) WRANGLER_SHARP_ARCH=arm64; \
-        WRANGLER_SHARP_NATIVE_INTEGRITY="sha512-De4jpEnAU8Hd5oT0j1G3uL4ZvTuipVMn7YC6vPaJhy6/7EwEae0SVAoBrUMYQbkLGDm85taVWwuPc1a44LTzCQ=="; \
-        WRANGLER_SHARP_LIBVIPS_INTEGRITY="sha512-0DaL0A6Xu6sQSQFwe4iVCrKWU2cCTItnRsYsCdxAMm9NF6twAA9BKnoqy4hqz4+azQ0JHuA26qiUKsf1XJ/v5A==";; \
+        WRANGLER_SHARP_NATIVE_INTEGRITY="sha512-LYVx5JTsOM2CBzmxreh+nl64/3H6Xb09iSLknqH47z2T2DFFxDeFLP5y4dJwe6H7uGQlHPyEEtIqyo3DYsRwdQ=="; \
+        WRANGLER_SHARP_LIBVIPS_INTEGRITY="sha512-Y3dgX/6lE2QhQb+Gxy0WZxfg9MEm/JBjamZpS2IklP7xIQoKN4hzAm7KcMVGtaVDt3neE9OKBC7vAfonA/Lr1A==";; \
       *) echo "unsupported Sharp target architecture: ${TARGETARCH}" >&2; exit 1;; \
     esac && \
     WRANGLER_SHARP_NATIVE_PACKAGE="@img/sharp-linux-${WRANGLER_SHARP_ARCH}" && \
@@ -709,7 +710,7 @@ RUN WRANGLER_SHARP_INTEGRITY="sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn
     test "$(find /usr/local/lib/node_modules/wrangler -path "*/@img/sharp-linux-${WRANGLER_SHARP_ARCH}/package.json" -type f | wc -l)" -eq 1 && \
     test "$(find /usr/local/lib/node_modules/wrangler -path "*/@img/sharp-libvips-linux-${WRANGLER_SHARP_ARCH}/package.json" -type f | wc -l)" -eq 1 && \
     (cd /usr/local/lib/node_modules/wrangler && npm ls sharp --all >/dev/null) && \
-    node -e 'const sharp=require(process.argv[1]); if(sharp.versions.sharp!==process.argv[2] || sharp.versions.heif!=="1.23.2") process.exit(1); sharp({create:{width:2,height:2,channels:4,background:{r:220,g:30,b:30,alpha:1}}}).avif().toBuffer().then(buffer=>sharp(buffer).raw().toBuffer({resolveWithObject:true})).then(({data,info})=>{if(info.width!==2 || info.height!==2 || info.channels!==4 || data.length!==16) process.exit(1)}).catch(error=>{console.error(error);process.exit(1)})' \
+    node -e 'const sharp=require(process.argv[1]); if(sharp.versions.sharp!==process.argv[2] || sharp.versions.heif!=="1.23.5") process.exit(1); sharp({create:{width:2,height:2,channels:4,background:{r:220,g:30,b:30,alpha:1}}}).avif().toBuffer().then(buffer=>sharp(buffer).raw().toBuffer({resolveWithObject:true})).then(({data,info})=>{if(info.width!==2 || info.height!==2 || info.channels!==4 || data.length!==16) process.exit(1)}).catch(error=>{console.error(error);process.exit(1)})' \
       "$WRANGLER_SHARP_DIR" "${WRANGLER_SHARP_VERSION}" && \
     ! command -v sharp && \
     rm -rf /root/.npm
@@ -720,7 +721,7 @@ RUN npm i -g --ignore-scripts \
 # Paperclip's current Cursor SDK no longer installs Connect's Node transport.
 # The remaining Undici is jsdom's 8.x dependency; guard the resolved owners.
 RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrity)" = \
-      "sha512-1Fpd644iTGNEoH5nEp5oYVlWgxSObL0VZfTZcCXhOB5MSJLc34vIvP6yx1udqSnpN+Rbpejvmxd9yoyjxhFVuw==" && \
+      "sha512-MWKMeqtkCOHOOi8uZqI7CYeUtOwwdWke1B4GEllERIGMsoKuxbk++tP/KzOXXxtOD9EUD1z3AQL6os6m3M1gIw==" && \
     test "$(npm view "jsdom@${PAPERCLIP_JSDOM_VERSION}" dist.integrity)" = \
       "sha512-0FFE/jE1rppmVfUrJUgxqXjcwolZYIGtAgj1pTussMhNZxIxi7W/PvfWaMNroGi2B36X1IKHbexpZ9DhkoOPiQ==" && \
     test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
@@ -729,7 +730,7 @@ RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrit
     test ! -e "$CONNECT_NODE_PACKAGE" && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0 && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1 && \
-    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.version!==process.argv[1] || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1" || jsdom.version!==process.argv[2] || jsdom.dependencies.undici!=="^8.11.2" || undici.version!==process.argv[3]) process.exit(1)' \
+    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); if(sdk.version!==process.argv[1]) { console.error(`Paperclip Cursor SDK version mismatch: expected ${process.argv[1]}, got ${sdk.version}`); process.exit(1) } if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1" || jsdom.version!==process.argv[2] || jsdom.dependencies.undici!=="^8.11.2" || undici.version!==process.argv[3]) process.exit(1)' \
       "${PAPERCLIP_CURSOR_SDK_VERSION}" "${PAPERCLIP_JSDOM_VERSION}" "${PAPERCLIP_UNDICI_VERSION}" && \
     node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; if(require.resolve("undici/package.json",{paths:[`${root}/jsdom`]})!==`${root}/undici/package.json`) process.exit(1)' && \
     (cd /usr/local/lib/node_modules/paperclipai && npm ls @cursor/sdk jsdom undici --omit=dev --all >/dev/null) && \

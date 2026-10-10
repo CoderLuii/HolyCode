@@ -294,7 +294,7 @@ EOF
   rm -rf "$paperclip_catalog_fixture"
   (cd /usr/local/lib/node_modules/paperclipai && npm ls @paperclipai/skills-catalog --all >/dev/null)
   node -e "console.log(require(\"/usr/local/lib/node_modules/paperclipai/package.json\").version)" | grep -Fx "$EXPECTED_PAPERCLIP"
-  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK || jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM || jsdom.dependencies.undici!==\"^8.11.2\" || undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) process.exit(1)"
+  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK) { console.error(\`Paperclip Cursor SDK version mismatch: expected \${process.env.EXPECTED_PAPERCLIP_CURSOR_SDK}, got \${sdk.version}\`); process.exit(1) } if(jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM || jsdom.dependencies.undici!==\"^8.11.2\" || undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) process.exit(1)"
   test ! -e /usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1
@@ -387,8 +387,11 @@ assert metadata.version("pandas") == "3.0.6"
 assert metadata.version("matplotlib") == "3.11.2"
 assert metadata.version("fonttools") == "4.65.0"
 assert metadata.version("tqdm") == "4.70.1"
-assert metadata.version("fastapi") == "0.141.1"
-assert metadata.version("uvicorn") == "0.53.0"
+assert metadata.version("fastapi") == "0.143.0"
+assert metadata.version("uvicorn") == "0.54.0"
+assert metadata.version("python-dotenv") == "1.2.4"
+assert metadata.version("Markdown") == "3.11"
+assert metadata.version("opentelemetry-api") == "1.45.1"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
 assert metadata.version("pip") == "26.2.1"
@@ -608,9 +611,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261001.1\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261001.1\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261001.1\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261006.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261006.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261006.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -627,7 +630,7 @@ EOF
   test "$(find /usr/local/lib/node_modules/wrangler -path "*/$wrangler_sharp_native_package/package.json" -type f | wc -l)" -eq 1
   test "$(find /usr/local/lib/node_modules/wrangler -path "*/$wrangler_sharp_libvips_package/package.json" -type f | wc -l)" -eq 1
   (cd /usr/local/lib/node_modules/wrangler && npm ls sharp --all >/dev/null)
-  node -e "const sharp=require(process.argv[1]); if(sharp.versions.sharp!==process.env.EXPECTED_WRANGLER_SHARP || sharp.versions.heif!==\"1.23.2\") process.exit(1); sharp({create:{width:2,height:2,channels:4,background:{r:220,g:30,b:30,alpha:1}}}).avif().toBuffer().then(buffer=>sharp(buffer).raw().toBuffer({resolveWithObject:true})).then(({data,info})=>{if(info.width!==2 || info.height!==2 || info.channels!==4 || data.length!==16) process.exit(1)}).catch(error=>{console.error(error);process.exit(1)})" "$wrangler_sharp_dir"
+  node -e "const sharp=require(process.argv[1]); if(sharp.versions.sharp!==process.env.EXPECTED_WRANGLER_SHARP || sharp.versions.heif!==\"1.23.5\") process.exit(1); sharp({create:{width:2,height:2,channels:4,background:{r:220,g:30,b:30,alpha:1}}}).avif().toBuffer().then(buffer=>sharp(buffer).raw().toBuffer({resolveWithObject:true})).then(({data,info})=>{if(info.width!==2 || info.height!==2 || info.channels!==4 || data.length!==16) process.exit(1)}).catch(error=>{console.error(error);process.exit(1)})" "$wrangler_sharp_dir"
   vite --version | grep -F "vite/$EXPECTED_VITE"
   vite_workspace="$(mktemp -d)"
   printf "<main>HolyCode Vite smoke</main>\n" > "$vite_workspace/index.html"
@@ -730,7 +733,7 @@ EOF
   npm ls -g --all --json > "$npm_tree" 2>/tmp/holycode-npm-tree.stderr || npm_tree_status=$?
   test -s "$npm_tree"
   test "$npm_tree_status" -eq 1
-  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const expected=[\"invalid: third-party-web@0.30.0 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.1 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\" || problems.some(problem=>problem.startsWith(\"missing:\")) || JSON.stringify([...problems].sort())!==JSON.stringify(expected)) process.exit(1); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); if(lighthouse?.version!==\"13.5.0\" || trace?.version!==\"0.0.65\" || tracePkg.dependencies[\"third-party-web\"]!==\"latest\" || tracePkg.dependencies[\"legacy-javascript\"]!==\"latest\" || trace.dependencies?.[\"third-party-web\"]?.version!==\"0.30.0\" || trace.dependencies?.[\"legacy-javascript\"]?.version!==\"0.0.1\") process.exit(1)" "$npm_tree"
+  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const fail=(label,expected,actual)=>{console.error(\`\${label}: expected \${JSON.stringify(expected)}, got \${JSON.stringify(actual)}\`);process.exit(1)}; const expected=[\"invalid: third-party-web@0.30.0 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.3 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\") fail(\"npm tree error code\",\"ELSPROBLEMS\",tree.error?.code??null); const missing=problems.filter(problem=>problem.startsWith(\"missing:\")); if(missing.length) fail(\"npm tree missing problems\",[],missing); const actualProblems=[...problems].sort(); if(JSON.stringify(actualProblems)!==JSON.stringify(expected)) fail(\"npm tree problems\",expected,actualProblems); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); const expectedGraph={lighthouse:\"13.5.0\",trace:\"0.0.65\",thirdPartyRange:\"latest\",legacyRange:\"latest\",thirdParty:\"0.30.0\",legacy:\"0.0.3\"}; const actualGraph={lighthouse:lighthouse?.version??null,trace:trace?.version??null,thirdPartyRange:tracePkg.dependencies[\"third-party-web\"]??null,legacyRange:tracePkg.dependencies[\"legacy-javascript\"]??null,thirdParty:trace?.dependencies?.[\"third-party-web\"]?.version??null,legacy:trace?.dependencies?.[\"legacy-javascript\"]?.version??null}; if(JSON.stringify(actualGraph)!==JSON.stringify(expectedGraph)) fail(\"Lighthouse owner graph\",expectedGraph,actualGraph)" "$npm_tree"
   rm -f "$npm_tree" /tmp/holycode-npm-tree.stderr
   ! command -v vercel
   ! command -v sharp
@@ -743,7 +746,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261001.1\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261006.1\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))
@@ -1071,7 +1074,7 @@ docker run --rm --network none --entrypoint sh \
   "$image" -lc '
   set -eu
   cd /fixture
-  node -e "console.log(require(\"./node_modules/drizzle-orm/package.json\").version)" | grep -Fx 0.45.3
+  node -e "console.log(require(\"./node_modules/drizzle-orm/package.json\").version)" | grep -Fx 0.45.4
   test "$(command -v drizzle-kit)" = /usr/local/bin/drizzle-kit
   test ! -e node_modules/.bin/drizzle-kit
   test ! -e /usr/local/lib/node_modules/drizzle-kit/node_modules/drizzle-orm

@@ -89,10 +89,10 @@ def collect_errors() -> list[str]:
         "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.75.0",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.2.4@sha256:"
-        "26dc14d6823573a0aa2b12469c93cbbf6492c1498bbb588a7a0b0c88c42c4a23",
-        "PREVIOUS_VERSION: v1.2.4",
-        "RELEASE_VERSION: v1.2.5",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.2.5@sha256:"
+        "035b0d86aafd7cf52db7dbbbd9cb3ae53cc195a1aa0ab58843c2c2d3809eb9e3",
+        "PREVIOUS_VERSION: v1.2.5",
+        "RELEASE_VERSION: v1.2.6",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",

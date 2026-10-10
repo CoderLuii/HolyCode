@@ -14,9 +14,9 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.2.4@sha256:26dc14d6823573a0aa2b12469c93cbbf6492c1498bbb588a7a0b0c88c42c4a23
-  PREVIOUS_VERSION: v1.2.4
-  RELEASE_VERSION: v1.2.5
+  PREVIOUS_IMAGE: coderluii/holycode:1.2.5@sha256:035b0d86aafd7cf52db7dbbbd9cb3ae53cc195a1aa0ab58843c2c2d3809eb9e3
+  PREVIOUS_VERSION: v1.2.5
+  RELEASE_VERSION: v1.2.6
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -420,7 +420,7 @@ jobs:
 
   promote-candidate:
     needs: protected-validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: write
@@ -586,7 +586,7 @@ jobs:
 
   update-dockerhub-description:
     needs: promote-candidate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read

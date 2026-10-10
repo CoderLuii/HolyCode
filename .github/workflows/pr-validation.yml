@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   static-validation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
 
@@ -120,7 +120,7 @@ jobs:
             [ -n "$installed" ]
             [ -n "$available" ]
             bash scripts/validate_chromium_version.sh \
-              "$installed" "${{ matrix.platform }}" v1.2.5 "$(date -u +%F)"
+              "$installed" "${{ matrix.platform }}" v1.2.6 "$(date -u +%F)"
             dpkg --compare-versions "$installed" ge "$available"
             printf '%s installed=%s available=%s platform=%s\n' \
               "$package" "$installed" "$available" "${{ matrix.platform }}"
@@ -302,7 +302,7 @@ jobs:
           python scripts/validate_scanner_findings.py \
             --scanner scout \
             --report "$SCOUT_REPORT" \
-            --release v1.2.5 \
+            --release v1.2.6 \
             --platform "${{ matrix.platform }}" \
             --accept-upstream-vulnerabilities \
             --accepted-findings "holycode-${{ matrix.suffix }}.scout-accepted.json" \
@@ -346,7 +346,7 @@ jobs:
           python scripts/validate_scanner_findings.py \
             --scanner trivy \
             --report "holycode-${{ matrix.suffix }}.trivy.json" \
-            --release v1.2.5 \
+            --release v1.2.6 \
             --platform "${{ matrix.platform }}" \
             --accept-upstream-vulnerabilities \
             --accepted-findings "holycode-${{ matrix.suffix }}.trivy-accepted.json" \

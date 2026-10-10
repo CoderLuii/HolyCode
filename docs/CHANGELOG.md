@@ -4,6 +4,19 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.6] - 10/10/2026
+
+### Changed
+
+- Update OpenCode to 1.18.35, Claude Code to 2.1.296, pnpm to 12.10.1 and Vite to 8.3.4
+- Update Wrangler to 4.149.0 with Miniflare 5.20261006.1-alpha and workerd 1.20261006.1; refresh the Drizzle ORM smoke fixture to 0.45.4
+- Follow Paperclip's normal Cursor SDK 1.0.37 resolution without changing Paperclip, jsdom or Undici
+- Follow Lighthouse 13.5.0's normal trace-engine resolution to legacy-javascript 0.0.3 while third-party-web remains 0.30.0, with exact expected and actual npm-tree diagnostics
+- Update python-dotenv to 1.2.4, Markdown to 3.11, FastAPI to 0.143.0 and Uvicorn to 0.54.0 with official pip-tools 7.6.2 lock generation
+- Pin the remaining Ubuntu workflow jobs to 24.04 and move the release predecessor and untouched-volume rollback image to v1.2.5
+- Preserve the compatibility holds and full scanner reports; third-party findings remain accepted upstream vulnerabilities, while secrets, HolyCode-owned findings, invalid reports and scanner failures remain blocking
+- Keep Chromium issue #13 and Claude Auth issue #11 open; this release does not establish a fix for either report
+
 ## [1.2.5] - 10/05/2026
 
 ### Changed
