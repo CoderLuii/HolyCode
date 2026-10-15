@@ -14,9 +14,9 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.2.5@sha256:035b0d86aafd7cf52db7dbbbd9cb3ae53cc195a1aa0ab58843c2c2d3809eb9e3
-  PREVIOUS_VERSION: v1.2.5
-  RELEASE_VERSION: v1.2.6
+  PREVIOUS_IMAGE: coderluii/holycode:1.2.6@sha256:42233ec8c9d3ba32f17edb1bbf90dcf38694a39c65b1216146994f1ca85b25d7
+  PREVIOUS_VERSION: v1.2.6
+  RELEASE_VERSION: v1.2.7
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -72,9 +72,9 @@ jobs:
           echo "Validated exact candidate $actual_sha for $RELEASE_VERSION" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Node for Renovate validation
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.0
 
       - name: Static release validation
         run: |
@@ -134,7 +134,7 @@ jobs:
           echo "Candidate digest: $digest" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload candidate digest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: holycode-${{ github.ref_name }}-candidate
           if-no-files-found: error
@@ -153,14 +153,14 @@ jobs:
             scout_arch: amd64
             scout_sha256: 47daa9ac442816316c65389f516b847146bb9f45e8d6afdcbb9ce835c4e138bd
             trivy_arch: 64bit
-            trivy_sha256: c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f
+            trivy_sha256: e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7
           - platform: linux/arm64
             suffix: arm64
             runner: ubuntu-24.04-arm
             scout_arch: arm64
             scout_sha256: 34282a50d6787eec46e44a377a1ed9e70342adf078135cca8617c9199852725c
             trivy_arch: ARM64
-            trivy_sha256: a1ee9f6ffb7d112b64ff726a2a0717c21175c1114361391f4a132956751a13b3
+            trivy_sha256: aab21e677a7b7071fc79f1711480840754c18a1b9d9cefa7ccd06af63a0e8f4c
     permissions:
       contents: read
       packages: read
@@ -226,7 +226,7 @@ jobs:
       - name: Install Trivy CLI
         env:
           TRIVY_SHA256: ${{ matrix.trivy_sha256 }}
-          TRIVY_VERSION: 0.75.0
+          TRIVY_VERSION: 0.76.0
         run: |
           set -euo pipefail
 
@@ -246,7 +246,7 @@ jobs:
       - name: Generate SPDX SBOM for Docker Scout
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.75.0
+          version: v0.76.0
           skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: spdx-json
@@ -334,7 +334,7 @@ jobs:
       - name: Trivy vulnerability report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.75.0
+          version: v0.76.0
           skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
@@ -347,7 +347,7 @@ jobs:
       - name: Trivy fixable critical and high gate
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.75.0
+          version: v0.76.0
           skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
@@ -391,7 +391,7 @@ jobs:
 
       - name: Upload architecture evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: holycode-${{ github.ref_name }}-${{ matrix.suffix }}-evidence
           if-no-files-found: error

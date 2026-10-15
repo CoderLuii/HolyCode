@@ -4,6 +4,23 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.7] - 10/14/2026
+
+### Changed
+
+- Update Node LTS to 24.22.0, fzf to 0.74.5, lazygit to 0.66.1, OpenCode to 1.19.0, Claude Code to 2.1.300 and OpenSpec to 1.14.2
+- Update pnpm to 12.11.2, Prettier to 3.9.10 and Wrangler to 4.151.0 with its Miniflare 5.20261012.0-beta and workerd 1.20261012.1 graph
+- Update Playwright to 1.64.0, NumPy to 2.5.4, Markdown to 3.11.1 and FastAPI to 0.143.1 using Python 3.13 hash locks
+- Follow Paperclip's normal jsdom resolution to official Undici 8.12.1 and report expected/actual dependency version mismatches
+- Update setup-node to 7.1.0, upload-artifact to 7.0.2 and checksum-verified Trivy to 0.76.0; use v1.2.6 for upgrade and untouched-volume rollback checks
+- Keep Paperclip 2026.831.1, the compatibility holds, user data and plugin settings; Claude Auth issue #11 remains open
+- Keep full scanner reports and accepted upstream vulnerability records; secrets, HolyCode-owned findings, unknown provenance, malformed reports and scanner failures remain blocking
+
+### Fixed
+
+- Require official Debian Chromium, common and sandbox 155.0.8059.39-1~deb13u1 or newer on both native platforms; issue #13 closes only after fresh published-image and scanner verification
+- Correct the runtime table to npm 12.2.0
+
 ## [1.2.6] - 10/10/2026
 
 ### Changed

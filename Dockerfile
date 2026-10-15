@@ -6,11 +6,11 @@
 # renovate: datasource=github-releases depName=cli/cli
 ARG GITHUB_CLI_VERSION=2.102.0
 # renovate: datasource=github-releases depName=junegunn/fzf
-ARG FZF_VERSION=0.74.4
+ARG FZF_VERSION=0.74.5
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.66.0
+ARG LAZYGIT_VERSION=0.66.1
 
-FROM node:24.21.0-trixie-slim@sha256:8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe
+FROM node:24.22.0-trixie-slim@sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -23,9 +23,9 @@ ARG DELTA_VERSION=0.20.1
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.18.35
+ARG OPENCODE_VERSION=1.19.0
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.296
+ARG CLAUDE_CODE_VERSION=2.1.300
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@cursor/sdk
@@ -33,9 +33,9 @@ ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.37
 # renovate: datasource=npm depName=jsdom
 ARG PAPERCLIP_JSDOM_VERSION=30.1.2
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.14.1
+ARG OPENSPEC_VERSION=1.14.2
 # renovate: datasource=npm depName=undici
-ARG PAPERCLIP_UNDICI_VERSION=8.11.2
+ARG PAPERCLIP_UNDICI_VERSION=8.12.1
 # renovate: datasource=npm depName=opencode-claude-auth
 ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.1
 # renovate: datasource=npm depName=typescript
@@ -59,11 +59,11 @@ ARG PM2_BASIC_FTP_VERSION=6.2.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.15
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.10.1
+ARG PNPM_VERSION=12.11.2
 # renovate: datasource=npm depName=vite
 ARG VITE_VERSION=8.3.4
 # renovate: datasource=npm depName=prettier
-ARG PRETTIER_VERSION=3.9.9
+ARG PRETTIER_VERSION=3.9.10
 # renovate: datasource=npm depName=prisma
 ARG PRISMA_VERSION=7.10.0
 # renovate: datasource=npm depName=deepmerge-ts
@@ -77,9 +77,9 @@ ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.5.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.149.0
+ARG WRANGLER_VERSION=4.151.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20261006.1-alpha
+ARG WRANGLER_MINIFLARE_VERSION=5.20261012.0-beta
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.5
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
@@ -87,7 +87,7 @@ ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.4
 # renovate: datasource=npm depName=eslint
 ARG ESLINT_VERSION=10.12.0
 # renovate: datasource=pypi depName=numpy
-ARG NUMPY_VERSION=2.5.3
+ARG NUMPY_VERSION=2.5.4
 # renovate: datasource=pypi depName=pip
 ARG PIP_VERSION=26.2.1
 # renovate: datasource=pypi depName=msgpack
@@ -102,8 +102,8 @@ ARG PIP_VENDOR_URLLIB3_WHEEL_SHA256=0cf3cae568d36aa9576b28dfb35f11328f1cb974ca76
 ARG PIP_VENDOR_URLLIB3_ARCHIVE_SHA256=c64eb33b95a5cbd0afd35cadfb3778da6e7c979efa634312f39a392ca3cb11f2
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-10-10
-ARG RELEASE_VERSION=v1.2.6
+ARG RELEASE_APT_REFRESH=2026-10-14
+ARG RELEASE_VERSION=v1.2.7
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -221,8 +221,8 @@ RUN ln -sf /usr/bin/batcat /usr/local/bin/bat 2>/dev/null || true
 
 # ---------- fzf ----------
 RUN FZF_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "5d673b849f494f0d64ec471d8640b153ca8849e3846a31da17abdcfce8df6b46";; \
-      *) echo "05e6813a337cc722c3ed07e54a764b75cc5d671e2e60459db0ba696ee5fa7504";; \
+      arm64) echo "cf058001da21724a469b714a29cf4aab9cbe860d218a0d6c1b5b661efad7784c";; \
+      *) echo "d47d7f882972c7d674dbbba998ffa4116e68379616ffac7695d0671e9a722c5f";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/fzf.tar.gz \
       "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${TARGETARCH}.tar.gz" && \
@@ -257,8 +257,8 @@ RUN GH_SHA256=$(case "$TARGETARCH" in \
 # ---------- lazygit ----------
 RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
     LAZYGIT_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "9a4fc4656897ac9f7877b835473ce1a75620cc267f554c57fc4ff266407f3257";; \
-      *) echo "5b45541155d20bd32bf2cc5ab5b7e3d91c2eebf0fb1242281350edc27d59d2b7";; \
+      arm64) echo "add91327af13343f37d2d610512d0982ef5c75da5cc962b5159748adc8a11a86";; \
+      *) echo "7b3f30c2c06a42cf575280f907e58d7ea08411408b6b62bc926bc91cbc6c3f46";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/lazygit.tar.gz \
       "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_${LAZYGIT_ARCH}.tar.gz" && \
@@ -632,29 +632,29 @@ RUN PM2_BASIC_FTP_INTEGRITY="sha512-bK67isD+lKq46AU8vNtjvMaT2ZqAOAmNCbxUHlFBRD4k
     rm "/tmp/${PM2_BASIC_FTP_TARBALL}" /tmp/test_get_uri_ftp.mjs && \
     rm -rf /root/.npm
 
-# Wrangler 4.149.0 owns Miniflare 5.20261006.1-alpha and workerd 1.20261006.1;
+# Wrangler 4.151.0 owns Miniflare 5.20261012.0-beta and workerd 1.20261012.1;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261006.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261012.1" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.esbuild)" = "0.28.2" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261006.1" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261012.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261006.1" || pkg.dependencies.esbuild!=="0.28.2") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261012.1" || pkg.dependencies.esbuild!=="0.28.2") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261006.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261012.1") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20261006.1" && \
+      "1.20261012.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \
@@ -725,12 +725,12 @@ RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrit
     test "$(npm view "jsdom@${PAPERCLIP_JSDOM_VERSION}" dist.integrity)" = \
       "sha512-0FFE/jE1rppmVfUrJUgxqXjcwolZYIGtAgj1pTussMhNZxIxi7W/PvfWaMNroGi2B36X1IKHbexpZ9DhkoOPiQ==" && \
     test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
-      "sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==" && \
+      "sha512-usz3OVQBeh1LxNn0DzU0voLXMgn5CU/WUdpBsY6Ti5afNao+vTkmn4H/NxoXolc10cOqe2+YIG0Hspq2rsl64w==" && \
     CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
     test ! -e "$CONNECT_NODE_PACKAGE" && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0 && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1 && \
-    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); if(sdk.version!==process.argv[1]) { console.error(`Paperclip Cursor SDK version mismatch: expected ${process.argv[1]}, got ${sdk.version}`); process.exit(1) } if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1" || jsdom.version!==process.argv[2] || jsdom.dependencies.undici!=="^8.11.2" || undici.version!==process.argv[3]) process.exit(1)' \
+    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); const fail=(name,expected,actual)=>{console.error(`${name}: expected ${expected}, got ${actual}`);process.exit(1)}; if(sdk.version!==process.argv[1]) fail("Paperclip Cursor SDK version mismatch",process.argv[1],sdk.version); if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1") process.exit(1); if(jsdom.version!==process.argv[2]) fail("Paperclip jsdom version mismatch",process.argv[2],jsdom.version); if(jsdom.dependencies.undici!=="^8.11.2") fail("Paperclip jsdom Undici range mismatch","^8.11.2",jsdom.dependencies.undici); if(undici.version!==process.argv[3]) fail("Paperclip Undici resolved version mismatch",process.argv[3],undici.version)' \
       "${PAPERCLIP_CURSOR_SDK_VERSION}" "${PAPERCLIP_JSDOM_VERSION}" "${PAPERCLIP_UNDICI_VERSION}" && \
     node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; if(require.resolve("undici/package.json",{paths:[`${root}/jsdom`]})!==`${root}/undici/package.json`) process.exit(1)' && \
     (cd /usr/local/lib/node_modules/paperclipai && npm ls @cursor/sdk jsdom undici --omit=dev --all >/dev/null) && \

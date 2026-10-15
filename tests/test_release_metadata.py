@@ -13,11 +13,11 @@ class ReleaseMetadataTests(unittest.TestCase):
 
     def test_previous_image_and_version_match_released_baseline(self):
         publish = (ROOT / ".github/workflows/docker-publish.yml").read_text()
-        self.assertIn("PREVIOUS_VERSION: v1.2.5", publish)
-        self.assertIn("RELEASE_VERSION: v1.2.6", publish)
+        self.assertIn("PREVIOUS_VERSION: v1.2.6", publish)
+        self.assertIn("RELEASE_VERSION: v1.2.7", publish)
         self.assertIn(
-            "PREVIOUS_IMAGE: coderluii/holycode:1.2.5@sha256:"
-            "035b0d86aafd7cf52db7dbbbd9cb3ae53cc195a1aa0ab58843c2c2d3809eb9e3",
+            "PREVIOUS_IMAGE: coderluii/holycode:1.2.6@sha256:"
+            "42233ec8c9d3ba32f17edb1bbf90dcf38694a39c65b1216146994f1ca85b25d7",
             publish,
         )
 
@@ -25,7 +25,7 @@ class ReleaseMetadataTests(unittest.TestCase):
         for name in ("pr-validation.yml", "docker-publish.yml"):
             with self.subTest(workflow=name):
                 workflow = (ROOT / ".github/workflows" / name).read_text()
-                self.assertIn("node-version: 24.21.0", workflow)
+                self.assertIn("node-version: 24.22.0", workflow)
                 self.assertIn(
                     "bash scripts/validate_renovate_extraction.sh 44.129.0", workflow
                 )

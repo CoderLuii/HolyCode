@@ -5,7 +5,7 @@ version="${1:?usage: validate_chromium_version.sh <version> <platform> <release>
 platform="${2:?platform is required}"
 release="${3:?release is required}"
 as_of="${4:?as-of date is required}"
-floor="154.0.8037.92-1~deb13u1"
+floor="155.0.8059.39-1~deb13u1"
 
 case "$as_of" in
   ????-??-??) ;;

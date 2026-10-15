@@ -294,7 +294,7 @@ EOF
   rm -rf "$paperclip_catalog_fixture"
   (cd /usr/local/lib/node_modules/paperclipai && npm ls @paperclipai/skills-catalog --all >/dev/null)
   node -e "console.log(require(\"/usr/local/lib/node_modules/paperclipai/package.json\").version)" | grep -Fx "$EXPECTED_PAPERCLIP"
-  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK) { console.error(\`Paperclip Cursor SDK version mismatch: expected \${process.env.EXPECTED_PAPERCLIP_CURSOR_SDK}, got \${sdk.version}\`); process.exit(1) } if(jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM || jsdom.dependencies.undici!==\"^8.11.2\" || undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) process.exit(1)"
+  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); const fail=(name,expected,actual)=>{console.error(\`\${name}: expected \${expected}, got \${actual}\`);process.exit(1)}; if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK) fail(\"Paperclip Cursor SDK version mismatch\",process.env.EXPECTED_PAPERCLIP_CURSOR_SDK,sdk.version); if(jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM) fail(\"Paperclip jsdom version mismatch\",process.env.EXPECTED_PAPERCLIP_JSDOM,jsdom.version); if(jsdom.dependencies.undici!==\"^8.11.2\") fail(\"Paperclip jsdom Undici range mismatch\",\"^8.11.2\",jsdom.dependencies.undici); if(undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) fail(\"Paperclip Undici resolved version mismatch\",process.env.EXPECTED_PAPERCLIP_UNDICI,undici.version)"
   test ! -e /usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1
@@ -381,16 +381,17 @@ from tqdm import tqdm
 import uvicorn
 
 assert metadata.version("numpy") == "$EXPECTED_NUMPY"
+assert metadata.version("playwright") == "1.64.0"
 assert metadata.version("requests") == "2.34.2"
 assert metadata.version("Pillow") == "12.3.0"
 assert metadata.version("pandas") == "3.0.6"
 assert metadata.version("matplotlib") == "3.11.2"
 assert metadata.version("fonttools") == "4.65.0"
 assert metadata.version("tqdm") == "4.70.1"
-assert metadata.version("fastapi") == "0.143.0"
+assert metadata.version("fastapi") == "0.143.1"
 assert metadata.version("uvicorn") == "0.54.0"
 assert metadata.version("python-dotenv") == "1.2.4"
-assert metadata.version("Markdown") == "3.11"
+assert metadata.version("Markdown") == "3.11.1"
 assert metadata.version("opentelemetry-api") == "1.45.1"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
@@ -611,9 +612,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261006.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261006.1\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261006.1\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261012.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261012.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261012.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -746,7 +747,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261006.1\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261012.1\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))
@@ -774,7 +775,34 @@ EOF
   done
   test -u /usr/lib/chromium/chrome-sandbox
   runuser -u opencode -- chromium --headless --disable-gpu --disable-dev-shm-usage --dump-dom about:blank | grep -F "<html><head></head><body></body></html>"
-  runuser -u opencode -- python3 -c "from playwright.sync_api import sync_playwright; from PIL import Image; p=sync_playwright().start(); b=p.chromium.launch(executable_path=\"/usr/bin/chromium\", args=[\"--disable-gpu\", \"--disable-dev-shm-usage\"]); page=b.new_page(viewport={\"width\": 320, \"height\": 200}); page.set_content(\"<main style=\\\"width:160px;height:100px;background:#d22\\\"></main>\"); page.screenshot(path=\"/tmp/holycode-chromium.png\"); b.close(); p.stop(); image=Image.open(\"/tmp/holycode-chromium.png\").convert(\"RGB\"); assert image.getbbox() and len(image.getcolors(maxcolors=1000000) or []) > 1"
+  cat > /tmp/holycode-playwright-smoke.py <<'PYTHON'
+from PIL import Image
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as playwright:
+    browser = playwright.chromium.launch(
+        executable_path="/usr/bin/chromium",
+        args=["--disable-gpu", "--disable-dev-shm-usage"],
+    )
+    page = browser.new_page(viewport={"width": 320, "height": 200})
+    page.set_content(
+        '<main style="width:160px;height:100px;background:#d22"></main>'
+        '<iframe id="hidden-frame" style="visibility: hidden" '
+        'srcdoc="<button>Hidden action</button>"></iframe>'
+    )
+    hidden_action = page.frame_locator("#hidden-frame").get_by_role(
+        "button", name="Hidden action"
+    )
+    assert hidden_action.is_hidden()
+    assert not hidden_action.is_visible()
+    page.screenshot(path="/tmp/holycode-chromium.png")
+    browser.close()
+
+image = Image.open("/tmp/holycode-chromium.png").convert("RGB")
+assert image.getbbox() and len(image.getcolors(maxcolors=1000000) or []) > 1
+PYTHON
+  runuser -u opencode -- python3 /tmp/holycode-playwright-smoke.py
+  rm -f /tmp/holycode-playwright-smoke.py
   test -s /usr/local/share/holycode/dpkg-inventory.txt
 
   mkdir -p /tmp/wrangler-modern /tmp/wrangler-legacy

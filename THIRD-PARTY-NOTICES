@@ -12,9 +12,9 @@ general legal-compliance audit of every transitive package.
 - License: MIT
 - Copyright: Anomaly
 - Source: https://github.com/anomalyco/opencode
-- npm: https://www.npmjs.com/package/opencode-ai/v/1.18.35
+- npm: https://www.npmjs.com/package/opencode-ai/v/1.19.0
 - Website: https://opencode.ai
-- Version: 1.18.35
+- Version: 1.19.0
 
 OpenCode is the core AI coding agent bundled in HolyCode. It is installed
 via npm as a global package and runs as an s6-overlay supervised process.
@@ -67,8 +67,8 @@ distribute or modify this plugin.
 
 - License: MIT
 - Source: https://github.com/Fission-AI/OpenSpec
-- npm: https://www.npmjs.com/package/@fission-ai/openspec/v/1.14.1
-- Version: 1.14.1
+- npm: https://www.npmjs.com/package/@fission-ai/openspec/v/1.14.2
+- Version: 1.14.2
 
 Installed as the pinned global CLI. Telemetry is disabled in the image, and
 project initialization occurs only when you explicitly run
@@ -206,7 +206,7 @@ automation via Playwright and Puppeteer.
 - License: Apache-2.0
 - Copyright: Microsoft Corporation
 - Source: https://github.com/microsoft/playwright
-- Version: 1.63.0
+- Version: 1.64.0
 
 Installed via pip. Uses the system Chromium binary, not Playwright's
 bundled browsers.
@@ -218,12 +218,12 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.296
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.296.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.300
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.300.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.296
+- Version: 2.1.300
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.296`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.300`.
 The immutable registry tarball contains a 147-byte `LICENSE.md` legal-agreements
 notice. Final native image validation must prove that the installed CLI and
 Linux native payload carry the same notice. This is artifact evidence, not a
@@ -259,14 +259,14 @@ notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.0.37` through its
 transport. This records the bundled notice; it is not legal clearance for
 Cursor service use.
 
-### Paperclip-scoped jsdom 30.1.2 and Undici 8.11.2
+### Paperclip-scoped jsdom 30.1.2 and Undici 8.12.1
 
 - License: MIT (each package includes its own license text)
 - Sources: https://github.com/jsdom/jsdom and https://github.com/nodejs/undici
-- npm: https://www.npmjs.com/package/jsdom/v/30.1.2 and https://www.npmjs.com/package/undici/v/8.11.2
+- npm: https://www.npmjs.com/package/jsdom/v/30.1.2 and https://www.npmjs.com/package/undici/v/8.12.1
 
 Paperclip's server resolves jsdom 30.1.2; jsdom declares `undici ^8.11.2` and
-currently resolves Undici 8.11.2. HolyCode checks that owner graph and exercises
+currently resolves Undici 8.12.1. HolyCode checks that owner graph and exercises
 jsdom's loopback URL fetch. It no longer replaces Undici or changes an installed
 Connect dependency declaration.
 
@@ -285,7 +285,7 @@ verification.
 - License: MIT
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
-- Version: 0.66.0
+- Version: 0.66.1
 
 Installed from the official upstream Linux release archive after SHA-256
 verification.
@@ -294,7 +294,7 @@ verification.
 
 - License: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
 - Source: https://github.com/numpy/numpy
-- Version: 2.5.3
+- Version: 2.5.4
 
 ## pandas
 
@@ -360,9 +360,9 @@ vendor repairs.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.149.0
+- Version: 4.151.0
 
-Wrangler owns Miniflare 5.20261006.1-alpha, workerd 1.20261006.1, and esbuild
+Wrangler owns Miniflare 5.20261012.0-beta, workerd 1.20261012.1, and esbuild
 0.28.2. The
 installed package manifests declare MIT for Miniflare and Apache-2.0 for
 workerd. Their selected npm package roots do not include license files, so this
@@ -373,7 +373,7 @@ images must verify the installed package roots and separate workerd payloads.
 
 - License: MIT
 - Source: https://github.com/pnpm/pnpm
-- Version: 12.10.1
+- Version: 12.11.2
 
 The selected package manifest declares MIT. Its npm package has no license file
 at the package root, so this notice does not claim one is bundled.
@@ -382,7 +382,7 @@ at the package root, so this notice does not claim one is bundled.
 
 - License: MIT
 - Source: https://github.com/prettier/prettier
-- Version: 3.9.9
+- Version: 3.9.10
 
 ## tsx
 
@@ -473,7 +473,7 @@ LGPL-3.0-or-later.
 - License: MIT
 - Copyright: Junegunn Choi
 - Source: https://github.com/junegunn/fzf
-- Version: 0.74.4
+- Version: 0.74.5
 
 Installed from the official upstream Linux release archive after SHA-256
 verification.
