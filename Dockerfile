@@ -4,13 +4,13 @@
 # ==============================================================================
 
 # renovate: datasource=github-releases depName=cli/cli
-ARG GITHUB_CLI_VERSION=2.102.0
+ARG GITHUB_CLI_VERSION=2.103.0
 # renovate: datasource=github-releases depName=junegunn/fzf
 ARG FZF_VERSION=0.74.5
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.66.1
+ARG LAZYGIT_VERSION=0.66.2
 
-FROM node:24.22.0-trixie-slim@sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315
+FROM node:24.22.1-trixie-slim@sha256:43b9ba1142b8dcf33fa8f922ca1be85714adc444e0586c7cf7726daaeabc1bea
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -23,35 +23,29 @@ ARG DELTA_VERSION=0.20.1
 # renovate: datasource=github-releases depName=eza-community/eza
 ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
-ARG OPENCODE_VERSION=1.19.0
+ARG OPENCODE_VERSION=1.19.3
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.300
+ARG CLAUDE_CODE_VERSION=2.1.307
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@cursor/sdk
-ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.37
+ARG PAPERCLIP_CURSOR_SDK_VERSION=1.0.40
 # renovate: datasource=npm depName=jsdom
-ARG PAPERCLIP_JSDOM_VERSION=30.1.2
+ARG PAPERCLIP_JSDOM_VERSION=30.1.3
 # renovate: datasource=npm depName=@fission-ai/openspec
-ARG OPENSPEC_VERSION=1.14.2
+ARG OPENSPEC_VERSION=1.14.3
 # renovate: datasource=npm depName=undici
-ARG PAPERCLIP_UNDICI_VERSION=8.12.1
+ARG PAPERCLIP_UNDICI_VERSION=8.12.3
 # renovate: datasource=npm depName=opencode-claude-auth
 ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.1
 # renovate: datasource=npm depName=typescript
 ARG TYPESCRIPT_VERSION=6.0.3
 # renovate: datasource=npm depName=npm
-ARG NPM_VERSION=12.2.0
-# renovate: datasource=npm depName=brace-expansion
-ARG NPM_BRACE_EXPANSION_VERSION=5.0.12
-# renovate: datasource=npm depName=tar
-ARG NPM_TAR_VERSION=7.5.22
-# renovate: datasource=npm depName=ip-address
-ARG NPM_IP_ADDRESS_VERSION=10.7.2
+ARG NPM_VERSION=12.2.1
 # renovate: datasource=npm depName=node-gyp
 ARG NPM_NODE_GYP_VERSION=13.0.2
 # renovate: datasource=npm depName=undici
-ARG NPM_NODE_GYP_UNDICI_VERSION=8.11.2
+ARG NPM_NODE_GYP_UNDICI_VERSION=8.12.3
 # renovate: datasource=npm depName=js-yaml
 ARG PM2_JS_YAML_VERSION=4.3.2
 # renovate: datasource=npm depName=basic-ftp
@@ -59,41 +53,37 @@ ARG PM2_BASIC_FTP_VERSION=6.2.1
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.15
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.11.2
+ARG PNPM_VERSION=12.15.0
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.3.4
+ARG VITE_VERSION=8.3.5
 # renovate: datasource=npm depName=prettier
 ARG PRETTIER_VERSION=3.9.10
 # renovate: datasource=npm depName=prisma
-ARG PRISMA_VERSION=7.10.0
+ARG PRISMA_VERSION=7.10.1
 # renovate: datasource=npm depName=deepmerge-ts
 ARG PRISMA_DEEPMERGE_VERSION=8.0.2
 # renovate: datasource=npm depName=mysql2
-ARG PRISMA_MYSQL2_VERSION=3.24.5
-# renovate: datasource=npm depName=@types/node
-ARG PRISMA_TYPES_NODE_VERSION=20.19.43
-# renovate: datasource=npm depName=undici-types
-ARG PRISMA_UNDICI_TYPES_VERSION=6.21.0
+ARG PRISMA_MYSQL2_VERSION=3.24.4
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.5.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.151.0
+ARG WRANGLER_VERSION=4.151.3
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20261012.0-beta
+ARG WRANGLER_MINIFLARE_VERSION=5.20261019.1-beta
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.5
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
 ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.4
 # renovate: datasource=npm depName=eslint
-ARG ESLINT_VERSION=10.12.0
+ARG ESLINT_VERSION=10.13.0
 # renovate: datasource=pypi depName=numpy
 ARG NUMPY_VERSION=2.5.4
 # renovate: datasource=pypi depName=pip
-ARG PIP_VERSION=26.2.1
+ARG PIP_VERSION=26.2.2
 # renovate: datasource=pypi depName=msgpack
 ARG PIP_VENDOR_MSGPACK_VERSION=1.2.2
 ARG PIP_VENDOR_MSGPACK_SHA256=9eb0b0e602064527a045ea28c4f174ed69383587e29cebe28947e3b84106eb2a
-# pip 26.2.1 vendors pkg_resources from vulnerable setuptools 70.3.0.
+# pip 26.2.2 vendors pkg_resources from vulnerable setuptools 70.3.0.
 ARG PIP_VENDOR_PKG_RESOURCES_VERSION=78.1.1
 ARG PIP_VENDOR_PKG_RESOURCES_SHA256=fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
 # renovate: datasource=pypi depName=urllib3
@@ -101,9 +91,9 @@ ARG PIP_VENDOR_URLLIB3_VERSION=2.8.0
 ARG PIP_VENDOR_URLLIB3_WHEEL_SHA256=0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3
 ARG PIP_VENDOR_URLLIB3_ARCHIVE_SHA256=c64eb33b95a5cbd0afd35cadfb3778da6e7c979efa634312f39a392ca3cb11f2
 # renovate: datasource=pypi depName=setuptools
-ARG SETUPTOOLS_VERSION=84.0.0
-ARG RELEASE_APT_REFRESH=2026-10-14
-ARG RELEASE_VERSION=v1.2.7
+ARG SETUPTOOLS_VERSION=84.2.1
+ARG RELEASE_APT_REFRESH=2026-10-25
+ARG RELEASE_VERSION=v1.2.8
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -118,9 +108,6 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.openspec=${OPENSPEC_VERSION} \
     io.holycode.version.claude-auth-plugin=${CLAUDE_AUTH_PLUGIN_VERSION} \
     io.holycode.version.npm=${NPM_VERSION} \
-    io.holycode.version.npm-brace-expansion=${NPM_BRACE_EXPANSION_VERSION} \
-    io.holycode.version.npm-tar=${NPM_TAR_VERSION} \
-    io.holycode.version.npm-ip-address=${NPM_IP_ADDRESS_VERSION} \
     io.holycode.version.npm-node-gyp=${NPM_NODE_GYP_VERSION} \
     io.holycode.version.npm-node-gyp-undici=${NPM_NODE_GYP_UNDICI_VERSION} \
     io.holycode.version.pm2-js-yaml=${PM2_JS_YAML_VERSION} \
@@ -136,8 +123,6 @@ LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
     io.holycode.version.prisma=${PRISMA_VERSION} \
     io.holycode.version.prisma-deepmerge-ts=${PRISMA_DEEPMERGE_VERSION} \
     io.holycode.version.prisma-mysql2=${PRISMA_MYSQL2_VERSION} \
-    io.holycode.version.prisma-types-node=${PRISMA_TYPES_NODE_VERSION} \
-    io.holycode.version.prisma-undici-types=${PRISMA_UNDICI_TYPES_VERSION} \
     io.holycode.version.lighthouse=${LIGHTHOUSE_VERSION} \
     io.holycode.version.s6-overlay=${S6_OVERLAY_VERSION} \
     io.holycode.version.fzf=${FZF_VERSION} \
@@ -243,8 +228,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ---------- GitHub CLI ----------
 RUN GH_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "7862c86c72f43df3a2d93ddde6f473285b4e2af61b494849846827e513ef6484";; \
-      *) echo "bb766f710eef8ede859c18578c72c327597cd4c8a85b06001b1f3843c6019386";; \
+      arm64) echo "7f322df34e624d14f5ec0c4acb121fd6dfa14392fdbbd1066aa8e0a05ac3721e";; \
+      *) echo "fdd768eb70f6409f80fcfa9f3a1c0adf0fc98d827ab3ce0bed2ac22762c5d786";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/gh.tar.gz \
       "https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_${TARGETARCH}.tar.gz" && \
@@ -257,8 +242,8 @@ RUN GH_SHA256=$(case "$TARGETARCH" in \
 # ---------- lazygit ----------
 RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
     LAZYGIT_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "add91327af13343f37d2d610512d0982ef5c75da5cc962b5159748adc8a11a86";; \
-      *) echo "7b3f30c2c06a42cf575280f907e58d7ea08411408b6b62bc926bc91cbc6c3f46";; \
+      arm64) echo "79a3161eeb642f0473e23db6341f7baabd4a5933e921a9c1167c5d5c765c41a4";; \
+      *) echo "158efc9ddfa1241fab5fb3526bb442c8dc6c4b1904d73213b9e4e93e03c52034";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/lazygit.tar.gz \
       "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_${LAZYGIT_ARCH}.tar.gz" && \
@@ -314,7 +299,7 @@ COPY config/python-requirements.lock /usr/local/share/holycode/python-requiremen
 COPY config/python-seed-requirements.lock /usr/local/share/holycode/python-seed-requirements.lock
 COPY patches/pip-vendored-pkg-resources-78.1.1.patch /tmp/pip-vendored-pkg-resources.patch
 COPY patches/pip-vendored-urllib3-2.8.0.tar.gz /tmp/pip-vendored-urllib3-2.8.0.tar.gz
-COPY patches/pip-vendored-bom-26.2.1-urllib3-2.8.0.cdx.json /tmp/pip-vendored-bom.cdx.json
+COPY patches/pip-vendored-bom-26.2.2-urllib3-2.8.0.cdx.json /tmp/pip-vendored-bom.cdx.json
 COPY scripts/verify_pip_vendor_record.py /tmp/verify-pip-vendor-record.py
 COPY scripts/test_pip_vendor_urllib3.py /tmp/test_pip_vendor_urllib3.py
 RUN python3 -m venv /tmp/holycode-pip-bootstrap && \
@@ -347,7 +332,7 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
       "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-${PIP_VENDOR_URLLIB3_VERSION}-py3-none-any.whl" && \
     echo "${PIP_VENDOR_URLLIB3_WHEEL_SHA256}  /tmp/urllib3.whl" | sha256sum -c - && \
     echo "${PIP_VENDOR_URLLIB3_ARCHIVE_SHA256}  /tmp/pip-vendored-urllib3-2.8.0.tar.gz" | sha256sum -c - && \
-    echo "4e645472781870c87c896be33c1c3e0f93b2f8efeaf8ef780f629cad7d960e75  /tmp/pip-vendored-bom.cdx.json" | sha256sum -c - && \
+    echo "525f0356e82a9e0c648dae6c762a230aa4ae0b429730799096ac47a1bac20ee3  /tmp/pip-vendored-bom.cdx.json" | sha256sum -c - && \
     mkdir -p /tmp/msgpack /tmp/setuptools && \
     tar -xzf /tmp/msgpack.tar.gz -C /tmp/msgpack --strip-components=1 && \
     tar -xzf /tmp/setuptools.tar.gz -C /tmp/setuptools --strip-components=1 && \
@@ -380,7 +365,7 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
     python3 -m pip --version | grep -F "pip ${PIP_VERSION}" && \
     python3 -c 'import pip._vendor.msgpack as msgpack; import pip._vendor.urllib3 as urllib3; assert msgpack.__version__ == "1.2.2"; assert urllib3.__version__ == "2.8.0"; assert msgpack.unpackb(msgpack.packb({"holycode": True})) == {"holycode": True}; import pip._vendor.pkg_resources' && \
     _PIP_USE_IMPORTLIB_METADATA=0 python3 -m pip list --format=json >/dev/null && \
-    python3 -c 'import setuptools; assert setuptools.__version__ == "84.0.0"' && \
+    python3 -c 'import setuptools; assert setuptools.__version__ == "84.2.1"' && \
     python3 -m pip check && \
     python3 /tmp/test_pip_vendor_urllib3.py && \
     rm /tmp/test_pip_vendor_urllib3.py
@@ -389,62 +374,23 @@ RUN rm -f /usr/local/bin/dotenv
 
 RUN npm install -g --ignore-scripts "npm@${NPM_VERSION}" && \
     test "$(npm --version)" = "${NPM_VERSION}" && \
-    rm -rf /root/.npm
-RUN test "$(npm view "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}" dist.integrity)" = \
-      "sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==" && \
-    BRACE_TARBALL=$(npm pack --silent --pack-destination /tmp \
-      "brace-expansion@${NPM_BRACE_EXPANSION_VERSION}") && \
-    BRACE_DIR=/usr/local/lib/node_modules/npm/node_modules/brace-expansion && \
-    rm -rf "$BRACE_DIR" && mkdir "$BRACE_DIR" && \
-    tar -xzf "/tmp/${BRACE_TARBALL}" -C "$BRACE_DIR" --strip-components=1 && \
-    rm "/tmp/${BRACE_TARBALL}" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json").version')" = \
-      "${NPM_BRACE_EXPANSION_VERSION}" && \
-    (cd /usr/local/lib/node_modules/npm && npm ls brace-expansion --all >/dev/null) && \
-    rm -rf /root/.npm
-RUN test "$(npm view "tar@${NPM_TAR_VERSION}" dist.integrity)" = \
-      "sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA==" && \
-    NPM_TAR_TARBALL=$(npm pack --silent --pack-destination /tmp "tar@${NPM_TAR_VERSION}") && \
-    NPM_TAR_DIR=/usr/local/lib/node_modules/npm/node_modules/tar && \
-    rm -rf "$NPM_TAR_DIR" && mkdir "$NPM_TAR_DIR" && \
-    tar -xzf "/tmp/${NPM_TAR_TARBALL}" -C "$NPM_TAR_DIR" --strip-components=1 && \
-    rm "/tmp/${NPM_TAR_TARBALL}" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/tar/package.json").version')" = \
-      "${NPM_TAR_VERSION}" && \
-    (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null) && \
-    rm -rf /root/.npm
-# npm 12.2.0 resolves ip-address through socks. Keep the compatible
-# socks range and replace that nested copy with the fixed 10.7.2 release.
-RUN test "$(npm view "ip-address@${NPM_IP_ADDRESS_VERSION}" dist.integrity)" = \
-      "sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==" && \
-    NPM_IP_ADDRESS_TARBALL=$(npm pack --silent --pack-destination /tmp \
-      "ip-address@${NPM_IP_ADDRESS_VERSION}") && \
-    NPM_IP_ADDRESS_DIR=/usr/local/lib/node_modules/npm/node_modules/ip-address && \
-    NPM_SOCKS_PACKAGE=/usr/local/lib/node_modules/npm/node_modules/socks/package.json && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.version!=="2.8.9" || pkg.dependencies["ip-address"]!=="^10.1.1") process.exit(1)' \
-      "$NPM_SOCKS_PACKAGE" && \
-    rm -rf "$NPM_IP_ADDRESS_DIR" && mkdir "$NPM_IP_ADDRESS_DIR" && \
-    tar -xzf "/tmp/${NPM_IP_ADDRESS_TARBALL}" -C "$NPM_IP_ADDRESS_DIR" --strip-components=1 && \
-    rm "/tmp/${NPM_IP_ADDRESS_TARBALL}" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/ip-address/package.json").version')" = \
-      "${NPM_IP_ADDRESS_VERSION}" && \
-    (cd /usr/local/lib/node_modules/npm && npm ls ip-address --all >/dev/null) && \
     test "$(npm prefix -g)" = "/usr/local" && \
+    npm ls -g brace-expansion tar ip-address --all >/dev/null && \
     rm -rf /root/.npm
-# npm 12.2.0 bundles node-gyp 13.0.0 with Undici 6.28.0. Its declared
-# compatible node-gyp 13.0.2 release consumes the patched Undici 8 line.
+# npm 12.2.1 owns the fixed brace-expansion, tar, and ip-address dependency graph.
+# Keep the existing owner-scoped node-gyp/Undici compatibility patch and test its behavior.
 COPY scripts/test_node_gyp_download.mjs /tmp/test_node_gyp_download.mjs
 COPY scripts/test_node_gyp_native.mjs /tmp/test_node_gyp_native.mjs
 RUN NPM_NODE_GYP_INTEGRITY="sha512-SXTvw3PxznpowYhJSOD9mVQBgDaCTWXffX+wQZsQ7PbcTV86TsXCUcSZhHnskFQvrvn/OdSzJPMsptT2pIj9ww==" && \
-    NPM_NODE_GYP_UNDICI_INTEGRITY="sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==" && \
+    NPM_NODE_GYP_UNDICI_INTEGRITY="sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==" && \
     test "$(npm view "node-gyp@${NPM_NODE_GYP_VERSION}" dist.integrity)" = "$NPM_NODE_GYP_INTEGRITY" && \
     test "$(npm view "undici@${NPM_NODE_GYP_UNDICI_VERSION}" dist.integrity)" = "$NPM_NODE_GYP_UNDICI_INTEGRITY" && \
     NPM_PACKAGE=/usr/local/lib/node_modules/npm/package.json && \
     NPM_NODE_GYP_DIR=/usr/local/lib/node_modules/npm/node_modules/node-gyp && \
     NPM_NODE_GYP_UNDICI_DIR=/usr/local/lib/node_modules/npm/node_modules/undici && \
-    node -e 'const npm=require(process.argv[1]); const gyp=require(process.argv[2]); if(npm.version!=="12.2.0" || npm.dependencies["node-gyp"]!=="^13.0.0" || gyp.version!=="13.0.0" || gyp.dependencies.undici!=="^6.25.0") process.exit(1)' \
+    node -e 'const npm=require(process.argv[1]); const gyp=require(process.argv[2]); if(npm.version!=="12.2.1" || npm.dependencies["node-gyp"]!=="^13.0.0" || gyp.version!=="13.0.0" || gyp.dependencies.undici!=="^6.25.0") process.exit(1)' \
       "$NPM_PACKAGE" "$NPM_NODE_GYP_DIR/package.json" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/undici/package.json").version')" = "6.28.0" && \
+    test "$(node -p 'require("/usr/local/lib/node_modules/npm/node_modules/undici/package.json").version')" = "6.29.0" && \
     NPM_NODE_GYP_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp "node-gyp@${NPM_NODE_GYP_VERSION}") && \
     NPM_NODE_GYP_UNDICI_TARBALL=$(npm pack --silent --ignore-scripts --pack-destination /tmp "undici@${NPM_NODE_GYP_UNDICI_VERSION}") && \
     node -e 'const fs=require("fs"); const crypto=require("crypto"); for(let i=1;i<process.argv.length;i+=2) { const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[i])).digest("base64")}`; if(actual!==process.argv[i+1]) process.exit(1) }' \
@@ -500,74 +446,13 @@ RUN npm i -g --ignore-scripts \
     drizzle-kit --help >/dev/null && \
     rm -rf /root/.npm
 
-# Prisma 7.10.0 pins deepmerge-ts 7.1.5 and mysql2 3.15.3. Replace only those
-# nested copies and materialize mysql2's required declaration peer from verified payloads.
-RUN PRISMA_TYPES_NODE_INTEGRITY="sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==" && \
-    PRISMA_UNDICI_TYPES_INTEGRITY="sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==" && \
-    test "$(npm view "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}" dist.integrity)" = \
-      "sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==" && \
-    test "$(npm view "mysql2@${PRISMA_MYSQL2_VERSION}" dist.integrity)" = \
-      "sha512-X6Ujsr2QSkkLpkQGjxzpKRAPn9nu4axpR63ntBzquFVEvPOArgbUQ1sJjFKI7hnaYtiVZxa17Z7q18KSubW0IQ==" && \
-    test "$(npm view "@types/node@${PRISMA_TYPES_NODE_VERSION}" dist.integrity)" = "$PRISMA_TYPES_NODE_INTEGRITY" && \
-    test "$(npm view "undici-types@${PRISMA_UNDICI_TYPES_VERSION}" dist.integrity)" = "$PRISMA_UNDICI_TYPES_INTEGRITY" && \
-    test "$(npm view "@prisma/config@${PRISMA_VERSION}" dependencies.deepmerge-ts)" = "7.1.5" && \
-    test "$(npm view "prisma@${PRISMA_VERSION}" dependencies.mysql2)" = "3.15.3" && \
-    PRISMA_DEEPMERGE_TARBALL=$(npm pack --silent --pack-destination /tmp \
-      "deepmerge-ts@${PRISMA_DEEPMERGE_VERSION}") && \
-    PRISMA_MYSQL2_TARBALL=$(npm pack --silent --pack-destination /tmp \
-      "mysql2@${PRISMA_MYSQL2_VERSION}") && \
-    PRISMA_TYPES_NODE_TARBALL=/tmp/prisma-types-node.tgz && \
-    PRISMA_UNDICI_TYPES_TARBALL=/tmp/prisma-undici-types.tgz && \
-    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL \
-      -o "$PRISMA_TYPES_NODE_TARBALL" \
-      "https://registry.npmjs.org/@types/node/-/node-${PRISMA_TYPES_NODE_VERSION}.tgz" && \
-    curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL \
-      -o "$PRISMA_UNDICI_TYPES_TARBALL" \
-      "https://registry.npmjs.org/undici-types/-/undici-types-${PRISMA_UNDICI_TYPES_VERSION}.tgz" && \
-    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
-      "$PRISMA_TYPES_NODE_TARBALL" "$PRISMA_TYPES_NODE_INTEGRITY" && \
-    node -e 'const fs=require("fs"); const crypto=require("crypto"); const actual=`sha512-${crypto.createHash("sha512").update(fs.readFileSync(process.argv[1])).digest("base64")}`; if(actual!==process.argv[2]) process.exit(1)' \
-      "$PRISMA_UNDICI_TYPES_TARBALL" "$PRISMA_UNDICI_TYPES_INTEGRITY" && \
-    PRISMA_DEEPMERGE_DIR=/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts && \
-    PRISMA_MYSQL2_DIR=/usr/local/lib/node_modules/prisma/node_modules/mysql2 && \
-    PRISMA_TYPES_NODE_DIR=/usr/local/lib/node_modules/prisma/node_modules/@types/node && \
-    PRISMA_UNDICI_TYPES_DIR=/usr/local/lib/node_modules/prisma/node_modules/undici-types && \
-    PRISMA_PACKAGE=/usr/local/lib/node_modules/prisma/package.json && \
-    PRISMA_CONFIG_PACKAGE=/usr/local/lib/node_modules/prisma/node_modules/@prisma/config/package.json && \
-    test "$(node -p 'require(process.argv[1]).version' "$PRISMA_PACKAGE")" = "${PRISMA_VERSION}" && \
-    test ! -e "$PRISMA_TYPES_NODE_DIR" && \
-    test ! -e "$PRISMA_UNDICI_TYPES_DIR" && \
-    rm -rf "$PRISMA_DEEPMERGE_DIR" && mkdir "$PRISMA_DEEPMERGE_DIR" && \
-    tar -xzf "/tmp/${PRISMA_DEEPMERGE_TARBALL}" -C "$PRISMA_DEEPMERGE_DIR" --strip-components=1 && \
-    rm -rf "$PRISMA_MYSQL2_DIR" && mkdir "$PRISMA_MYSQL2_DIR" && \
-    tar -xzf "/tmp/${PRISMA_MYSQL2_TARBALL}" -C "$PRISMA_MYSQL2_DIR" --strip-components=1 && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.peerDependencies["@types/node"]!==">= 8" || pkg.peerDependenciesMeta?.["@types/node"]!==undefined) process.exit(1)' \
-      "$PRISMA_MYSQL2_DIR/package.json" "${PRISMA_MYSQL2_VERSION}" && \
-    mkdir -p "$PRISMA_TYPES_NODE_DIR" "$PRISMA_UNDICI_TYPES_DIR" && \
-    tar -xzf "$PRISMA_TYPES_NODE_TARBALL" -C "$PRISMA_TYPES_NODE_DIR" --strip-components=1 && \
-    tar -xzf "$PRISMA_UNDICI_TYPES_TARBALL" -C "$PRISMA_UNDICI_TYPES_DIR" --strip-components=1 && \
-    npm install --prefix "$PRISMA_MYSQL2_DIR" --ignore-scripts --package-lock=false --omit=dev && \
-    rm "/tmp/${PRISMA_DEEPMERGE_TARBALL}" "/tmp/${PRISMA_MYSQL2_TARBALL}" \
-      "$PRISMA_TYPES_NODE_TARBALL" "$PRISMA_UNDICI_TYPES_TARBALL" && \
-    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies["deepmerge-ts"]!=="7.1.5") process.exit(1); pkg.dependencies["deepmerge-ts"]=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
-      "$PRISMA_CONFIG_PACKAGE" "${PRISMA_DEEPMERGE_VERSION}" && \
-    node -e 'const fs=require("fs"); const file=process.argv[1]; const version=process.argv[2]; const pkg=JSON.parse(fs.readFileSync(file,"utf8")); if(pkg.dependencies.mysql2!=="3.15.3") process.exit(1); pkg.dependencies.mysql2=version; fs.writeFileSync(file,`${JSON.stringify(pkg,null,2)}\n`)' \
-      "$PRISMA_PACKAGE" "${PRISMA_MYSQL2_VERSION}" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts/package.json").version')" = \
-      "${PRISMA_DEEPMERGE_VERSION}" && \
-    test "$(node -p 'require("/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json").version')" = \
-      "${PRISMA_MYSQL2_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.types!=="index.d.ts" || pkg.main!=="" || pkg.dependencies["undici-types"]!=="~6.21.0") process.exit(1)' \
-      "$PRISMA_TYPES_NODE_DIR/package.json" "${PRISMA_TYPES_NODE_VERSION}" && \
-    test "$(node -p 'require(process.argv[1]).version' "$PRISMA_UNDICI_TYPES_DIR/package.json")" = \
-      "${PRISMA_UNDICI_TYPES_VERSION}" && \
-    test -s "$PRISMA_TYPES_NODE_DIR/index.d.ts" && \
-    test -s "$PRISMA_UNDICI_TYPES_DIR/fetch.d.ts" && \
-    node -e 'const resolved=require.resolve("@types/node/package.json",{paths:[process.argv[1]]}); const pkg=require(resolved); if(pkg.version!==process.argv[2] || resolved!==process.argv[3]) process.exit(1)' \
-      "$PRISMA_MYSQL2_DIR" "${PRISMA_TYPES_NODE_VERSION}" "$PRISMA_TYPES_NODE_DIR/package.json" && \
-    node -e 'const resolved=require.resolve("undici-types/package.json",{paths:[process.argv[1]]}); const pkg=require(resolved); if(pkg.version!==process.argv[2] || resolved!==process.argv[3]) process.exit(1)' \
-      "$PRISMA_TYPES_NODE_DIR" "${PRISMA_UNDICI_TYPES_VERSION}" "$PRISMA_UNDICI_TYPES_DIR/package.json" && \
-    (cd /usr/local/lib/node_modules/prisma && npm ls deepmerge-ts mysql2 @types/node undici-types --all >/dev/null) && \
+# Prisma 7.10.1 owns the current deepmerge-ts and mysql2 versions. Check the
+# resolved owner graph and exercise the database driver without local overlays.
+RUN test "$(npm view "@prisma/config@${PRISMA_VERSION}" dependencies.deepmerge-ts)" = "${PRISMA_DEEPMERGE_VERSION}" && \
+    test "$(npm view "prisma@${PRISMA_VERSION}" dependencies.mysql2)" = "${PRISMA_MYSQL2_VERSION}" && \
+    node -e 'const fs=require("node:fs"); const path=require("node:path"); const root="/usr/local/lib/node_modules/prisma"; const configPath=require.resolve("@prisma/config/package.json",{paths:[root]}); const config=require(configPath); const packageMetadata=(name,base)=>{const entry=require.resolve(name,{paths:[base]}); let directory=path.dirname(entry); while(directory!==path.dirname(directory)){const manifest=path.join(directory,"package.json"); if(fs.existsSync(manifest)){const metadata=JSON.parse(fs.readFileSync(manifest,"utf8")); if(metadata.name===name)return metadata;} directory=path.dirname(directory);} throw Error("Unable to find "+name+" manifest from resolved entry "+entry);}; const deepmerge=packageMetadata("deepmerge-ts",configPath); const prisma=require(root+"/package.json"); const mysql2=packageMetadata("mysql2",root); if(config.dependencies["deepmerge-ts"]!==process.argv[1] || deepmerge.version!==process.argv[1] || prisma.dependencies.mysql2!==process.argv[2] || mysql2.version!==process.argv[2]) process.exit(1)' \
+      "${PRISMA_DEEPMERGE_VERSION}" "${PRISMA_MYSQL2_VERSION}" && \
+    (cd /usr/local/lib/node_modules/prisma && npm ls @prisma/config deepmerge-ts mysql2 --all >/dev/null) && \
     node -e 'const mysql=require("/usr/local/lib/node_modules/prisma/node_modules/mysql2"); if(typeof mysql.createConnection!=="function") process.exit(1)' && \
     prisma --version >/dev/null && \
     rm -rf /root/.npm
@@ -632,29 +517,29 @@ RUN PM2_BASIC_FTP_INTEGRITY="sha512-bK67isD+lKq46AU8vNtjvMaT2ZqAOAmNCbxUHlFBRD4k
     rm "/tmp/${PM2_BASIC_FTP_TARBALL}" /tmp/test_get_uri_ftp.mjs && \
     rm -rf /root/.npm
 
-# Wrangler 4.151.0 owns Miniflare 5.20261012.0-beta and workerd 1.20261012.1;
+# Wrangler 4.151.3 owns Miniflare 5.20261019.1-beta and workerd 1.20261019.1;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261012.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261019.1" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.esbuild)" = "0.28.2" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261012.1" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261019.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261012.1" || pkg.dependencies.esbuild!=="0.28.2") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261019.1" || pkg.dependencies.esbuild!=="0.28.2") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261012.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261019.1") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20261012.1" && \
+      "1.20261019.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \
@@ -721,16 +606,16 @@ RUN npm i -g --ignore-scripts \
 # Paperclip's current Cursor SDK no longer installs Connect's Node transport.
 # The remaining Undici is jsdom's 8.x dependency; guard the resolved owners.
 RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrity)" = \
-      "sha512-MWKMeqtkCOHOOi8uZqI7CYeUtOwwdWke1B4GEllERIGMsoKuxbk++tP/KzOXXxtOD9EUD1z3AQL6os6m3M1gIw==" && \
+      "sha512-IaI59014gXLUTiWnVS2LlagOdSgWfMma0Sl4MwzsOh79UQf+CrKj+jj/AeX4vVPTlJ81X/Ca3dGytwPf/hWAQA==" && \
     test "$(npm view "jsdom@${PAPERCLIP_JSDOM_VERSION}" dist.integrity)" = \
-      "sha512-0FFE/jE1rppmVfUrJUgxqXjcwolZYIGtAgj1pTussMhNZxIxi7W/PvfWaMNroGi2B36X1IKHbexpZ9DhkoOPiQ==" && \
+      "sha512-hQMUPvRgN7KxsfIytDQji7bimuJeRQa6Qo5+iuiZQk5CafeRxLIA10/cG5YCBFNpD9RO3oqIiN4CO1Y44kxqXg==" && \
     test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
-      "sha512-usz3OVQBeh1LxNn0DzU0voLXMgn5CU/WUdpBsY6Ti5afNao+vTkmn4H/NxoXolc10cOqe2+YIG0Hspq2rsl64w==" && \
+      "sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==" && \
     CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
     test ! -e "$CONNECT_NODE_PACKAGE" && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0 && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1 && \
-    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); const fail=(name,expected,actual)=>{console.error(`${name}: expected ${expected}, got ${actual}`);process.exit(1)}; if(sdk.version!==process.argv[1]) fail("Paperclip Cursor SDK version mismatch",process.argv[1],sdk.version); if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1") process.exit(1); if(jsdom.version!==process.argv[2]) fail("Paperclip jsdom version mismatch",process.argv[2],jsdom.version); if(jsdom.dependencies.undici!=="^8.11.2") fail("Paperclip jsdom Undici range mismatch","^8.11.2",jsdom.dependencies.undici); if(undici.version!==process.argv[3]) fail("Paperclip Undici resolved version mismatch",process.argv[3],undici.version)' \
+    node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; const adapter=require(`${root}/@paperclipai/adapter-cursor-cloud/package.json`); const sdk=require(`${root}/@cursor/sdk/package.json`); const server=require(`${root}/@paperclipai/server/package.json`); const jsdom=require(`${root}/jsdom/package.json`); const undici=require(`${root}/undici/package.json`); const fail=(name,expected,actual)=>{console.error(`${name}: expected ${expected}, got ${actual}`);process.exit(1)}; if(sdk.version!==process.argv[1]) fail("Paperclip Cursor SDK version mismatch",process.argv[1],sdk.version); if(adapter.dependencies["@cursor/sdk"]!=="^1.0.28" || sdk.dependencies["@connectrpc/connect-node"]!==undefined || server.dependencies.jsdom!=="^30.0.1") process.exit(1); if(jsdom.version!==process.argv[2]) fail("Paperclip jsdom version mismatch",process.argv[2],jsdom.version); if(jsdom.dependencies.undici!=="^8.12.1") fail("Paperclip jsdom Undici range mismatch","^8.12.1",jsdom.dependencies.undici); if(undici.version!==process.argv[3]) fail("Paperclip Undici resolved version mismatch",process.argv[3],undici.version)' \
       "${PAPERCLIP_CURSOR_SDK_VERSION}" "${PAPERCLIP_JSDOM_VERSION}" "${PAPERCLIP_UNDICI_VERSION}" && \
     node -e 'const root="/usr/local/lib/node_modules/paperclipai/node_modules"; if(require.resolve("undici/package.json",{paths:[`${root}/jsdom`]})!==`${root}/undici/package.json`) process.exit(1)' && \
     (cd /usr/local/lib/node_modules/paperclipai && npm ls @cursor/sdk jsdom undici --omit=dev --all >/dev/null) && \
@@ -803,7 +688,7 @@ RUN mkdir -p /usr/local/share/holycode/python-seed && \
       "packaging==26.3" "wheel==0.48.0" && \
     /tmp/holycode-pip-seed-check/bin/python /tmp/verify_pip_vendor_record.py && \
     /tmp/holycode-pip-seed-check/bin/python /tmp/test_pip_vendor_urllib3.py && \
-    /tmp/holycode-pip-seed-check/bin/python -c 'import pip._vendor.msgpack as m,pip._vendor.urllib3 as u; import pip._vendor.pkg_resources as p; assert m.__version__=="1.2.2" and u.__version__=="2.8.0" and p.get_distribution("pip").version=="26.2.1"' && \
+    /tmp/holycode-pip-seed-check/bin/python -c 'import pip._vendor.msgpack as m,pip._vendor.urllib3 as u; import pip._vendor.pkg_resources as p; assert m.__version__=="1.2.2" and u.__version__=="2.8.0" and p.get_distribution("pip").version=="26.2.2"' && \
     rm -rf /tmp/holycode-pip-seed-check \
       /tmp/rebuild_pip_seed_wheel.py /tmp/verify_pip_vendor_record.py /tmp/test_pip_vendor_urllib3.py
 

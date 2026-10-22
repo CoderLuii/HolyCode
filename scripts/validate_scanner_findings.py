@@ -121,6 +121,17 @@ def validate_scout_report(report):
                     f"Scout runs[{run_index}].results[{result_index}].ruleId "
                     "must be a string"
                 )
+            message = result.get("message", {})
+            if not isinstance(message, dict):
+                return (
+                    f"Scout runs[{run_index}].results[{result_index}].message "
+                    "must be an object"
+                )
+            if "text" in message and not isinstance(message["text"], str):
+                return (
+                    f"Scout runs[{run_index}].results[{result_index}].message.text "
+                    "must be a string"
+                )
         tool = run.get("tool", {})
         if not isinstance(tool, dict):
             return f"Scout runs[{run_index}].tool must be an object"
@@ -198,6 +209,19 @@ def scout_findings(report):
             cve = result.get("ruleId", "")
             rule = rules.get(cve, {})
             purls = rule.get("properties", {}).get("purls") or []
+            result_purls = []
+            for line in result.get("message", {}).get("text", "").splitlines():
+                field, _, value = line.partition(":")
+                if field.strip() == "Package":
+                    result_purls.append(value.strip())
+            if result_purls:
+                purls = (
+                    result_purls
+                    if len(result_purls) == 1 and result_purls[0] in purls
+                    else []
+                )
+            elif len(purls) != 1:
+                purls = []
             if not purls:
                 findings.append(
                     {

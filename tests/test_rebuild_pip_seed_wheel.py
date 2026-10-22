@@ -12,16 +12,25 @@ from scripts import rebuild_pip_seed_wheel
 
 
 class RebuildPipSeedWheelTests(unittest.TestCase):
+    def test_selected_official_seed_identity(self):
+        self.assertEqual(rebuild_pip_seed_wheel.INFO_NAME, "pip-26.2.2.dist-info")
+        self.assertEqual(
+            rebuild_pip_seed_wheel.PIP_WHEEL_SHA256,
+            "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70",
+        )
+
     def test_reproducible_repaired_wheel_keeps_unrelated_entries(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             site = root / "site"
-            info = "pip-26.2.1.dist-info"
+            info = "pip-26.2.2.dist-info"
             original = {
                 "pip/__init__.py": b"unchanged pip entrypoint\n",
                 f"{info}/entry_points.txt": b"[console_scripts]\npip=pip:main\n",
                 "pip/_vendor/vendor.txt": b"    urllib3==2.7.0\n",
                 "pip/_vendor/bom.cdx.json": b"{}\n",
+                "pip/_vendor/certifi/__init__.py": b'__version__ = "2026.10.19"\n',
+                "pip/_vendor/certifi/cacert.pem": b"current upstream certificates\n",
             }
             for name in rebuild_pip_seed_wheel.VENDORS:
                 package = f"pip/_vendor/{name}"
@@ -45,7 +54,7 @@ class RebuildPipSeedWheelTests(unittest.TestCase):
                 writer.writerow((name, f"sha256={digest.decode()}", len(data)))
             writer.writerow((f"{info}/RECORD", "", ""))
             original[f"{info}/RECORD"] = record.getvalue().encode()
-            source = root / "pip-26.2.1-py3-none-any.whl"
+            source = root / "pip-26.2.2-py3-none-any.whl"
             with zipfile.ZipFile(source, "w") as archive:
                 for name, data in original.items():
                     archive.writestr(name, data)
@@ -59,6 +68,8 @@ class RebuildPipSeedWheelTests(unittest.TestCase):
                 self.assertEqual(archive.read("pip/__init__.py"), original["pip/__init__.py"])
                 self.assertEqual(archive.read(f"{info}/entry_points.txt"),
                                  original[f"{info}/entry_points.txt"])
+                for name in ("pip/_vendor/certifi/__init__.py", "pip/_vendor/certifi/cacert.pem"):
+                    self.assertEqual(archive.read(name), original[name])
                 self.assertEqual(archive.read("pip/_vendor/urllib3/__init__.py"),
                                  b"urllib3 repaired\n")
                 rows = csv.reader(io.StringIO(archive.read(f"{info}/RECORD").decode()))

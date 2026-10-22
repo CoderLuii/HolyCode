@@ -14,8 +14,8 @@ else:
     from verify_pip_vendor_record import VENDORS, refresh_record, verify_record
 
 
-PIP_WHEEL_SHA256 = "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e"
-INFO_NAME = "pip-26.2.1.dist-info"
+PIP_WHEEL_SHA256 = "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70"
+INFO_NAME = "pip-26.2.2.dist-info"
 
 
 def rebuild(source: Path, installed_site: Path, output: Path) -> None:

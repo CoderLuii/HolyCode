@@ -15,12 +15,12 @@ const nodeGypPackage = require(join(nodeGypRoot, "package.json"));
 const undiciPackagePath = require.resolve("undici/package.json", { paths: [nodeGypRoot] });
 const undiciPackage = require(undiciPackagePath);
 
-assert.equal(npmPackage.version, "12.2.0");
+assert.equal(npmPackage.version, "12.2.1");
 assert.equal(npmPackage.dependencies["node-gyp"], "^13.0.0");
 assert.equal(nodeGypPackage.version, "13.0.2");
 assert.equal(nodeGypPackage.dependencies.undici, "^8.4.1");
 assert.equal(undiciPackagePath, join(undiciRoot, "package.json"));
-assert.equal(undiciPackage.version, "8.11.2");
+assert.equal(undiciPackage.version, "8.12.3");
 await access("/usr/local/include/node/node_api.h", constants.R_OK);
 await access("/usr/local/include/node/common.gypi", constants.R_OK);
 await access("/usr/bin/g++", constants.X_OK);

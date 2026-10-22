@@ -17,9 +17,6 @@ expected_paperclip_undici="$(image_label io.holycode.version.paperclip-undici)"
 expected_openspec="$(image_label io.holycode.version.openspec)"
 expected_claude_auth="$(image_label io.holycode.version.claude-auth-plugin)"
 expected_npm="$(image_label io.holycode.version.npm)"
-expected_npm_brace_expansion="$(image_label io.holycode.version.npm-brace-expansion)"
-expected_npm_tar="$(image_label io.holycode.version.npm-tar)"
-expected_npm_ip_address="$(image_label io.holycode.version.npm-ip-address)"
 expected_npm_node_gyp="$(image_label io.holycode.version.npm-node-gyp)"
 expected_npm_node_gyp_undici="$(image_label io.holycode.version.npm-node-gyp-undici)"
 expected_pm2_js_yaml="$(image_label io.holycode.version.pm2-js-yaml)"
@@ -40,8 +37,6 @@ expected_prettier="$(image_label io.holycode.version.prettier)"
 expected_prisma="$(image_label io.holycode.version.prisma)"
 expected_prisma_deepmerge="$(image_label io.holycode.version.prisma-deepmerge-ts)"
 expected_prisma_mysql2="$(image_label io.holycode.version.prisma-mysql2)"
-expected_prisma_types_node="$(image_label io.holycode.version.prisma-types-node)"
-expected_prisma_undici_types="$(image_label io.holycode.version.prisma-undici-types)"
 expected_lighthouse="$(image_label io.holycode.version.lighthouse)"
 expected_s6="$(image_label io.holycode.version.s6-overlay)"
 expected_fzf="$(image_label io.holycode.version.fzf)"
@@ -73,9 +68,6 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   -e EXPECTED_OPENSPEC="$expected_openspec" \
   -e EXPECTED_CLAUDE_AUTH="$expected_claude_auth" \
   -e EXPECTED_NPM="$expected_npm" \
-  -e EXPECTED_NPM_BRACE_EXPANSION="$expected_npm_brace_expansion" \
-  -e EXPECTED_NPM_TAR="$expected_npm_tar" \
-  -e EXPECTED_NPM_IP_ADDRESS="$expected_npm_ip_address" \
   -e EXPECTED_NPM_NODE_GYP="$expected_npm_node_gyp" \
   -e EXPECTED_NPM_NODE_GYP_UNDICI="$expected_npm_node_gyp_undici" \
   -e EXPECTED_PM2_JS_YAML="$expected_pm2_js_yaml" \
@@ -96,8 +88,6 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   -e EXPECTED_PRISMA="$expected_prisma" \
   -e EXPECTED_PRISMA_DEEPMERGE="$expected_prisma_deepmerge" \
   -e EXPECTED_PRISMA_MYSQL2="$expected_prisma_mysql2" \
-  -e EXPECTED_PRISMA_TYPES_NODE="$expected_prisma_types_node" \
-  -e EXPECTED_PRISMA_UNDICI_TYPES="$expected_prisma_undici_types" \
   -e EXPECTED_LIGHTHOUSE="$expected_lighthouse" \
   -e EXPECTED_S6="$expected_s6" \
   -e EXPECTED_FZF="$expected_fzf" \
@@ -113,13 +103,9 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
 
   node --version | grep -E "^v[0-9]+\\."
   npm --version | grep -Fx "$EXPECTED_NPM"
-  node -e "console.log(require(\"/usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json\").version)" | grep -Fx "$EXPECTED_NPM_BRACE_EXPANSION"
-  (cd /usr/local/lib/node_modules/npm && npm ls brace-expansion --all >/dev/null)
-  node -e "console.log(require(\"/usr/local/lib/node_modules/npm/node_modules/tar/package.json\").version)" | grep -Fx "$EXPECTED_NPM_TAR"
-  (cd /usr/local/lib/node_modules/npm && npm ls tar --all >/dev/null)
-  node -e "console.log(require(\"/usr/local/lib/node_modules/npm/node_modules/ip-address/package.json\").version)" | grep -Fx "$EXPECTED_NPM_IP_ADDRESS"
-  node -e "const pkg=require(\"/usr/local/lib/node_modules/npm/node_modules/socks/package.json\"); if(pkg.version!==\"2.8.9\" || pkg.dependencies[\"ip-address\"]!==\"^10.1.1\") process.exit(1)"
-  (cd /usr/local/lib/node_modules/npm && npm ls ip-address --all >/dev/null)
+  npm ls -g brace-expansion tar ip-address --all >/dev/null
+  node -e "const root=\"/usr/local/lib/node_modules/npm\"; const npm=require(root+\"/package.json\"); const gyp=require(root+\"/node_modules/node-gyp/package.json\"); const undici=require(root+\"/node_modules/undici/package.json\"); if(npm.version!==process.env.EXPECTED_NPM || npm.dependencies[\"node-gyp\"]!==\"^13.0.0\" || gyp.version!==process.env.EXPECTED_NPM_NODE_GYP || gyp.dependencies.undici!==\"^8.4.1\" || undici.version!==process.env.EXPECTED_NPM_NODE_GYP_UNDICI) process.exit(1)"
+  (cd /usr/local/lib/node_modules/npm && npm ls node-gyp undici --all >/dev/null)
   node -e "const npm=require('/usr/local/lib/node_modules/npm/package.json'); const gyp=require('/usr/local/lib/node_modules/npm/node_modules/node-gyp/package.json'); const undici=require('/usr/local/lib/node_modules/npm/node_modules/undici/package.json'); if(npm.dependencies['node-gyp']!=='^13.0.0' || gyp.version!==process.env.EXPECTED_NPM_NODE_GYP || gyp.dependencies.undici!=='^8.4.1' || undici.version!==process.env.EXPECTED_NPM_NODE_GYP_UNDICI) process.exit(1)"
   (cd /usr/local/lib/node_modules/npm && npm ls node-gyp undici --all >/dev/null)
   test "$(npm prefix -g)" = "/usr/local"
@@ -294,7 +280,7 @@ EOF
   rm -rf "$paperclip_catalog_fixture"
   (cd /usr/local/lib/node_modules/paperclipai && npm ls @paperclipai/skills-catalog --all >/dev/null)
   node -e "console.log(require(\"/usr/local/lib/node_modules/paperclipai/package.json\").version)" | grep -Fx "$EXPECTED_PAPERCLIP"
-  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); const fail=(name,expected,actual)=>{console.error(\`\${name}: expected \${expected}, got \${actual}\`);process.exit(1)}; if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK) fail(\"Paperclip Cursor SDK version mismatch\",process.env.EXPECTED_PAPERCLIP_CURSOR_SDK,sdk.version); if(jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM) fail(\"Paperclip jsdom version mismatch\",process.env.EXPECTED_PAPERCLIP_JSDOM,jsdom.version); if(jsdom.dependencies.undici!==\"^8.11.2\") fail(\"Paperclip jsdom Undici range mismatch\",\"^8.11.2\",jsdom.dependencies.undici); if(undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) fail(\"Paperclip Undici resolved version mismatch\",process.env.EXPECTED_PAPERCLIP_UNDICI,undici.version)"
+  node -e "const root=\"/usr/local/lib/node_modules/paperclipai/node_modules\"; const sdk=require(root+\"/@cursor/sdk/package.json\"); const jsdom=require(root+\"/jsdom/package.json\"); const undici=require(root+\"/undici/package.json\"); const fail=(name,expected,actual)=>{console.error(\`\${name}: expected \${expected}, got \${actual}\`);process.exit(1)}; if(sdk.version!==process.env.EXPECTED_PAPERCLIP_CURSOR_SDK) fail(\"Paperclip Cursor SDK version mismatch\",process.env.EXPECTED_PAPERCLIP_CURSOR_SDK,sdk.version); if(jsdom.version!==process.env.EXPECTED_PAPERCLIP_JSDOM) fail(\"Paperclip jsdom version mismatch\",process.env.EXPECTED_PAPERCLIP_JSDOM,jsdom.version); if(jsdom.dependencies.undici!==\"^8.12.1\") fail(\"Paperclip jsdom Undici range mismatch\",\"^8.12.1\",jsdom.dependencies.undici); if(undici.version!==process.env.EXPECTED_PAPERCLIP_UNDICI) fail(\"Paperclip Undici resolved version mismatch\",process.env.EXPECTED_PAPERCLIP_UNDICI,undici.version)"
   test ! -e /usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0
   test "$(find /usr/local/lib/node_modules/paperclipai -path '*/undici/package.json' -type f | wc -l)" -eq 1
@@ -309,7 +295,7 @@ EOF
   grep -Fx "VERSION_ID=\"13\"" /etc/os-release
   python3 --version | grep -E "^Python 3\.13\."
   python3 -m pip --version
-  pip --version | grep -F "pip 26.2.1"
+  pip --version | grep -F "pip 26.2.2"
   test "$(dpkg-query -W -f=\${db:Status-Status} python3-pip 2>/dev/null || true)" != installed
   test "$(dpkg-query -W -f=\${db:Status-Status} python3-setuptools 2>/dev/null || true)" != installed
   python3 -m pip check
@@ -383,21 +369,21 @@ import uvicorn
 assert metadata.version("numpy") == "$EXPECTED_NUMPY"
 assert metadata.version("playwright") == "1.64.0"
 assert metadata.version("requests") == "2.34.2"
-assert metadata.version("Pillow") == "12.3.0"
+assert metadata.version("Pillow") == "13.0.0"
 assert metadata.version("pandas") == "3.0.6"
 assert metadata.version("matplotlib") == "3.11.2"
 assert metadata.version("fonttools") == "4.65.0"
 assert metadata.version("tqdm") == "4.70.1"
-assert metadata.version("fastapi") == "0.143.1"
+assert metadata.version("fastapi") == "0.143.5"
 assert metadata.version("uvicorn") == "0.54.0"
 assert metadata.version("python-dotenv") == "1.2.4"
-assert metadata.version("Markdown") == "3.11.1"
+assert metadata.version("Markdown") == "3.11.2"
 assert metadata.version("opentelemetry-api") == "1.45.1"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
-assert metadata.version("pip") == "26.2.1"
+assert metadata.version("pip") == "26.2.2"
 assert metadata.version("rich") == "15.0.0"
-assert metadata.version("setuptools") == "84.0.0"
+assert metadata.version("setuptools") == "84.2.1"
 try:
     metadata.version("hermes-agent")
 except metadata.PackageNotFoundError:
@@ -492,18 +478,18 @@ PY
   python3 -m venv /tmp/holycode-python-seed
   /tmp/holycode-python-seed/bin/python -m pip install --no-index \
     --find-links /usr/local/share/holycode/python-seed \
-    pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.48.0
+    pip==26.2.2 setuptools==84.2.1 packaging==26.3 wheel==0.48.0
   /tmp/holycode-python-seed/bin/python - <<PY
 import importlib.metadata as metadata
 import pip._vendor.msgpack as msgpack
 import pip._vendor.pkg_resources as pkg_resources
 import pip._vendor.urllib3 as urllib3
-assert metadata.version("pip") == "26.2.1"
-assert metadata.version("setuptools") == "84.0.0"
+assert metadata.version("pip") == "26.2.2"
+assert metadata.version("setuptools") == "84.2.1"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
 assert msgpack.__version__ == "1.2.2"
-assert pkg_resources.get_distribution("pip").version == "26.2.1"
+assert pkg_resources.get_distribution("pip").version == "26.2.2"
 assert urllib3.__version__ == "2.8.0"
 PY
 
@@ -524,6 +510,7 @@ PY
   jq -e ".loggedIn == false and .authMethod == \"none\"" /tmp/claude-auth-status.json >/dev/null
 
   pnpm --version | grep -Fx "$EXPECTED_PNPM"
+  node -e "console.log(require(\"/usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json\").version)" | grep -Fx "6.29.1"
   tsc --version | grep -Fx "Version $EXPECTED_TYPESCRIPT"
   command -v tsserver
   typescript_workspace="$(mktemp -d)"
@@ -612,9 +599,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261012.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261012.1\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261012.1\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261019.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261019.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261019.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -672,18 +659,9 @@ EOF
   rm -rf "$lint_workspace"
   prettier --version | grep -Fx "$EXPECTED_PRETTIER"
   prisma --version | grep -E "^prisma[[:space:]]+:[[:space:]]+$EXPECTED_PRISMA$"
-  node -e "console.log(require(\"/usr/local/lib/node_modules/prisma/node_modules/deepmerge-ts/package.json\").version)" | grep -Fx "$EXPECTED_PRISMA_DEEPMERGE"
-  node -e "const pkg=require(\"/usr/local/lib/node_modules/prisma/node_modules/@prisma/config/package.json\"); if(pkg.dependencies[\"deepmerge-ts\"]!==process.env.EXPECTED_PRISMA_DEEPMERGE) process.exit(1)"
-  (cd /usr/local/lib/node_modules/prisma && npm ls deepmerge-ts --all >/dev/null)
-  node -e "console.log(require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json\").version)" | grep -Fx "$EXPECTED_PRISMA_MYSQL2"
-  node -e "const pkg=require(\"/usr/local/lib/node_modules/prisma/package.json\"); if(pkg.dependencies.mysql2!==process.env.EXPECTED_PRISMA_MYSQL2) process.exit(1)"
-  node -e "const pkg=require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2/package.json\"); if(pkg.peerDependencies[\"@types/node\"]!==\">= 8\" || pkg.peerDependenciesMeta?.[\"@types/node\"]!==undefined) process.exit(1)"
-  node -e "const resolved=require.resolve(\"@types/node/package.json\",{paths:[\"/usr/local/lib/node_modules/prisma/node_modules/mysql2\"]}); const pkg=require(resolved); if(pkg.version!==process.env.EXPECTED_PRISMA_TYPES_NODE || resolved!==\"/usr/local/lib/node_modules/prisma/node_modules/@types/node/package.json\" || pkg.types!==\"index.d.ts\" || pkg.main!==\"\" || pkg.dependencies[\"undici-types\"]!==\"~6.21.0\") process.exit(1)"
-  node -e "const resolved=require.resolve(\"undici-types/package.json\",{paths:[\"/usr/local/lib/node_modules/prisma/node_modules/@types/node\"]}); const pkg=require(resolved); if(pkg.version!==process.env.EXPECTED_PRISMA_UNDICI_TYPES || resolved!==\"/usr/local/lib/node_modules/prisma/node_modules/undici-types/package.json\") process.exit(1)"
-  test -s /usr/local/lib/node_modules/prisma/node_modules/@types/node/index.d.ts
-  test -s /usr/local/lib/node_modules/prisma/node_modules/undici-types/fetch.d.ts
-  (cd /usr/local/lib/node_modules/prisma && npm ls mysql2 @types/node undici-types --all >/dev/null)
-  node -e "const mysql=require(\"/usr/local/lib/node_modules/prisma/node_modules/mysql2\"); if(typeof mysql.createConnection!==\"function\") process.exit(1)"
+  node -e 'const fs=require("node:fs"); const path=require("node:path"); const root="/usr/local/lib/node_modules/prisma"; const configPath=require.resolve("@prisma/config/package.json",{paths:[root]}); const config=require(configPath); const packageMetadata=(name,base)=>{const entry=require.resolve(name,{paths:[base]}); let directory=path.dirname(entry); while(directory!==path.dirname(directory)){const manifest=path.join(directory,"package.json"); if(fs.existsSync(manifest)){const metadata=JSON.parse(fs.readFileSync(manifest,"utf8")); if(metadata.name===name)return metadata;} directory=path.dirname(directory);} throw Error("Unable to find "+name+" manifest from resolved entry "+entry);}; const deepmerge=packageMetadata("deepmerge-ts",configPath); const prisma=require(root+"/package.json"); const mysql2=packageMetadata("mysql2",root); if(config.dependencies["deepmerge-ts"]!==process.env.EXPECTED_PRISMA_DEEPMERGE || deepmerge.version!==process.env.EXPECTED_PRISMA_DEEPMERGE || prisma.dependencies.mysql2!==process.env.EXPECTED_PRISMA_MYSQL2 || mysql2.version!==process.env.EXPECTED_PRISMA_MYSQL2) process.exit(1)'
+  (cd /usr/local/lib/node_modules/prisma && npm ls @prisma/config deepmerge-ts mysql2 --all >/dev/null)
+  node -e "const root=\"/usr/local/lib/node_modules/prisma\"; const mysql=require(require.resolve(\"mysql2\",{paths:[root]})); if(typeof mysql.createConnection!==\"function\") process.exit(1)"
   prisma_workspace="$(mktemp -d)"
   cat > "$prisma_workspace/schema.prisma" <<EOF
 datasource db {
@@ -734,7 +712,7 @@ EOF
   npm ls -g --all --json > "$npm_tree" 2>/tmp/holycode-npm-tree.stderr || npm_tree_status=$?
   test -s "$npm_tree"
   test "$npm_tree_status" -eq 1
-  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const fail=(label,expected,actual)=>{console.error(\`\${label}: expected \${JSON.stringify(expected)}, got \${JSON.stringify(actual)}\`);process.exit(1)}; const expected=[\"invalid: third-party-web@0.30.0 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.3 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\") fail(\"npm tree error code\",\"ELSPROBLEMS\",tree.error?.code??null); const missing=problems.filter(problem=>problem.startsWith(\"missing:\")); if(missing.length) fail(\"npm tree missing problems\",[],missing); const actualProblems=[...problems].sort(); if(JSON.stringify(actualProblems)!==JSON.stringify(expected)) fail(\"npm tree problems\",expected,actualProblems); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); const expectedGraph={lighthouse:\"13.5.0\",trace:\"0.0.65\",thirdPartyRange:\"latest\",legacyRange:\"latest\",thirdParty:\"0.30.0\",legacy:\"0.0.3\"}; const actualGraph={lighthouse:lighthouse?.version??null,trace:trace?.version??null,thirdPartyRange:tracePkg.dependencies[\"third-party-web\"]??null,legacyRange:tracePkg.dependencies[\"legacy-javascript\"]??null,thirdParty:trace?.dependencies?.[\"third-party-web\"]?.version??null,legacy:trace?.dependencies?.[\"legacy-javascript\"]?.version??null}; if(JSON.stringify(actualGraph)!==JSON.stringify(expectedGraph)) fail(\"Lighthouse owner graph\",expectedGraph,actualGraph)" "$npm_tree"
+  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const fail=(label,expected,actual)=>{console.error(\`\${label}: expected \${JSON.stringify(expected)}, got \${JSON.stringify(actual)}\`);process.exit(1)}; const expected=[\"invalid: third-party-web@0.30.0 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.4 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\") fail(\"npm tree error code\",\"ELSPROBLEMS\",tree.error?.code??null); const missing=problems.filter(problem=>problem.startsWith(\"missing:\")); if(missing.length) fail(\"npm tree missing problems\",[],missing); const actualProblems=[...problems].sort(); if(JSON.stringify(actualProblems)!==JSON.stringify(expected)) fail(\"npm tree problems\",expected,actualProblems); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); const expectedGraph={lighthouse:\"13.5.0\",trace:\"0.0.65\",thirdPartyRange:\"latest\",legacyRange:\"latest\",thirdParty:\"0.30.0\",legacy:\"0.0.4\"}; const actualGraph={lighthouse:lighthouse?.version??null,trace:trace?.version??null,thirdPartyRange:tracePkg.dependencies[\"third-party-web\"]??null,legacyRange:tracePkg.dependencies[\"legacy-javascript\"]??null,thirdParty:trace?.dependencies?.[\"third-party-web\"]?.version??null,legacy:trace?.dependencies?.[\"legacy-javascript\"]?.version??null}; if(JSON.stringify(actualGraph)!==JSON.stringify(expectedGraph)) fail(\"Lighthouse owner graph\",expectedGraph,actualGraph)" "$npm_tree"
   rm -f "$npm_tree" /tmp/holycode-npm-tree.stderr
   ! command -v vercel
   ! command -v sharp
@@ -747,7 +725,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261012.1\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261019.1\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))
@@ -864,7 +842,7 @@ docker run --rm --network none --entrypoint sh \
   --mount "type=bind,src=$smoke_script_dir/test_node_gyp_native.mjs,dst=/tmp/test_node_gyp_native.mjs,readonly" \
   --mount "type=bind,src=$smoke_script_dir/test_pip_vendor_urllib3.py,dst=/tmp/test_pip_vendor_urllib3.py,readonly" \
   --mount "type=bind,src=$smoke_script_dir/verify_pip_vendor_record.py,dst=/tmp/verify_pip_vendor_record.py,readonly" \
-  "$image" -lc 'node /tmp/test_get_uri_ftp.mjs all && node /tmp/test_node_gyp_download.mjs && node /tmp/test_node_gyp_native.mjs && python3 /tmp/verify_pip_vendor_record.py && python3 /tmp/test_pip_vendor_urllib3.py && python3 -m venv /tmp/holycode-repaired-seed && /tmp/holycode-repaired-seed/bin/python -m pip install --no-index --no-deps --find-links /usr/local/share/holycode/python-seed pip==26.2.1 setuptools==84.0.0 packaging==26.3 wheel==0.48.0 && /tmp/holycode-repaired-seed/bin/python /tmp/verify_pip_vendor_record.py && /tmp/holycode-repaired-seed/bin/python /tmp/test_pip_vendor_urllib3.py'
+  "$image" -lc 'node /tmp/test_get_uri_ftp.mjs all && node /tmp/test_node_gyp_download.mjs && node /tmp/test_node_gyp_native.mjs && python3 /tmp/verify_pip_vendor_record.py && python3 /tmp/test_pip_vendor_urllib3.py && python3 -m venv /tmp/holycode-repaired-seed && /tmp/holycode-repaired-seed/bin/python -m pip install --no-index --no-deps --find-links /usr/local/share/holycode/python-seed pip==26.2.2 setuptools==84.2.1 packaging==26.3 wheel==0.48.0 && /tmp/holycode-repaired-seed/bin/python /tmp/verify_pip_vendor_record.py && /tmp/holycode-repaired-seed/bin/python /tmp/test_pip_vendor_urllib3.py'
 
 cliproxy_network="holycode-cliproxy-smoke-$$"
 cliproxy_mock="holycode-cliproxy-mock-$$"

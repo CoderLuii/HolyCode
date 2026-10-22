@@ -13,19 +13,19 @@ const gyp = require(`${root}/node_modules/node-gyp/package.json`);
 const undici = require(`${root}/node_modules/undici/package.json`);
 assert.equal(gyp.version, "13.0.2");
 assert.equal(gyp.dependencies.undici, "^8.4.1");
-assert.equal(undici.version, "8.11.2");
+assert.equal(undici.version, "8.12.3");
 
 const directory = await mkdtemp(join(tmpdir(), "holycode-node-gyp-"));
-const headerRoot = join(directory, "node-v24.22.0", "include", "node");
-const tarball = join(directory, "node-v24.22.0-headers.tar.gz");
-const archiveName = "node-v24.22.0-headers.tar.gz";
+const headerRoot = join(directory, "node-v24.22.1", "include", "node");
+const tarball = join(directory, "node-v24.22.1-headers.tar.gz");
+const archiveName = "node-v24.22.1-headers.tar.gz";
 let server;
 
 try {
   await mkdir(headerRoot, { recursive: true });
   await writeFile(join(headerRoot, "node.h"), "#define HOLYCODE_NODE_GYP_SMOKE 1\n");
   const tar = require(`${root}/node_modules/tar`);
-  await tar.c({ gzip: true, cwd: directory, file: tarball }, ["node-v24.22.0/include/node/node.h"]);
+  await tar.c({ gzip: true, cwd: directory, file: tarball }, ["node-v24.22.1/include/node/node.h"]);
   const archive = await readFile(tarball);
   const checksum = createHash("sha256").update(archive).digest("hex");
   const paths = [];
@@ -46,7 +46,7 @@ try {
   const url = `http://127.0.0.1:${server.address().port}`;
   const child = spawn(process.execPath, [
     `${root}/node_modules/node-gyp/bin/node-gyp.js`,
-    "install", "--target=24.22.0", `--dist-url=${url}`,
+    "install", "--target=24.22.1", `--dist-url=${url}`,
     `--devdir=${join(directory, "cache")}`,
   ], { env: { ...process.env, npm_config_offline: "true" }, stdio: ["ignore", "pipe", "pipe"] });
   let output = "";
@@ -65,7 +65,7 @@ try {
   assert.equal(exit, 0, output);
   assert(paths.some((path) => path?.endsWith(`/${archiveName}`)));
   assert(paths.some((path) => path?.endsWith("/SHASUMS256.txt")));
-  assert.match(await readFile(join(directory, "cache", "24.22.0", "include", "node", "node.h"), "utf8"), /HOLYCODE_NODE_GYP_SMOKE/);
+  assert.match(await readFile(join(directory, "cache", "24.22.1", "include", "node", "node.h"), "utf8"), /HOLYCODE_NODE_GYP_SMOKE/);
   console.log("node-gyp loopback header download and checksum passed");
 } finally {
   if (server) await new Promise((resolve) => server.close(resolve));

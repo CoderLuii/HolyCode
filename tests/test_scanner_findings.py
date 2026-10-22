@@ -83,6 +83,51 @@ def scout_report(cve="CVE-2026-16804", package="chromium", version="150.0.7871.1
     }
 
 
+def scout_shared_rule_report():
+    report = scout_report(cve="CVE-2026-109869", package="undici", version="7.29.1")
+    run = report["runs"][0]
+    run["tool"]["driver"]["rules"][0]["properties"] = {
+        "purls": [
+            "pkg:npm/undici@6.29.0",
+            "pkg:npm/undici@7.29.1",
+            "pkg:npm/undici@8.11.2",
+        ],
+        "fixed_version": "7.30.1",
+        "cvssV3_severity": "HIGH",
+    }
+    run["results"] = [
+        {
+            "ruleId": "CVE-2026-109869",
+            "message": {
+                "text": (
+                    "Vulnerability    :CVE-2026-109869\n"
+                    "Severity         :HIGH\n"
+                    f"Package          :pkg:npm/undici@{version}  \n"
+                    f"Fixed version    :{fixed}\n"
+                )
+            },
+            "locations": [
+                {
+                    "physicalLocation": {
+                        "artifactLocation": {
+                            "uri": (
+                                f"/usr/local/lib/node_modules/{owner}/"
+                                "node_modules/undici/package.json"
+                            )
+                        }
+                    }
+                }
+            ],
+        }
+        for version, fixed, owner in (
+            ("7.29.1", "7.30.1", "wrangler"),
+            ("6.29.0", "6.29.1", "pnpm/dist"),
+            ("8.11.2", "8.12.2", "npm"),
+        )
+    ]
+    return report
+
+
 class ScannerFindingTests(unittest.TestCase):
     def run_validator(
         self, scanner, report, exceptions=None, as_of="2026-07-30", use_exceptions=True
@@ -384,6 +429,99 @@ class ScannerFindingTests(unittest.TestCase):
             accepted["findings"][0]["installedVersion"],
             "1:2.41.5-0+deb13u1",
         )
+
+    def test_scout_shared_rule_uses_each_result_package(self):
+        result, accepted = self.run_advisory_validator("scout", scout_shared_rule_report())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            [finding["purl"] for finding in accepted["findings"]],
+            [
+                "pkg:npm/undici@7.29.1",
+                "pkg:npm/undici@6.29.0",
+                "pkg:npm/undici@8.11.2",
+            ],
+        )
+        self.assertIn("accepted 3 upstream", result.stdout)
+
+    def test_scout_retains_repeated_result_occurrences(self):
+        report = scout_shared_rule_report()
+        report["runs"][0]["results"].append(report["runs"][0]["results"][0])
+        result, accepted = self.run_advisory_validator("scout", report)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(accepted["findings"]), 4)
+        self.assertEqual(accepted["findings"][0], accepted["findings"][3])
+
+    def test_scout_rejects_ambiguous_shared_rule_package(self):
+        for text in (
+            "fixable",
+            "Package          :\n",
+            "Package          :pkg:npm/undici@9.0.0\n",
+            "Package          :pkg:npm/undici@7.29.1\n"
+            "Package          :pkg:npm/undici@6.29.0\n",
+        ):
+            with self.subTest(text=text):
+                report = scout_shared_rule_report()
+                report["runs"][0]["results"][0]["message"]["text"] = text
+                result, accepted = self.run_advisory_validator("scout", report)
+                self.assertEqual(result.returncode, 1)
+                self.assertIsNone(accepted)
+                self.assertIn("unclassified finding", result.stderr)
+
+    def test_scout_rejects_mismatched_single_rule_package(self):
+        report = scout_report()
+        report["runs"][0]["results"][0]["message"]["text"] = (
+            "Package          :pkg:npm/undici@7.29.1\n"
+        )
+        result, accepted = self.run_advisory_validator("scout", report)
+        self.assertEqual(result.returncode, 1)
+        self.assertIsNone(accepted)
+        self.assertIn("unclassified finding", result.stderr)
+
+    def test_scout_rejects_project_owned_result_in_shared_rule(self):
+        report = scout_shared_rule_report()
+        run = report["runs"][0]
+        run["tool"]["driver"]["rules"][0]["properties"]["purls"].append(
+            "pkg:npm/%40coderluii/holycode@1.2.5"
+        )
+        run["results"].append(
+            {
+                "ruleId": "CVE-2026-109869",
+                "message": {
+                    "text": "Package          :pkg:npm/%40coderluii/holycode@1.2.5\n"
+                },
+            }
+        )
+        result, accepted = self.run_advisory_validator("scout", report)
+        self.assertEqual(result.returncode, 1)
+        self.assertIsNone(accepted)
+        self.assertIn("project-owned finding", result.stderr)
+
+    def test_scout_rejects_unclassified_result_in_shared_rule(self):
+        for purl in ("", "not-a-purl", "pkg:generic/vendor/tool@1.0.0"):
+            with self.subTest(purl=purl):
+                report = scout_shared_rule_report()
+                run = report["runs"][0]
+                run["tool"]["driver"]["rules"][0]["properties"]["purls"].append(purl)
+                run["results"].append(
+                    {
+                        "ruleId": "CVE-2026-109869",
+                        "message": {"text": f"Package          :{purl}\n"},
+                    }
+                )
+                result, accepted = self.run_advisory_validator("scout", report)
+                self.assertEqual(result.returncode, 1)
+                self.assertIsNone(accepted)
+                self.assertIn("unclassified finding", result.stderr)
+
+    def test_scout_rejects_malformed_result_message(self):
+        for message in (None, [], "Package :pkg:npm/undici@7.29.1", {"text": []}):
+            with self.subTest(message=message):
+                report = scout_shared_rule_report()
+                report["runs"][0]["results"][0]["message"] = message
+                result, accepted = self.run_advisory_validator("scout", report)
+                self.assertEqual(result.returncode, 2)
+                self.assertIsNone(accepted)
+                self.assertIn("invalid scanner report", result.stderr)
 
     def test_advisory_mode_rejects_secrets(self):
         report = {

@@ -4,6 +4,29 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.8] - 10/26/2026
+
+### Changed
+
+- Update the Node.js LTS base to security release 24.22.1 and require official Debian Chromium, common, and sandbox packages 155.0.8059.79-1~deb13u1 or newer on AMD64 and ARM64
+- Refresh selected tools and libraries: GitHub CLI 2.103.0, lazygit 0.66.2, OpenCode 1.19.3, Claude Code 2.1.307, OpenSpec 1.14.3, npm 12.2.1, pnpm 12.15.0, Vite 8.3.5, ESLint 10.13.0, FastAPI 0.143.5, Markdown 3.11.2, setuptools 84.2.1, Pillow 13.0.0 and certifi 2026.10.19
+- Move Wrangler to 4.151.3 with its Miniflare 5.20261019.1-beta and workerd 1.20261019.1 graph, and Prisma to 7.10.1 with its published dependency graph
+- Follow Paperclip's normal Cursor SDK 1.0.40 resolution and refresh its jsdom/Undici owner graph to 30.1.3/8.12.3; keep Paperclip 2026.831.1 unchanged
+- Regenerate the hash-locked Python requirements under Linux Python 3.13 with pip-tools 7.6.2
+- Update Trivy to 0.76.1 and Docker Scout to 1.27.0, which includes Go toolchain security fixes; keep the existing user data, provider settings, Paperclip behavior, browser sandbox, and compatibility holds
+- Record issue #14's Chromium scanner findings as pending fresh published-image evidence; accepted upstream findings remain visible and do not count as fixed
+- Keep the website synchronization and deployment in the separate `holycode-site` follow-up
+
+### Fixed
+
+- Use npm 12.2.1's published dependency graph and remove the prior brace-expansion, tar, and ip-address replacement blocks
+- Use Prisma 7.10.1's published `deepmerge-ts` and `mysql2` graph without local package overlays or materialized type peers
+- Follow Lighthouse 13.5.0's normal trace-engine resolution to `legacy-javascript` 0.0.4 while `third-party-web` remains 0.30.0
+- Match each Scout result to its reported package so shared vulnerability rules do not multiply the accepted counts
+- Update npm's existing node-gyp Undici replacement to 8.12.3 and use pnpm 12.15.0's fixed Undici 6.29.1 bundle
+- Update pip to 26.2.2 for its fixed Certifi bundle while preserving the existing vendor repairs, licenses, RECORD and offline seed
+- Keep the native AMD64 and ARM64 release checks, full Trivy and Docker Scout reports, and pinned rollback image in the release workflow
+
 ## [1.2.7] - 10/14/2026
 
 ### Changed

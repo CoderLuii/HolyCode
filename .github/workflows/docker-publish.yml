@@ -14,9 +14,9 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.2.6@sha256:42233ec8c9d3ba32f17edb1bbf90dcf38694a39c65b1216146994f1ca85b25d7
-  PREVIOUS_VERSION: v1.2.6
-  RELEASE_VERSION: v1.2.7
+  PREVIOUS_IMAGE: coderluii/holycode:1.2.7@sha256:b212036da5c9057e02e2b0680d66fd5164272d0c9e3ef82c1542589236bd1ed1
+  PREVIOUS_VERSION: v1.2.7
+  RELEASE_VERSION: v1.2.8
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
@@ -74,7 +74,7 @@ jobs:
       - name: Set up Node for Renovate validation
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.22.0
+          node-version: 24.22.1
 
       - name: Static release validation
         run: |
@@ -151,16 +151,16 @@ jobs:
             suffix: amd64
             runner: ubuntu-24.04
             scout_arch: amd64
-            scout_sha256: 47daa9ac442816316c65389f516b847146bb9f45e8d6afdcbb9ce835c4e138bd
+            scout_sha256: 815207e27559fd3d7dddfe778e86f0aeb823eeb24b3cd79d00bc5cd8dfd0724d
             trivy_arch: 64bit
-            trivy_sha256: e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7
+            trivy_sha256: c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0
           - platform: linux/arm64
             suffix: arm64
             runner: ubuntu-24.04-arm
             scout_arch: arm64
-            scout_sha256: 34282a50d6787eec46e44a377a1ed9e70342adf078135cca8617c9199852725c
+            scout_sha256: 3da088c321f55ddf2c2d1c5c9d49c66673b7a978a8b2b65f6a1ca9a3944dc3cd
             trivy_arch: ARM64
-            trivy_sha256: aab21e677a7b7071fc79f1711480840754c18a1b9d9cefa7ccd06af63a0e8f4c
+            trivy_sha256: e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f
     permissions:
       contents: read
       packages: read
@@ -226,7 +226,7 @@ jobs:
       - name: Install Trivy CLI
         env:
           TRIVY_SHA256: ${{ matrix.trivy_sha256 }}
-          TRIVY_VERSION: 0.76.0
+          TRIVY_VERSION: 0.76.1
         run: |
           set -euo pipefail
 
@@ -246,7 +246,7 @@ jobs:
       - name: Generate SPDX SBOM for Docker Scout
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.76.0
+          version: v0.76.1
           skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: spdx-json
@@ -255,7 +255,7 @@ jobs:
       - name: Install Docker Scout CLI
         env:
           SCOUT_SHA256: ${{ matrix.scout_sha256 }}
-          SCOUT_VERSION: 1.26.0
+          SCOUT_VERSION: 1.27.0
         run: |
           set -euo pipefail
 
@@ -334,7 +334,7 @@ jobs:
       - name: Trivy vulnerability report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.76.0
+          version: v0.76.1
           skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
@@ -347,7 +347,7 @@ jobs:
       - name: Trivy fixable critical and high gate
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: v0.76.0
+          version: v0.76.1
           skip-setup-trivy: true
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json

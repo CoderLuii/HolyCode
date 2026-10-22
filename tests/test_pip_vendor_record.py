@@ -12,7 +12,7 @@ class PipVendorRecordTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             site = Path(directory)
             vendor = site / "pip" / "_vendor" / "urllib3"
-            info = site / "pip-26.2.1.dist-info"
+            info = site / "pip-26.2.2.dist-info"
             vendor.mkdir(parents=True)
             info.mkdir()
             source = vendor / "response.py"
@@ -20,7 +20,7 @@ class PipVendorRecordTests(unittest.TestCase):
             (site / "pip" / "_vendor" / "vendor.txt").write_bytes(b"urllib3==2.8.0\n")
             (site / "pip" / "_vendor" / "bom.cdx.json").write_bytes(b"{}\n")
             record = info / "RECORD"
-            record.write_bytes(b"pip-26.2.1.dist-info/RECORD,,\n")
+            record.write_bytes(b"pip-26.2.2.dist-info/RECORD,,\n")
             refresh_record(site, info)
 
             bytecode = Path(importlib.util.cache_from_source(str(source)))
@@ -62,7 +62,7 @@ class PipVendorRecordTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             site = Path(directory)
             vendor = site / "pip" / "_vendor"
-            info = site / "pip-26.2.1.dist-info"
+            info = site / "pip-26.2.2.dist-info"
             for name in ("msgpack", "pkg_resources", "urllib3"):
                 package = vendor / name
                 package.mkdir(parents=True)
@@ -84,8 +84,8 @@ class PipVendorRecordTests(unittest.TestCase):
                         ("pip/_vendor/urllib3/removed.py", "sha256=stale", "5"),
                         ("pip/_vendor/urllib3/__init__.py", "sha256=stale", "5"),
                         ("pip/__init__.py", "sha256=unchanged", "10"),
-                        ("pip-26.2.1.dist-info/entry_points.txt", "sha256=entrypoint", "18"),
-                        ("pip-26.2.1.dist-info/RECORD", "", ""),
+                        ("pip-26.2.2.dist-info/entry_points.txt", "sha256=entrypoint", "18"),
+                        ("pip-26.2.2.dist-info/RECORD", "", ""),
                     ]
                 )
 
@@ -103,10 +103,10 @@ class PipVendorRecordTests(unittest.TestCase):
             self.assertIn("pip/_vendor/bom.cdx.json", rows)
             self.assertEqual(rows["pip/__init__.py"], ["pip/__init__.py", "sha256=unchanged", "10"])
             self.assertEqual(
-                rows["pip-26.2.1.dist-info/entry_points.txt"],
-                ["pip-26.2.1.dist-info/entry_points.txt", "sha256=entrypoint", "18"],
+                rows["pip-26.2.2.dist-info/entry_points.txt"],
+                ["pip-26.2.2.dist-info/entry_points.txt", "sha256=entrypoint", "18"],
             )
-            self.assertIn("pip-26.2.1.dist-info/licenses/src/pip/_vendor/urllib3/LICENSE.txt", rows)
+            self.assertIn("pip-26.2.2.dist-info/licenses/src/pip/_vendor/urllib3/LICENSE.txt", rows)
             rows.pop("pip/_vendor/urllib3/__init__.py")
             with record.open("w", newline="") as stream:
                 csv.writer(stream).writerows(rows.values())
@@ -117,13 +117,13 @@ class PipVendorRecordTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             site = Path(directory)
             vendor = site / "pip" / "_vendor" / "urllib3"
-            info = site / "pip-26.2.1.dist-info"
+            info = site / "pip-26.2.2.dist-info"
             vendor.mkdir(parents=True)
             info.mkdir()
             (vendor / "__init__.py").write_text("good")
             (site / "pip" / "_vendor" / "vendor.txt").write_text("urllib3==2.8.0\n")
             (site / "pip" / "_vendor" / "bom.cdx.json").write_text("{}\n")
-            (info / "RECORD").write_text("pip-26.2.1.dist-info/RECORD,,\n")
+            (info / "RECORD").write_text("pip-26.2.2.dist-info/RECORD,,\n")
             refresh_record(site, info)
             (vendor / "__init__.py").write_text("bad")
             with self.assertRaises(ValueError):
