@@ -15,12 +15,12 @@ const nodeGypPackage = require(join(nodeGypRoot, "package.json"));
 const undiciPackagePath = require.resolve("undici/package.json", { paths: [nodeGypRoot] });
 const undiciPackage = require(undiciPackagePath);
 
-assert.equal(npmPackage.version, "12.2.1");
+assert.equal(npmPackage.version, "12.2.2");
 assert.equal(npmPackage.dependencies["node-gyp"], "^13.0.0");
-assert.equal(nodeGypPackage.version, "13.0.2");
-assert.equal(nodeGypPackage.dependencies.undici, "^8.4.1");
+assert.equal(nodeGypPackage.version, "13.0.0");
+assert.equal(nodeGypPackage.dependencies.undici, "^6.25.0");
 assert.equal(undiciPackagePath, join(undiciRoot, "package.json"));
-assert.equal(undiciPackage.version, "8.12.3");
+assert.equal(undiciPackage.version, "6.29.1");
 await access("/usr/local/include/node/node_api.h", constants.R_OK);
 await access("/usr/local/include/node/common.gypi", constants.R_OK);
 await access("/usr/bin/g++", constants.X_OK);
@@ -120,7 +120,7 @@ try {
   const result = await install(directory);
   assert.equal(result.code, 0, result.output);
   assert.equal(result.signal, null, result.output);
-  assert.match(result.output, /gyp info using node-gyp@13\.0\.2/);
+  assert.match(result.output, /gyp info using node-gyp@13\.0\.0/);
   assert.match(result.output, /CXX\(target\)/);
 
   const binary = join(directory, "build", "Release", "holycode_native.node");

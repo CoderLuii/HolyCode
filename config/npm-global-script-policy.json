@@ -1,5 +1,5 @@
 {
-  "npmVersion": "12.2.1",
+  "npmVersion": "12.2.2",
   "mode": "deny-by-default",
   "allowScripts": {
     "@embedded-postgres/linux-x64@18.1.0-beta.16": {
@@ -22,23 +22,23 @@
       },
       "reason": "Paperclip requires the packaged PostgreSQL library symlinks before it drops to the unprivileged runtime user."
     },
-    "@anthropic-ai/claude-code@2.1.307": {
+    "@anthropic-ai/claude-code@2.1.318": {
       "architectures": [
         "amd64",
         "arm64"
       ],
-      "integrity": "sha512-/G+XTieqaNEpug8R7iQSgEvWYO7nRsxs3Hm7f0bSHboVn1KYr5rBgUFwXnAqmbFEtVek+qbl5n/xdX5eezKNGA==",
+      "integrity": "sha512-OTJgLxcvWefv8IdTsq5n90Z2IxEhLwKqHUBhwZYE4odXzKA/Tb6p2Zb5Iy9Vq7JIVcNZzn9cPxW5sb42wLF95Q==",
       "scripts": {
         "postinstall": "node install.cjs"
       },
       "reason": "Claude Code uses this script to install its pinned platform-native binary."
     },
-    "opencode-ai@1.19.3": {
+    "opencode-ai@1.19.5": {
       "architectures": [
         "amd64",
         "arm64"
       ],
-      "integrity": "sha512-wDRcUlMDibaLzecIGvVGUA9naghXVqzCWcUE7N3qagpGiLSUlU4VbixI+bpsErwJp+AAuSO2lhSr/XxJl7XbrQ==",
+      "integrity": "sha512-tEqMvQahfhdDj8vceYpXtoIrvjPXm5XRfetWnPN5YISueU7adNx9JcUA3zZ+2GKuDVgDpGdQe1ZLtCZDjqodvA==",
       "scripts": {
         "postinstall": "node ./postinstall.mjs"
       },
@@ -101,23 +101,23 @@
       },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "workerd@1.20261019.1": {
+    "workerd@1.20261103.1": {
       "architectures": [
         "amd64",
         "arm64"
       ],
-      "integrity": "sha512-UUYRUq/7DmeCl11YriNbcVbjUZVLtt8uuCXFu+nz77hGFf8d4DEVXoCYtnA+MlBatE4+wxoj47DVqzK3xGBAiw==",
+      "integrity": "sha512-GgcAnUH94uY8BEDc7CUyX3qsuLVbiidV+SZqJhasxbKi+f2dtR5xrgBC18uLbnaBFarlNFCYfr8JAIL2xJpnZw==",
       "scripts": {
         "postinstall": "node install.js"
       },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
     },
-    "pnpm@12.15.0": {
+    "pnpm@12.16.1": {
       "architectures": [
         "amd64",
         "arm64"
       ],
-      "integrity": "sha512-s5UdbW/0qfE9x89WzSjSuOs328ycaOUuHhGRhz6p+CoBcoerULqtxczElPA2xnwOR+sTYIwvo29HcRth6hKOYQ==",
+      "integrity": "sha512-CR0d7nknV1Zhsl2rPCrjHK/BxU1rce1qZgDPDByxBDSkR+rhQBXxsj4ua+3u1535SpMuIWTSgyKA3OP7MvZW0Q==",
       "scripts": {
         "preinstall": "node install.js",
         "postinstall": "node install.js"

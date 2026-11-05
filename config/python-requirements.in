@@ -1,9 +1,9 @@
-playwright==1.64.0
+playwright==1.64.1
 packaging==26.3
 wheel==0.48.0
 setuptools==84.2.1
 requests==2.34.2
-certifi==2026.10.19
+certifi==2026.10.23
 httpx==0.28.1
 beautifulsoup4==4.15.0
 lxml==6.1.3

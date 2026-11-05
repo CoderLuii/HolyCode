@@ -12,9 +12,9 @@ general legal-compliance audit of every transitive package.
 - License: MIT
 - Copyright: Anomaly
 - Source: https://github.com/anomalyco/opencode
-- npm: https://www.npmjs.com/package/opencode-ai/v/1.19.3
+- npm: https://www.npmjs.com/package/opencode-ai/v/1.19.5
 - Website: https://opencode.ai
-- Version: 1.19.3
+- Version: 1.19.5
 
 OpenCode is the core AI coding agent bundled in HolyCode. It is installed
 via npm as a global package and runs as an s6-overlay supervised process.
@@ -78,49 +78,36 @@ project initialization occurs only when you explicitly run
 
 - License: Artistic-2.0
 - Source: https://github.com/npm/cli
-- Version: 12.2.1
+- Version: 12.2.2
 
-### npm bundled node-gyp 13.0.2 and Undici 8.12.3 replacements
+### npm bundled node-gyp and Undici
 
 - Licenses: MIT (node-gyp and Undici)
 - Sources: https://github.com/nodejs/node-gyp and https://github.com/nodejs/undici
-- Versions: 13.0.2 and 8.12.3
+- Versions: 13.0.0 and 6.29.1
 
-npm 12.2.1 declares `node-gyp ^13.0.0`. HolyCode installs the unmodified,
-integrity-verified 13.0.2 payload under npm. That release declares `undici
-^8.4.1`; its npm-owned Undici copy is the unmodified, integrity-verified
-8.12.3 payload. This does not change Paperclip's separate Undici copy.
+The official npm 12.2.2 payload owns node-gyp 13.0.0 and Undici 6.29.1.
+HolyCode uses that payload without dependency overlays. Paperclip owns a
+separate Undici copy.
 
 ## PM2
 
 - License: AGPL-3.0
-- Source: https://github.com/Unitech/pm2/tree/v7.0.4
-- npm: https://www.npmjs.com/package/pm2/v/7.0.4
-- Artifact: https://registry.npmjs.org/pm2/-/pm2-7.0.4.tgz
-- Version: 7.0.4
+- Source: https://github.com/Unitech/pm2/tree/v7.1.2
+- npm: https://www.npmjs.com/package/pm2/v/7.1.2
+- Artifact: https://registry.npmjs.org/pm2/-/pm2-7.1.2.tgz
+- Version: 7.1.2
 
-### PM2 bundled js-yaml 4.3.2 replacement
+### PM2 bundled js-yaml
 
 - License: MIT
 - Source: https://github.com/nodeca/js-yaml
 - npm: https://www.npmjs.com/package/js-yaml/v/4.3.2
 - Version: 4.3.2
 
-HolyCode replaces PM2's nested `js-yaml` package with the unmodified,
-integrity-verified 4.3.2 npm payload and updates PM2's installed dependency
-declaration to that exact version.
-
-### PM2 bundled basic-ftp 6.2.1 replacement
-
-- License: MIT
-- Source: https://github.com/patrickjuchli/basic-ftp
-- npm: https://www.npmjs.com/package/basic-ftp/v/6.2.1
-- Version: 6.2.1
-
-PM2's `get-uri 6.0.5` declares `basic-ftp ^5.0.2`. HolyCode replaces only that
-copy with the unmodified, integrity-verified 6.2.1 npm payload and binds the
-installed `get-uri` declaration to 6.2.1. The v6 secure default for FTP data
-hosts remains enabled.
+The official PM2 7.1.2 payload owns js-yaml 4.3.2. Its graph has no get-uri
+or basic-ftp. HolyCode does not replace these dependencies or rewrite their
+installed declarations.
 
 ## Prisma
 
@@ -151,7 +138,7 @@ automation via Playwright and Puppeteer.
 - License: Apache-2.0
 - Copyright: Microsoft Corporation
 - Source: https://github.com/microsoft/playwright
-- Version: 1.64.0
+- Version: 1.64.1
 
 Installed via pip. Uses the system Chromium binary, not Playwright's
 bundled browsers.
@@ -163,14 +150,14 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.307
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.307.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.318
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.318.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.307
+- Version: 2.1.318
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.307`.
-The immutable registry tarball contains a 147-byte `LICENSE.md` legal-agreements
-notice. Final native image validation must prove that the installed CLI and
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.318`.
+The pinned package must retain its `LICENSE.md` legal-agreements notice.
+Final native image validation must prove that the installed CLI and
 Linux native payload carry the same notice. This is artifact evidence, not a
 permissive SPDX license classification.
 Used for Claude subscription authentication flows when
@@ -191,15 +178,15 @@ architecture, and lifecycle-script body before running the exact embedded Postgr
 postinstall needed to hydrate its packaged library symlinks. Paperclip then runs as
 an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 
-### Paperclip-scoped Cursor SDK 1.0.40
+### Paperclip-scoped Cursor SDK 1.3.1
 
 - License: Cursor SDK License (use subject to Cursor's Terms of Service)
 - Copyright: Anysphere Inc.
 - Source: https://github.com/cursor/cursor
-- npm: https://www.npmjs.com/package/@cursor/sdk/v/1.0.40
+- npm: https://www.npmjs.com/package/@cursor/sdk/v/1.3.1
 
 The published npm payload includes `LICENSE.md` with the Cursor SDK License
-notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.0.40` through its
+notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.3.1` through its
 `^1.0.28` declaration. The installed SDK no longer declares Connect's Node
 transport. This records the bundled notice; it is not legal clearance for
 Cursor service use.
@@ -220,7 +207,7 @@ Connect dependency declaration.
 - License: MIT
 - Copyright: GitHub, Inc.
 - Source: https://github.com/cli/cli
-- Version: 2.103.0
+- Version: 2.103.3
 
 Installed from the official upstream Linux release archive after SHA-256
 verification.
@@ -269,45 +256,29 @@ The clean-resolved Python lock also includes these changed transitive packages:
 - Source: https://github.com/pypa/packaging
 - Version: 26.3
 
-## pip vendored msgpack
+## pip and its vendored packages
 
-- License: Apache-2.0
-- Source: https://github.com/msgpack/msgpack-python
-- Version: 1.2.2
+- License: MIT (pip); each vendored package retains its own license
+- Source: https://github.com/pypa/pip
+- Version: 26.3
 
-HolyCode replaces pip 26.2.2's internal msgpack copy with the hash-verified
-official PyPI source. The replacement remains under pip's vendored namespace.
+HolyCode uses the official, unmodified pip 26.3 wheel, including its vendored
+msgpack 1.2.4 (Apache-2.0), pkg_resources from setuptools 70.3.0 (MIT),
+urllib3 2.8.0 (MIT), and certifi 2026.10.23 (MPL-2.0).
+The offline packaging seed uses that same official wheel. HolyCode does not
+rebuild pip or repair its vendored source or RECORD.
 
-## pip vendored pkg_resources
-
-- License: MIT
-- Source: https://github.com/pypa/setuptools
-- Version: 78.1.1
-
-HolyCode replaces pip's vendored `pkg_resources` source with the
-checksum-verified setuptools 78.1.1 source and keeps pip's vendoring imports.
-
-## pip vendored urllib3
-
-- License: MIT
-- Source: https://github.com/urllib3/urllib3
-- PyPI: https://pypi.org/project/urllib3/2.8.0/
-- Version: 2.8.0
-
-HolyCode replaces pip 26.2.2's internal urllib3 copy with the 2.8.0 payload
-generated by pip's own vendoring 1.4.0 workflow and its three urllib3 patches.
-The generated subtree includes `LICENSE.txt` and `py.typed`. This copy stays
-inside pip; the separate product urllib3 2.8.0 package is unchanged. The
-vendored metadata and pip's installed RECORD are updated for all three pip
-vendor repairs.
+Vendored sources: https://github.com/msgpack/msgpack-python,
+https://github.com/pypa/setuptools, https://github.com/urllib3/urllib3,
+and https://github.com/certifi/python-certifi.
 
 ## Wrangler
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.151.3
+- Version: 4.157.0
 
-Wrangler owns Miniflare 5.20261019.1-beta, workerd 1.20261019.1, and esbuild
+Wrangler owns Miniflare 5.20261103.0-beta, workerd 1.20261103.1, and esbuild
 0.28.2. The
 installed package manifests declare MIT for Miniflare and Apache-2.0 for
 workerd. Their selected npm package roots do not include license files, so this
@@ -318,7 +289,7 @@ images must verify the installed package roots and separate workerd payloads.
 
 - License: MIT
 - Source: https://github.com/pnpm/pnpm
-- Version: 12.15.0
+- Version: 12.16.1
 
 The selected package manifest declares MIT. Its npm package has no license file
 at the package root, so this notice does not claim one is bundled.
@@ -345,13 +316,13 @@ at the package root, so this notice does not claim one is bundled.
 
 - License: Apache-2.0
 - Source: https://github.com/GoogleChrome/lighthouse
-- Version: 13.5.0
+- Version: 13.6.0
 
 ## Lighthouse trace engine transitive dependency
 
 - License: BSD-3-Clause
-- Source: https://www.npmjs.com/package/@paulirish/trace_engine/v/0.0.65
-- Version: 0.0.65
+- Source: https://www.npmjs.com/package/@paulirish/trace_engine/v/0.0.67
+- Version: 0.0.67
 
 ## Lighthouse third-party-web transitive dependency
 
@@ -359,11 +330,9 @@ at the package root, so this notice does not claim one is bundled.
 - Source: https://github.com/patrickhulce/third-party-web
 - Version: 0.30.0
 
-## Lighthouse legacy-javascript transitive dependency
-
-- License: Apache-2.0
-- Source: https://github.com/GoogleChrome/lighthouse
-- Version: 0.0.4
+Lighthouse declares `third-party-web` as `*`; HolyCode checks the selected
+0.30.0 graph without rewriting that declaration. Lighthouse 13.6.0 does not
+include legacy-javascript.
 
 ## ESLint
 

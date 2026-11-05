@@ -20,7 +20,6 @@ expected_npm="$(image_label io.holycode.version.npm)"
 expected_npm_node_gyp="$(image_label io.holycode.version.npm-node-gyp)"
 expected_npm_node_gyp_undici="$(image_label io.holycode.version.npm-node-gyp-undici)"
 expected_pm2_js_yaml="$(image_label io.holycode.version.pm2-js-yaml)"
-expected_pm2_basic_ftp="$(image_label io.holycode.version.pm2-basic-ftp)"
 expected_pip_vendor_msgpack="$(image_label io.holycode.version.pip-vendor-msgpack)"
 expected_pip_vendor_pkg_resources="$(image_label io.holycode.version.pip-vendor-pkg-resources)"
 expected_pip_vendor_urllib3="$(image_label io.holycode.version.pip-vendor-urllib3)"
@@ -71,7 +70,6 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   -e EXPECTED_NPM_NODE_GYP="$expected_npm_node_gyp" \
   -e EXPECTED_NPM_NODE_GYP_UNDICI="$expected_npm_node_gyp_undici" \
   -e EXPECTED_PM2_JS_YAML="$expected_pm2_js_yaml" \
-  -e EXPECTED_PM2_BASIC_FTP="$expected_pm2_basic_ftp" \
   -e EXPECTED_PIP_VENDOR_MSGPACK="$expected_pip_vendor_msgpack" \
   -e EXPECTED_PIP_VENDOR_PKG_RESOURCES="$expected_pip_vendor_pkg_resources" \
   -e EXPECTED_PIP_VENDOR_URLLIB3="$expected_pip_vendor_urllib3" \
@@ -104,21 +102,21 @@ docker run --rm -i --network none --security-opt "seccomp=$seccomp_profile" --en
   node --version | grep -E "^v[0-9]+\\."
   npm --version | grep -Fx "$EXPECTED_NPM"
   npm ls -g brace-expansion tar ip-address --all >/dev/null
-  node -e "const root=\"/usr/local/lib/node_modules/npm\"; const npm=require(root+\"/package.json\"); const gyp=require(root+\"/node_modules/node-gyp/package.json\"); const undici=require(root+\"/node_modules/undici/package.json\"); if(npm.version!==process.env.EXPECTED_NPM || npm.dependencies[\"node-gyp\"]!==\"^13.0.0\" || gyp.version!==process.env.EXPECTED_NPM_NODE_GYP || gyp.dependencies.undici!==\"^8.4.1\" || undici.version!==process.env.EXPECTED_NPM_NODE_GYP_UNDICI) process.exit(1)"
+  node -e "const root=\"/usr/local/lib/node_modules/npm\"; const npm=require(root+\"/package.json\"); const gyp=require(root+\"/node_modules/node-gyp/package.json\"); const undici=require(root+\"/node_modules/undici/package.json\"); if(npm.version!==process.env.EXPECTED_NPM || npm.dependencies[\"node-gyp\"]!==\"^13.0.0\" || gyp.version!==process.env.EXPECTED_NPM_NODE_GYP || gyp.dependencies.undici!==\"^6.25.0\" || undici.version!==process.env.EXPECTED_NPM_NODE_GYP_UNDICI) process.exit(1)"
   (cd /usr/local/lib/node_modules/npm && npm ls node-gyp undici --all >/dev/null)
-  node -e "const npm=require('/usr/local/lib/node_modules/npm/package.json'); const gyp=require('/usr/local/lib/node_modules/npm/node_modules/node-gyp/package.json'); const undici=require('/usr/local/lib/node_modules/npm/node_modules/undici/package.json'); if(npm.dependencies['node-gyp']!=='^13.0.0' || gyp.version!==process.env.EXPECTED_NPM_NODE_GYP || gyp.dependencies.undici!=='^8.4.1' || undici.version!==process.env.EXPECTED_NPM_NODE_GYP_UNDICI) process.exit(1)"
+  node -e "const npm=require('/usr/local/lib/node_modules/npm/package.json'); const gyp=require('/usr/local/lib/node_modules/npm/node_modules/node-gyp/package.json'); const undici=require('/usr/local/lib/node_modules/npm/node_modules/undici/package.json'); if(npm.dependencies['node-gyp']!=='^13.0.0' || gyp.version!==process.env.EXPECTED_NPM_NODE_GYP || gyp.dependencies.undici!=='^6.25.0' || undici.version!==process.env.EXPECTED_NPM_NODE_GYP_UNDICI) process.exit(1)"
   (cd /usr/local/lib/node_modules/npm && npm ls node-gyp undici --all >/dev/null)
   test "$(npm prefix -g)" = "/usr/local"
   node -e "console.log(require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml/package.json\").version)" | grep -Fx "$EXPECTED_PM2_JS_YAML"
   node -e "const pkg=require(\"/usr/local/lib/node_modules/pm2/package.json\"); if(pkg.dependencies[\"js-yaml\"]!==process.env.EXPECTED_PM2_JS_YAML) process.exit(1)"
   (cd /usr/local/lib/node_modules/pm2 && npm ls js-yaml --all >/dev/null)
-  node -e "const getUri=require('/usr/local/lib/node_modules/pm2/node_modules/get-uri/package.json'); const ftp=require('/usr/local/lib/node_modules/pm2/node_modules/basic-ftp/package.json'); if(getUri.version!=='6.0.5' || getUri.dependencies['basic-ftp']!==process.env.EXPECTED_PM2_BASIC_FTP || ftp.version!==process.env.EXPECTED_PM2_BASIC_FTP) process.exit(1)"
-  (cd /usr/local/lib/node_modules/pm2 && npm ls get-uri basic-ftp --all >/dev/null)
+  test ! -d /usr/local/lib/node_modules/pm2/node_modules/get-uri
+  test ! -d /usr/local/lib/node_modules/pm2/node_modules/basic-ftp
   node -e "const yaml=require(\"/usr/local/lib/node_modules/pm2/node_modules/js-yaml\"); const parsed=yaml.load(\"service:\\n  enabled: true\\n\"); if(parsed.service.enabled!==true) process.exit(1)"
   pm2_app=/tmp/holycode-smoke-pm2-app.js
   printf "setInterval(() => {}, 60000);\n" > "$pm2_app"
   PM2_HOME=/tmp/holycode-smoke-pm2 pm2 start "$pm2_app" --name holycode-smoke-pm2 --no-autorestart >/dev/null
-  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 --version | grep -Fx "7.0.4"
+  PM2_HOME=/tmp/holycode-smoke-pm2 pm2 --version | grep -Fx "7.1.2"
   PM2_HOME=/tmp/holycode-smoke-pm2 pm2 stop holycode-smoke-pm2 >/dev/null
   PM2_HOME=/tmp/holycode-smoke-pm2 pm2 kill >/dev/null
   rm -rf /tmp/holycode-smoke-pm2 "$pm2_app"
@@ -295,7 +293,7 @@ EOF
   grep -Fx "VERSION_ID=\"13\"" /etc/os-release
   python3 --version | grep -E "^Python 3\.13\."
   python3 -m pip --version
-  pip --version | grep -F "pip 26.2.2"
+  pip --version | grep -F "pip 26.3"
   test "$(dpkg-query -W -f=\${db:Status-Status} python3-pip 2>/dev/null || true)" != installed
   test "$(dpkg-query -W -f=\${db:Status-Status} python3-setuptools 2>/dev/null || true)" != installed
   python3 -m pip check
@@ -367,7 +365,7 @@ from tqdm import tqdm
 import uvicorn
 
 assert metadata.version("numpy") == "$EXPECTED_NUMPY"
-assert metadata.version("playwright") == "1.64.0"
+assert metadata.version("playwright") == "1.64.1"
 assert metadata.version("requests") == "2.34.2"
 assert metadata.version("Pillow") == "13.0.0"
 assert metadata.version("pandas") == "3.0.6"
@@ -381,7 +379,7 @@ assert metadata.version("Markdown") == "3.11.2"
 assert metadata.version("opentelemetry-api") == "1.45.1"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
-assert metadata.version("pip") == "26.2.2"
+assert metadata.version("pip") == "26.3"
 assert metadata.version("rich") == "15.0.0"
 assert metadata.version("setuptools") == "84.2.1"
 try:
@@ -478,18 +476,18 @@ PY
   python3 -m venv /tmp/holycode-python-seed
   /tmp/holycode-python-seed/bin/python -m pip install --no-index \
     --find-links /usr/local/share/holycode/python-seed \
-    pip==26.2.2 setuptools==84.2.1 packaging==26.3 wheel==0.48.0
+    pip==26.3 setuptools==84.2.1 packaging==26.3 wheel==0.48.0
   /tmp/holycode-python-seed/bin/python - <<PY
 import importlib.metadata as metadata
 import pip._vendor.msgpack as msgpack
 import pip._vendor.pkg_resources as pkg_resources
 import pip._vendor.urllib3 as urllib3
-assert metadata.version("pip") == "26.2.2"
+assert metadata.version("pip") == "26.3"
 assert metadata.version("setuptools") == "84.2.1"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
-assert msgpack.__version__ == "1.2.2"
-assert pkg_resources.get_distribution("pip").version == "26.2.2"
+assert msgpack.__version__ == "1.2.4"
+assert pkg_resources.get_distribution("pip").version == "26.3"
 assert urllib3.__version__ == "2.8.0"
 PY
 
@@ -599,9 +597,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261019.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261019.1\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261019.1\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261103.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261103.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261103.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -711,8 +709,8 @@ EOF
   npm_tree_status=0
   npm ls -g --all --json > "$npm_tree" 2>/tmp/holycode-npm-tree.stderr || npm_tree_status=$?
   test -s "$npm_tree"
-  test "$npm_tree_status" -eq 1
-  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const fail=(label,expected,actual)=>{console.error(\`\${label}: expected \${JSON.stringify(expected)}, got \${JSON.stringify(actual)}\`);process.exit(1)}; const expected=[\"invalid: third-party-web@0.30.0 /usr/local/lib/node_modules/lighthouse/node_modules/third-party-web\",\"invalid: legacy-javascript@0.0.4 /usr/local/lib/node_modules/lighthouse/node_modules/legacy-javascript\"].sort(); const problems=tree.problems||[]; if(tree.error?.code!==\"ELSPROBLEMS\") fail(\"npm tree error code\",\"ELSPROBLEMS\",tree.error?.code??null); const missing=problems.filter(problem=>problem.startsWith(\"missing:\")); if(missing.length) fail(\"npm tree missing problems\",[],missing); const actualProblems=[...problems].sort(); if(JSON.stringify(actualProblems)!==JSON.stringify(expected)) fail(\"npm tree problems\",expected,actualProblems); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); const expectedGraph={lighthouse:\"13.5.0\",trace:\"0.0.65\",thirdPartyRange:\"latest\",legacyRange:\"latest\",thirdParty:\"0.30.0\",legacy:\"0.0.4\"}; const actualGraph={lighthouse:lighthouse?.version??null,trace:trace?.version??null,thirdPartyRange:tracePkg.dependencies[\"third-party-web\"]??null,legacyRange:tracePkg.dependencies[\"legacy-javascript\"]??null,thirdParty:trace?.dependencies?.[\"third-party-web\"]?.version??null,legacy:trace?.dependencies?.[\"legacy-javascript\"]?.version??null}; if(JSON.stringify(actualGraph)!==JSON.stringify(expectedGraph)) fail(\"Lighthouse owner graph\",expectedGraph,actualGraph)" "$npm_tree"
+  test "$npm_tree_status" -eq 0
+  node -e "const fs=require(\"fs\"); const tree=JSON.parse(fs.readFileSync(process.argv[1],\"utf8\")); const fail=(label,expected,actual)=>{console.error(\`\${label}: expected \${JSON.stringify(expected)}, got \${JSON.stringify(actual)}\`);process.exit(1)}; const problems=tree.problems||[]; if(problems.length || tree.error) fail(\"npm tree problems\",[],problems); const lighthouse=tree.dependencies?.lighthouse; const trace=lighthouse?.dependencies?.[\"@paulirish/trace_engine\"]; const tracePkg=require(\"/usr/local/lib/node_modules/lighthouse/node_modules/@paulirish/trace_engine/package.json\"); const expectedGraph={lighthouse:\"13.6.0\",trace:\"0.0.67\",thirdPartyRange:\"*\",legacyRange:null,thirdParty:\"0.30.0\",legacy:null}; const actualGraph={lighthouse:lighthouse?.version??null,trace:trace?.version??null,thirdPartyRange:tracePkg.dependencies[\"third-party-web\"]??null,legacyRange:tracePkg.dependencies[\"legacy-javascript\"]??null,thirdParty:trace?.dependencies?.[\"third-party-web\"]?.version??null,legacy:trace?.dependencies?.[\"legacy-javascript\"]?.version??null}; if(JSON.stringify(actualGraph)!==JSON.stringify(expectedGraph)) fail(\"Lighthouse owner graph\",expectedGraph,actualGraph)" "$npm_tree"
   rm -f "$npm_tree" /tmp/holycode-npm-tree.stderr
   ! command -v vercel
   ! command -v sharp
@@ -725,7 +723,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261019.1\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261103.1\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))
@@ -837,12 +835,11 @@ HOLYCODE_SMOKE
 
 smoke_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 docker run --rm --network none --entrypoint sh \
-  --mount "type=bind,src=$smoke_script_dir/test_get_uri_ftp.mjs,dst=/tmp/test_get_uri_ftp.mjs,readonly" \
   --mount "type=bind,src=$smoke_script_dir/test_node_gyp_download.mjs,dst=/tmp/test_node_gyp_download.mjs,readonly" \
   --mount "type=bind,src=$smoke_script_dir/test_node_gyp_native.mjs,dst=/tmp/test_node_gyp_native.mjs,readonly" \
   --mount "type=bind,src=$smoke_script_dir/test_pip_vendor_urllib3.py,dst=/tmp/test_pip_vendor_urllib3.py,readonly" \
   --mount "type=bind,src=$smoke_script_dir/verify_pip_vendor_record.py,dst=/tmp/verify_pip_vendor_record.py,readonly" \
-  "$image" -lc 'node /tmp/test_get_uri_ftp.mjs all && node /tmp/test_node_gyp_download.mjs && node /tmp/test_node_gyp_native.mjs && python3 /tmp/verify_pip_vendor_record.py && python3 /tmp/test_pip_vendor_urllib3.py && python3 -m venv /tmp/holycode-repaired-seed && /tmp/holycode-repaired-seed/bin/python -m pip install --no-index --no-deps --find-links /usr/local/share/holycode/python-seed pip==26.2.2 setuptools==84.2.1 packaging==26.3 wheel==0.48.0 && /tmp/holycode-repaired-seed/bin/python /tmp/verify_pip_vendor_record.py && /tmp/holycode-repaired-seed/bin/python /tmp/test_pip_vendor_urllib3.py'
+  "$image" -lc 'node /tmp/test_node_gyp_download.mjs && node /tmp/test_node_gyp_native.mjs && python3 /tmp/verify_pip_vendor_record.py && python3 /tmp/test_pip_vendor_urllib3.py && python3 -m venv /tmp/holycode-repaired-seed && /tmp/holycode-repaired-seed/bin/python -m pip install --no-index --no-deps --find-links /usr/local/share/holycode/python-seed pip==26.3 setuptools==84.2.1 packaging==26.3 wheel==0.48.0 && /tmp/holycode-repaired-seed/bin/python /tmp/verify_pip_vendor_record.py && /tmp/holycode-repaired-seed/bin/python /tmp/test_pip_vendor_urllib3.py'
 
 cliproxy_network="holycode-cliproxy-smoke-$$"
 cliproxy_mock="holycode-cliproxy-mock-$$"

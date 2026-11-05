@@ -50,7 +50,7 @@ def certificate(directory, name):
     subprocess.run(
         ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
          "-keyout", str(key), "-out", str(cert), "-subj", "/CN=localhost",
-         "-addext", "subjectAltName=DNS:localhost"],
+         "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1"],
         check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -181,7 +181,7 @@ def test_tls_and_proxy(directory):
             pass
 
     target = serve(Target, tls=target_tls)
-    target_url = f"https://localhost:{target.server_port}/"
+    target_url = f"https://127.0.0.1:{target.server_port}/"
 
     class Proxy(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
@@ -224,27 +224,29 @@ def test_tls_and_proxy(directory):
         else:
             raise AssertionError("untrusted target certificate accepted")
         try:
-            secure.request("GET", f"https://127.0.0.1:{target.server_port}/", timeout=urllib3.Timeout(total=3))
-        except urllib3.exceptions.SSLError:
-            pass
+            urllib3.PoolManager(
+                ssl_context=target_client, server_hostname="wrong.invalid", retries=False,
+            ).request("GET", target_url, timeout=urllib3.Timeout(total=3))
+        except urllib3.exceptions.SSLError as error:
+            assert "wrong.invalid" in str(error)
         else:
             raise AssertionError("wrong target hostname accepted")
         proxied = urllib3.ProxyManager(f"http://127.0.0.1:{http_proxy.server_port}", retries=False)
         assert proxied.request("GET", "http://invalid.example/", timeout=urllib3.Timeout(total=3)).data == b"http proxy ok"
         tunneled = urllib3.ProxyManager(
-            f"https://localhost:{https_proxy.server_port}",
+            f"https://127.0.0.1:{https_proxy.server_port}",
             proxy_ssl_context=proxy_client, ssl_context=target_client, retries=False,
         )
         assert tunneled.request("GET", target_url, timeout=urllib3.Timeout(total=3)).data == b"target tls ok"
         forwarded = urllib3.ProxyManager(
-            f"https://localhost:{https_proxy.server_port}",
+            f"https://127.0.0.1:{https_proxy.server_port}",
             proxy_ssl_context=proxy_client, ssl_context=target_client,
             use_forwarding_for_https=True, retries=False,
         )
         assert forwarded.request("GET", target_url, timeout=urllib3.Timeout(total=3)).data == b"http proxy ok"
         try:
             urllib3.ProxyManager(
-                f"https://localhost:{https_proxy.server_port}",
+                f"https://127.0.0.1:{https_proxy.server_port}",
                 proxy_ssl_context=target_client, ssl_context=target_client, retries=False,
             ).request("GET", target_url, timeout=urllib3.Timeout(total=3))
         except urllib3.exceptions.ProxyError:

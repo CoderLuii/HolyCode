@@ -4,6 +4,32 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.9] - 11/04/2026
+
+### Changed
+
+- Update Node.js LTS to 24.22.2 and require official Debian Chromium, common and sandbox packages 156.0.8078.79-1~deb13u1 or newer on AMD64 and ARM64
+- Update OpenCode to 1.19.5, Claude Code to 2.1.318, npm to 12.2.2, pnpm to 12.16.1 and GitHub CLI to 2.103.3
+- Update Wrangler to 4.157.0 with its published Miniflare 5.20261103.0-beta and workerd 1.20261103.1 graph; update Lighthouse to 13.6.0
+- Update Python Playwright to 1.64.1, Certifi to 2026.10.23 and pip to 26.3
+- Follow Paperclip's official Cursor SDK 1.3.1 resolution without changing Paperclip 2026.831.1 or its jsdom/Undici graph
+- Update Docker Scout to 1.29.0 and retain complete finding records, package provenance and result-to-PURL matching
+- Keep Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6 and the existing service/data compatibility holds
+
+### Fixed
+
+- Use npm 12.2.2's official node-gyp and Undici bundle without replacing its dependency subtree
+- Use PM2 7.1.2's official js-yaml 4.3.2 graph and remove the obsolete js-yaml and get-uri/basic-ftp replacements
+- Use pip 26.3's unmodified official wheel and offline seed, retaining RECORD, metadata and HTTP/TLS/proxy consumer checks
+- Follow Lighthouse's current trace-engine graph without the removed legacy-javascript dependency
+- Validate pip's TLS/proxy consumers over IPv4 loopback with explicit invalid-hostname rejection
+
+### Security
+
+- Known upstream vulnerabilities remain advisory with full scanner evidence; acceptance does not fix them or prove they are safe
+- Keep the non-root user, Chromium sandbox, supplied seccomp policy and closed browser port; avoid untrusted browser content and automation while known findings remain
+- Make no Claude Auth token-refresh fix claim; issue #14 remains closed against its verified v1.2.8 release evidence
+
 ## [1.2.8] - 10/26/2026
 
 ### Changed
