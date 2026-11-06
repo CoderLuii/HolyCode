@@ -191,14 +191,14 @@ notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.3.1` through its
 transport. This records the bundled notice; it is not legal clearance for
 Cursor service use.
 
-### Paperclip-scoped jsdom 30.1.3 and Undici 8.12.3
+### Paperclip-scoped jsdom 30.1.3 and Undici 8.12.4
 
 - License: MIT (each package includes its own license text)
 - Sources: https://github.com/jsdom/jsdom and https://github.com/nodejs/undici
-- npm: https://www.npmjs.com/package/jsdom/v/30.1.3 and https://www.npmjs.com/package/undici/v/8.12.3
+- npm: https://www.npmjs.com/package/jsdom/v/30.1.3 and https://www.npmjs.com/package/undici/v/8.12.4
 
 Paperclip's server resolves jsdom 30.1.3; jsdom declares `undici ^8.12.1` and
-currently resolves Undici 8.12.3. HolyCode checks that owner graph and exercises
+currently resolves Undici 8.12.4. HolyCode checks that owner graph and exercises
 jsdom's loopback URL fetch. It no longer replaces Undici or changes an installed
 Connect dependency declaration.
 

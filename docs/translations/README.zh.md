@@ -433,7 +433,7 @@ services:
 
 > 发布标签严格使用 `vX.Y.Z`。Docker 镜像标签会去掉 `v`。`v1.0.9` 之后使用 `v1.1.0`，`v1.1.9` 之后使用 `v1.2.0`，`v1.9.9` 之后使用 `v2.0.0`。`v1.0.10` 到 `v1.0.13` 保持不可变。
 
-> Current v1.2.9 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
+> Current v1.3.0 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
 
 </details>
 
@@ -684,7 +684,7 @@ environment:
 
 如果从 `v1.1.3` 之前的版本升级，请下载上面的 seccomp 配置文件，并在重新创建容器前把 `security_opt` 添加到 `holycode` 服务中。
 
-v1.2.9 继续使用 Paperclip 2026.831.1，因此没有新增 Paperclip 迁移，也没有覆盖原生运行器的默认设置。回滚时，请使用镜像 `1.2.8` 恢复升级前未改动的 home、cache 和 workspace 卷；不要重复使用已经由 v1.2.9 启动过的卷。
+v1.3.0 继续使用 Paperclip 2026.831.1，因此没有新增 Paperclip 迁移，也没有覆盖原生运行器的默认设置。回滚时，请使用镜像 `1.2.9` 恢复升级前未改动的 home、cache 和 workspace 卷；不要重复使用已经由 v1.3.0 启动过的卷。
 
 v1.1.9 通过迁移 `0223`–`0230` 将 Paperclip 从 2026.824.1 升级到 2026.831.1。已弃用的 `brandColor` 和 `attachmentMaxBytes` 字段会被移除，进行中的登录会话会被重置；升级后请重新登录。回滚时必须把未改动的备份还原到镜像 `1.1.8`。不要用 `1.1.8` 启动已由 v1.1.9 迁移的数据库。
 

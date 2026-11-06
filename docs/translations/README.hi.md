@@ -433,7 +433,7 @@ services:
 
 > Release tags ठीक `vX.Y.Z` का उपयोग करते हैं. Docker image tags से `v` हटा रहता है. `v1.0.9` के बाद `v1.1.0`, `v1.1.9` के बाद `v1.2.0`, और `v1.9.9` के बाद `v2.0.0` आता है. `v1.0.10` से `v1.0.13` तक अपरिवर्तनीय हैं.
 
-> Current v1.2.9 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
+> Current v1.3.0 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
 
 </details>
 
@@ -684,7 +684,7 @@ environment:
 
 अगर आप `v1.1.3` से पहले के release से अपग्रेड कर रहे हैं, तो ऊपर दी गई seccomp प्रोफ़ाइल डाउनलोड करें और कंटेनर को री-क्रिएट करने से पहले `holycode` service में `security_opt` जोड़ें।
 
-v1.2.9 में Paperclip 2026.831.1 पर ही रहता है, इसलिए Paperclip का कोई नया migration या native runner default override नहीं है। Rollback के लिए अपग्रेड से पहले के untouched home, cache और workspace volumes को image `1.2.8` के साथ restore करें; v1.2.9 के साथ पहले ही शुरू किए गए volumes दोबारा इस्तेमाल न करें।
+v1.3.0 में Paperclip 2026.831.1 पर ही रहता है, इसलिए Paperclip का कोई नया migration या native runner default override नहीं है। Rollback के लिए अपग्रेड से पहले के untouched home, cache और workspace volumes को image `1.2.9` के साथ restore करें; v1.3.0 के साथ पहले ही शुरू किए गए volumes दोबारा इस्तेमाल न करें।
 
 v1.1.9 में Paperclip 2026.824.1 से 2026.831.1 पर migrations `0223`–`0230` के साथ migrate होता है। हटाए गए `brandColor` और `attachmentMaxBytes` fields निकाल दिए जाते हैं और चल रहे login sessions reset होते हैं; upgrade के बाद दोबारा login करें। Rollback के लिए untouched backup को image `1.1.8` के साथ restore करें। v1.1.9 से migrate हुए database के साथ `1.1.8` कभी शुरू न करें।
 

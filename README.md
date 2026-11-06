@@ -30,7 +30,9 @@
 
 OpenCode running in a container with everything already installed. 50+ dev tools, 10+ AI providers, a sandboxed headless browser, persistent state, and Paperclip on top. Drop it on any machine and pick up exactly where you left off.
 
-**Chromium update.** v1.2.9 builds require official Debian `chromium`, `chromium-common`, and `chromium-sandbox` `156.0.8078.79-1~deb13u1` or newer on AMD64 and ARM64. Earlier images still need an upgrade; pull and restart to apply it. Fresh release scans determine which accepted upstream findings remain; this is not a zero-vulnerability claim. Avoid untrusted browser content and automation while known findings remain; see [the dependency audit](docs/dependency-audit-v1.2.9.md#security-delivery-policy). Keep the unprivileged user, setuid sandbox, seccomp profile, and closed browser port.
+**Chromium update.** v1.3.0 builds require official Debian `chromium`, `chromium-common`, and `chromium-sandbox` `156.0.8078.79-1~deb13u1` or newer on AMD64 and ARM64. Earlier images still need an upgrade; pull and restart to apply it. Fresh release scans determine which accepted upstream findings remain; this is not a zero-vulnerability claim. Avoid untrusted browser content and automation while known findings remain; see [the dependency audit](docs/dependency-audit-v1.3.0.md#security-delivery-policy). Keep the unprivileged user, setuid sandbox, seccomp profile, and closed browser port.
+
+Maintainer checks run on controlled local infrastructure. GitHub displays the actual results as `local/` commit statuses. See the [local validation guide](docs/local-validation.md).
 
 **Hermes remains temporarily unbundled.** HolyCode leaves `/home/opencode/.hermes` untouched so you can restore the service if managed bundling returns.
 
@@ -475,7 +477,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 </details>
 
 <details>
-<summary><strong>v1.2.9 release pins</strong></summary>
+<summary><strong>v1.3.0 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
@@ -483,7 +485,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | OpenSpec | 1.14.3; telemetry disabled, initialize a project explicitly with `openspec init --tools opencode` |
 | npm | 12.2.2 official payload, with its own node-gyp 13.0.0 and Undici 6.29.1; no dependency overlays |
 | PM2 | 7.1.2 official payload with upstream-owned `js-yaml` 4.3.2; no `get-uri`, `basic-ftp`, or dependency overlays |
-| Paperclip | 2026.831.1 compatibility hold; its current Cursor SDK 1.3.1 and jsdom/Undici 30.1.3/8.12.3 graph is checked without an Undici replacement; no new migration or native-runner default override |
+| Paperclip | 2026.831.1 compatibility hold; its current Cursor SDK 1.3.1 and jsdom/Undici 30.1.3/8.12.4 graph is checked without an Undici replacement; no new migration or native-runner default override |
 | Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
 | s6-overlay | 3.2.3.2 |
@@ -517,7 +519,7 @@ The official npm, PM2 and pip distributions keep their published dependency grap
 
 Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. Manual main-branch validation also runs Docker Scout and Trivy natively on AMD64 and ARM64 before a tag is created. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
 
-The dated adoption, hold, and removal decisions, plus the required release gates, are in the [v1.2.9 dependency audit](docs/dependency-audit-v1.2.9.md).
+The dated adoption, hold, and removal decisions, plus the required release gates, are in the [v1.3.0 dependency audit](docs/dependency-audit-v1.3.0.md).
 
 </details>
 
@@ -846,7 +848,7 @@ docker compose pull
 docker compose up -d
 ```
 
-`v1.2.9` keeps Paperclip at 2026.831.1, so this release adds no Paperclip migration or native-runner default override. To roll back, stop the stack, select `coderluii/holycode:1.2.8`, restore the untouched home, local-cache, and workspace copies you made before upgrading, and start the stack again. Do not reuse volumes that the newer image has already started against when testing the rollback.
+`v1.3.0` keeps Paperclip at 2026.831.1, so this release adds no Paperclip migration or native-runner default override. To roll back, stop the stack, select `coderluii/holycode:1.2.9`, restore the untouched home, local-cache, and workspace copies you made before upgrading, and start the stack again. Do not reuse volumes that the newer image has already started against when testing the rollback.
 
 `v1.1.9` upgrades Paperclip from 2026.824.1 to 2026.831.1 and applies migrations `0223` through `0230`. Migrations remove the retired `brandColor` and `attachmentMaxBytes` company fields, reset transient in-progress login sessions, and require users to restart login. Keep your untouched pre-upgrade copies until onboarding, Skills, agents, projects, workspaces, connections, and provider authentication pass your checks.
 

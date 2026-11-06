@@ -4,6 +4,22 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 11/06/2026
+
+### Changed
+
+- Run release qualification on maintainer-controlled native AMD64 and ARM64 hosts and report the actual results through local commit statuses
+- Keep hosted build and validation workflows manual-only, with explicit authorization and existing-release guards
+- Build explicitly requested hosted releases on parallel native AMD64 and ARM64 runners instead of emulating ARM64
+- Retain the v1.2.9 top-level tool versions, persistent data paths and compatibility holds
+
+### Fixed
+
+- Prevent normal releases from starting a duplicate hosted publisher that later needs cancellation
+- Bind local status results to exact source, command receipts and artifacts; reject stale or incomplete evidence
+- Refuse published-version overwrites and remove release-asset clobbering from the manual fallback
+- Follow Paperclip's supported Undici 8.12.4 patch resolution with exact version and integrity checks, without a dependency replacement
+
 ## [1.2.9] - 11/04/2026
 
 ### Changed

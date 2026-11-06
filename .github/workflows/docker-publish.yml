@@ -1,10 +1,19 @@
-name: HolyCode - Build and Push to Docker Hub + GHCR
-run-name: ${{ github.ref_name }}
+name: HolyCode - Manual hosted release fallback
+run-name: ${{ inputs.release_version }} hosted fallback
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      confirm_hosted_execution:
+        description: Separately authorized hosted execution; normal releases run locally
+        type: boolean
+        required: true
+        default: false
+      release_version:
+        description: Exact version with a source-bound draft release
+        type: string
+        required: true
+        default: v1.3.0
 
 concurrency:
   group: docker-release
@@ -14,24 +23,30 @@ env:
   DOCKERHUB_IMAGE: coderluii/holycode
   GHCR_IMAGE: ghcr.io/coderluii/holycode
   CANDIDATE_IMAGE: ghcr.io/coderluii/holycode
-  PREVIOUS_IMAGE: coderluii/holycode:1.2.8@sha256:e3b53026050ef69998045f273f01f13131e5f7b6e52d5e9978e7ea26c68133da
-  PREVIOUS_VERSION: v1.2.8
-  RELEASE_VERSION: v1.2.9
+  PREVIOUS_IMAGE: coderluii/holycode:1.2.9@sha256:3d0bdce2a62f4eb6a5b03ec644b608d2c370da143474c6c6a81474ef1a16c439
+  PREVIOUS_VERSION: v1.2.9
+  RELEASE_VERSION: v1.3.0
 
 # Required secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username with access to coderluii/holycode.
 #   DOCKERHUB_TOKEN - Docker Hub access token with push and description-update access.
 
 jobs:
-  build-candidate:
+  validate-source:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
-      contents: read
-      packages: write
-    outputs:
-      digest: ${{ steps.build.outputs.digest }}
+      # Draft release listings require push access, even for this metadata read.
+      contents: write
 
     steps:
+      - name: Require explicit hosted fallback authorization
+        env:
+          HOSTED_EXECUTION_APPROVED: ${{ inputs.confirm_hosted_execution }}
+        run: |
+          test "$HOSTED_EXECUTION_APPROVED" = true
+          test "$GITHUB_REF" = refs/heads/main
+
       - name: Checkout exact workflow commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -41,8 +56,8 @@ jobs:
       - name: Validate release metadata and commit binding
         env:
           REQUESTED_REF: ${{ github.sha }}
-          REQUESTED_RELEASE_TITLE: ${{ github.ref_name }}
-          REQUESTED_VERSION: ${{ github.ref_name }}
+          REQUESTED_RELEASE_TITLE: ${{ inputs.release_version }}
+          REQUESTED_VERSION: ${{ inputs.release_version }}
         run: |
           set -euo pipefail
 
@@ -71,6 +86,21 @@ jobs:
 
           echo "Validated exact candidate $actual_sha for $RELEASE_VERSION" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Require unpublished image aliases and a matching draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/check_release_target.py \
+            --repository "$GITHUB_REPOSITORY" --version "$RELEASE_VERSION" \
+            --sha "$GITHUB_SHA" --require-draft \
+            --previous-digest "${PREVIOUS_IMAGE##*@sha256:}"
+
+      - name: Verify Docker Hub credentials before native builds
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Set up Node for Renovate validation
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -84,10 +114,42 @@ jobs:
           python scripts/validate_chromium_seccomp.py
           python -m json.tool renovate.json >/tmp/renovate.json
           python -m json.tool config/npm-global-script-policy.json >/tmp/npm-global-script-policy.json
-          ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
+          ruby -e 'require "yaml"; Dir[".github/workflows/*.{yml,yaml}"].each { |path| YAML.load_file(path) }'
           docker compose -f docker-compose.yaml config --no-interpolate >/tmp/docker-compose.yaml
           docker compose -f docker-compose.full.yaml config --no-interpolate >/tmp/docker-compose.full.yaml
           bash scripts/validate_renovate_extraction.sh 44.129.0
+
+  build-candidate:
+    needs: validate-source
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            suffix: amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            suffix: arm64
+            runner: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout exact workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Require native build architecture
+        run: |
+          set -euo pipefail
+          case "${{ matrix.suffix }}:$(uname -m)" in
+            amd64:x86_64|arm64:aarch64) ;;
+            *) echo "Runner architecture does not match native build" >&2; exit 1 ;;
+          esac
 
       - name: Free up disk space
         run: |
@@ -95,9 +157,6 @@ jobs:
           sudo apt-get clean
           docker system prune -af
           df -h
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -114,35 +173,133 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platform }}
           push: true
-          tags: ${{ env.CANDIDATE_IMAGE }}:validation-${{ github.sha }}
+          tags: ${{ env.CANDIDATE_IMAGE }}:validation-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.suffix }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ github.ref_name }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            org.opencontainers.image.version=${{ inputs.release_version }}
+          cache-from: |
+            type=gha,scope=release-${{ matrix.suffix }}
+            type=gha
+          cache-to: type=gha,scope=release-${{ matrix.suffix }},mode=max
           sbom: true
           provenance: mode=max
 
-      - name: Record immutable candidate digest
+      - name: Record immutable native candidate digest
         run: |
           set -euo pipefail
           digest='${{ steps.build.outputs.digest }}'
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf '%s\n' "$digest" > "candidate-${{ matrix.suffix }}.txt"
+          echo "Native ${{ matrix.platform }} candidate digest: $digest" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload native candidate digest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: holycode-${{ inputs.release_version }}-${{ matrix.suffix }}-candidate
+          if-no-files-found: error
+          path: candidate-${{ matrix.suffix }}.txt
+
+  compose-candidate:
+    needs: build-candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.compose.outputs.digest }}
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Login to GHCR
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download and verify both native candidate digests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            gh run download "$GITHUB_RUN_ID" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "holycode-$RELEASE_VERSION-$arch-candidate" \
+              --dir "candidate-inputs/$arch"
+            digest="$(tr -d '\r\n' < "candidate-inputs/$arch/candidate-$arch.txt")"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+            docker buildx imagetools inspect "$CANDIDATE_IMAGE@$digest" \
+              --format '{{json .Manifest}}' > "candidate-$arch.index.json"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          expected = []
+          for arch in ("amd64", "arm64"):
+              index = json.loads(Path(f"candidate-{arch}.index.json").read_text())
+              digest = Path(f"candidate-inputs/{arch}/candidate-{arch}.txt").read_text().strip()
+              assert index["digest"] == digest and index["schemaVersion"] == 2
+              assert index["mediaType"] == "application/vnd.oci.image.index.v1+json"
+              native = [m for m in index["manifests"] if m.get("platform", {}).get("os") == "linux"
+                        and m["platform"]["architecture"] == arch]
+              attestations = [m for m in index["manifests"] if m.get("annotations", {}).get(
+                  "vnd.docker.reference.type") == "attestation-manifest"]
+              assert len(native) == 1 and attestations
+              assert len(index["manifests"]) == 1 + len(attestations)
+              assert all(m["annotations"]["vnd.docker.reference.digest"] == native[0]["digest"]
+                         for m in attestations)
+              expected.extend(index["manifests"])
+          assert len({m["digest"] for m in expected}) == len(expected)
+          Path("expected-manifests.json").write_text(json.dumps(sorted(expected, key=lambda m: m["digest"])))
+          PY
+
+      - name: Compose exact attested native candidates
+        id: compose
+        run: |
+          set -euo pipefail
+          amd64="$(tr -d '\r\n' < candidate-inputs/amd64/candidate-amd64.txt)"
+          arm64="$(tr -d '\r\n' < candidate-inputs/arm64/candidate-arm64.txt)"
+          tag="$CANDIDATE_IMAGE:validation-$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          docker buildx imagetools create --metadata-file candidate-metadata.json \
+            --tag "$tag" "$CANDIDATE_IMAGE@$amd64" "$CANDIDATE_IMAGE@$arm64"
+          digest="$(jq -er '."containerimage.descriptor".digest' candidate-metadata.json)"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          docker buildx imagetools inspect "$CANDIDATE_IMAGE@$digest" \
+            --format '{{json .Manifest}}' > candidate-index.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          metadata = json.loads(Path("candidate-metadata.json").read_text())["containerimage.descriptor"]
+          combined = json.loads(Path("candidate-index.json").read_text())
+          expected = json.loads(Path("expected-manifests.json").read_text())
+          assert combined["digest"] == metadata["digest"] and combined["schemaVersion"] == 2
+          assert combined["mediaType"] == metadata["mediaType"] == "application/vnd.oci.image.index.v1+json"
+          assert sorted(combined["manifests"], key=lambda m: m["digest"]) == expected
+          PY
           printf '%s\n' "$digest" > candidate-digest.txt
-          echo "Candidate digest: $digest" >> "$GITHUB_STEP_SUMMARY"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Combined native candidate digest: $digest" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload candidate digest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: holycode-${{ github.ref_name }}-candidate
+          name: holycode-${{ inputs.release_version }}-candidate
           if-no-files-found: error
           path: candidate-digest.txt
 
   protected-validation:
-    needs: build-candidate
+    needs: compose-candidate
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -181,7 +338,7 @@ jobs:
 
       - name: Pull exact candidate digest
         env:
-          CANDIDATE_DIGEST: ${{ needs.build-candidate.outputs.digest }}
+          CANDIDATE_DIGEST: ${{ needs.compose-candidate.outputs.digest }}
         run: |
           set -euo pipefail
           [[ "$CANDIDATE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
@@ -375,7 +532,7 @@ jobs:
       - name: Collect architecture evidence
         if: always()
         env:
-          CANDIDATE_DIGEST: ${{ needs.build-candidate.outputs.digest }}
+          CANDIDATE_DIGEST: ${{ needs.compose-candidate.outputs.digest }}
         run: |
           set -euo pipefail
 
@@ -393,7 +550,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: holycode-${{ github.ref_name }}-${{ matrix.suffix }}-evidence
+          name: holycode-${{ inputs.release_version }}-${{ matrix.suffix }}-evidence
           if-no-files-found: error
           path: |
             holycode-${{ matrix.suffix }}.candidate-digest.txt
@@ -418,9 +575,31 @@ jobs:
           test "$SCOUT_GATE_OUTCOME" = "success"
           test "$TRIVY_GATE_OUTCOME" = "success"
 
-  promote-candidate:
-    needs: protected-validation
+  release-validation:
+    needs: [validate-source, build-candidate, compose-candidate, protected-validation]
+    if: always()
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Enforce release validation
+        env:
+          SOURCE_RESULT: ${{ needs.validate-source.result }}
+          BUILD_RESULT: ${{ needs.build-candidate.result }}
+          COMPOSE_RESULT: ${{ needs.compose-candidate.result }}
+          PROTECTED_RESULT: ${{ needs.protected-validation.result }}
+        run: |
+          set -eu
+          test "$SOURCE_RESULT" = success
+          test "$BUILD_RESULT" = success
+          test "$COMPOSE_RESULT" = success
+          test "$PROTECTED_RESULT" = success
+
+  promote-candidate:
+    needs: release-validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: write
@@ -438,7 +617,7 @@ jobs:
 
           git fetch --no-tags --depth=1 origin main
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main
-          current="$GITHUB_REF_NAME"
+          current="$RELEASE_VERSION"
           previous="$(git tag --list 'v*' --sort=-v:refname | grep -Fxv "$current" | head -n 1 || true)"
           commit_title="$(git log -1 --format=%s "$GITHUB_SHA")"
           python scripts/validate_version.py \
@@ -447,29 +626,15 @@ jobs:
             --tag-name "$current" \
             --commit-title "$commit_title"
 
-      - name: Require matching published GitHub release
+      - name: Require matching source-bound draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-
-          release=''
-          for _ in $(seq 1 180); do
-            if release="$(gh api \
-              -H 'X-GitHub-Api-Version: 2026-03-10' \
-              "/repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" 2>/dev/null)"; then
-              break
-            fi
-            sleep 10
-          done
-          [ -n "$release" ]
-          jq -e --arg tag "$GITHUB_REF_NAME" '
-            .tag_name == $tag and
-            .name == $tag and
-            .draft == false and
-            (.body | test("^## [0-9]{2}/[0-9]{2}/[0-9]{4}"))
-          ' <<<"$release" >/dev/null
-
+          python scripts/check_release_target.py \
+            --repository "$GITHUB_REPOSITORY" --version "$RELEASE_VERSION" \
+            --sha "$GITHUB_SHA" --require-draft \
+            --previous-digest "${PREVIOUS_IMAGE##*@sha256:}"
       - name: Download protected candidate digest
         env:
           GH_TOKEN: ${{ github.token }}
@@ -478,7 +643,7 @@ jobs:
 
           gh run download "$GITHUB_RUN_ID" \
             --repo "$GITHUB_REPOSITORY" \
-            --name "holycode-$GITHUB_REF_NAME-candidate" \
+            --name "holycode-$RELEASE_VERSION-candidate" \
             --dir candidate
           candidate_digest="$(tr -d '\r\n' < candidate/candidate-digest.txt)"
           [[ "$candidate_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
@@ -500,11 +665,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Recheck unpublished aliases before promotion
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python scripts/check_release_target.py \
+            --repository "$GITHUB_REPOSITORY" --version "$RELEASE_VERSION" \
+            --sha "$GITHUB_SHA" --require-draft \
+            --previous-digest "${PREVIOUS_IMAGE##*@sha256:}"
       - name: Verify and promote exact protected candidate
         run: |
           set -euo pipefail
 
-          version="${GITHUB_REF_NAME#v}"
+          version="${RELEASE_VERSION#v}"
           source="$GHCR_IMAGE@$CANDIDATE_DIGEST"
           manifest="$(docker buildx imagetools inspect "$source" --format '{{json .Manifest}}')"
           digest="$(jq -er '.digest' <<<"$manifest")"
@@ -525,7 +699,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          version="${GITHUB_REF_NAME#v}"
+          version="${RELEASE_VERSION#v}"
           refs=(
             "$DOCKERHUB_IMAGE:$version"
             "$DOCKERHUB_IMAGE:latest"
@@ -573,8 +747,8 @@ jobs:
 
           mkdir -p release-evidence
           for artifact in \
-            "holycode-$GITHUB_REF_NAME-amd64-evidence" \
-            "holycode-$GITHUB_REF_NAME-arm64-evidence"; do
+            "holycode-$RELEASE_VERSION-amd64-evidence" \
+            "holycode-$RELEASE_VERSION-arm64-evidence"; do
             gh run download "$GITHUB_RUN_ID" \
               --repo "$GITHUB_REPOSITORY" \
               --name "$artifact" \
@@ -582,12 +756,13 @@ jobs:
           done
           mapfile -d '' assets < <(find release-evidence -type f -print0)
           [ "${#assets[@]}" -gt 0 ]
-          gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
+          gh release upload "$RELEASE_VERSION" "${assets[@]}"
 
   update-dockerhub-description:
     needs: promote-candidate
     runs-on: ubuntu-24.04
-    if: startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 10
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     steps:

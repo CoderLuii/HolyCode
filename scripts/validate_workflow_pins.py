@@ -26,12 +26,37 @@ REQUIRED_PINS = {
 }
 
 
+def manual_trigger_errors(text: str, name: str) -> list[str]:
+    top_level_keys = []
+    for line in text.splitlines():
+        if not line or line[0].isspace() or line.startswith("#"):
+            continue
+        match = re.match(r"([A-Za-z_][A-Za-z_0-9-]*):(?:\s|$)", line)
+        if not match:
+            return [f"{name} must use unquoted canonical top-level YAML keys"]
+        top_level_keys.append(match.group(1))
+    if len(top_level_keys) != len(set(top_level_keys)):
+        return [f"{name} must not contain duplicate top-level YAML keys"]
+    headers = list(re.finditer(r"(?m)^on:\s*$", text))
+    if len(headers) != 1:
+        return [f"{name} must use one explicit manual-only on block"]
+    body = text[headers[0].end():]
+    boundary = re.search(r"(?m)^[^\s#]", body)
+    if boundary:
+        body = body[:boundary.start()]
+    entries = re.findall(r"(?m)^  ([^\s#][^\n]*)", body)
+    if len(entries) != 1 or not re.fullmatch(r"workflow_dispatch:\s*(?:#.*)?", entries[0]):
+        return [f"{name} must expose only workflow_dispatch; all qualification runs locally"]
+    return []
+
+
 def collect_errors() -> list[str]:
     errors: list[str] = []
     seen: set[str] = set()
 
-    for workflow in sorted(WORKFLOWS.glob("*.yml")):
+    for workflow in sorted((*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml"))):
         text = workflow.read_text(encoding="utf-8")
+        errors.extend(manual_trigger_errors(text, workflow.name))
         for line_number, line in enumerate(text.splitlines(), start=1):
             match = USES_RE.match(line)
             if not match:
@@ -51,8 +76,24 @@ def collect_errors() -> list[str]:
 
     docker_publish = WORKFLOWS / "docker-publish.yml"
     publish_text = docker_publish.read_text(encoding="utf-8")
-    if "workflow_dispatch:" in publish_text:
-        errors.append("docker-publish.yml must not expose workflow_dispatch; manual runs can overwrite latest")
+    image_versions = re.findall(
+        r"(?m)^ARG RELEASE_VERSION=(\S+)\s*$",
+        (ROOT / "Dockerfile").read_text(encoding="utf-8"),
+    )
+    workflow_versions = re.findall(r"(?m)^  RELEASE_VERSION: (\S+)\s*$", publish_text)
+    if len(image_versions) != 1 or image_versions != workflow_versions:
+        errors.append("Dockerfile release must match the single workflow RELEASE_VERSION")
+    for required in (
+        "confirm_hosted_execution:",
+        "HOSTED_EXECUTION_APPROVED: ${{ inputs.confirm_hosted_execution }}",
+        'test "$HOSTED_EXECUTION_APPROVED" = true',
+        "python scripts/check_release_target.py",
+        "--require-draft",
+    ):
+        if required not in publish_text:
+            errors.append(f"docker-publish.yml must retain explicit safe fallback guard {required!r}")
+    if "--clobber" in publish_text:
+        errors.append("docker-publish.yml must not overwrite existing release assets")
     if "GHCR_TOKEN" in publish_text:
         errors.append("docker-publish.yml must use secrets.GITHUB_TOKEN for GHCR, not a separate GHCR_TOKEN")
     if "packages: write" not in publish_text or "contents: read" not in publish_text:
@@ -64,7 +105,6 @@ def collect_errors() -> list[str]:
             "actions/checkout",
             "actions/setup-node",
             "actions/upload-artifact",
-            "docker/setup-qemu-action",
             "docker/setup-buildx-action",
             "docker/login-action",
             "docker/build-push-action",
@@ -89,10 +129,10 @@ def collect_errors() -> list[str]:
         "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.76.1",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.2.8@sha256:"
-        "e3b53026050ef69998045f273f01f13131e5f7b6e52d5e9978e7ea26c68133da",
-        "PREVIOUS_VERSION: v1.2.8",
-        "RELEASE_VERSION: v1.2.9",
+        "PREVIOUS_IMAGE: coderluii/holycode:1.2.9@sha256:"
+        "3d0bdce2a62f4eb6a5b03ec644b608d2c370da143474c6c6a81474ef1a16c439",
+        "PREVIOUS_VERSION: v1.2.9",
+        "RELEASE_VERSION: v1.3.0",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
@@ -136,6 +176,9 @@ def collect_errors() -> list[str]:
     pr_text = pr_validation.read_text(encoding="utf-8")
     for required_text in (
         "workflow_dispatch:",
+        "confirm_hosted_execution:",
+        "HOSTED_EXECUTION_APPROVED: ${{ inputs.confirm_hosted_execution }}",
+        'test "$HOSTED_EXECUTION_APPROVED" = true',
         "if: github.event_name == 'workflow_dispatch'",
         "test \"$GITHUB_REF\" = 'refs/heads/main'",
         "runner: ubuntu-24.04",

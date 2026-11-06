@@ -35,7 +35,7 @@ ARG PAPERCLIP_JSDOM_VERSION=30.1.3
 # renovate: datasource=npm depName=@fission-ai/openspec
 ARG OPENSPEC_VERSION=1.14.3
 # renovate: datasource=npm depName=undici
-ARG PAPERCLIP_UNDICI_VERSION=8.12.3
+ARG PAPERCLIP_UNDICI_VERSION=8.12.4
 # renovate: datasource=npm depName=opencode-claude-auth
 ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.1
 # renovate: datasource=npm depName=typescript
@@ -83,8 +83,8 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=70.3.0
 ARG PIP_VENDOR_URLLIB3_VERSION=2.8.0
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.2.1
-ARG RELEASE_APT_REFRESH=2026-11-04
-ARG RELEASE_VERSION=v1.2.9
+ARG RELEASE_APT_REFRESH=2026-11-05
+ARG RELEASE_VERSION=v1.3.0
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -497,7 +497,7 @@ RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrit
     test "$(npm view "jsdom@${PAPERCLIP_JSDOM_VERSION}" dist.integrity)" = \
       "sha512-hQMUPvRgN7KxsfIytDQji7bimuJeRQa6Qo5+iuiZQk5CafeRxLIA10/cG5YCBFNpD9RO3oqIiN4CO1Y44kxqXg==" && \
     test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \
-      "sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==" && \
+      "sha512-8Mx+uNKKER2bA4AdtedkqRbwUCIJFr2nJckXRe5yrDqzePqwLP7VNcctN8/XdmDSbF7mS+jJKIszlL+vbam1VA==" && \
     CONNECT_NODE_PACKAGE=/usr/local/lib/node_modules/paperclipai/node_modules/@connectrpc/connect-node/package.json && \
     test ! -e "$CONNECT_NODE_PACKAGE" && \
     test "$(find /usr/local/lib/node_modules/paperclipai -path '*/@connectrpc/connect-node/package.json' -type f | wc -l)" -eq 0 && \

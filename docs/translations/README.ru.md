@@ -433,7 +433,7 @@ services:
 
 > Теги релизов используют ровно `vX.Y.Z`. Docker-теги опускают `v`. После `v1.0.9` идёт `v1.1.0`, после `v1.1.9` идёт `v1.2.0`, а после `v1.9.9` идёт `v2.0.0`. Версии от `v1.0.10` до `v1.0.13` остаются неизменными.
 
-> Current v1.2.9 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
+> Current v1.3.0 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
 
 </details>
 
@@ -684,7 +684,7 @@ environment:
 
 При обновлении с версии старше `v1.1.3` скачайте указанный выше профиль seccomp и добавьте `security_opt` в сервис `holycode` до пересоздания контейнера.
 
-В v1.2.9 сохраняется Paperclip 2026.831.1, поэтому новых миграций Paperclip и переопределения значения native runner по умолчанию нет. Для отката восстановите нетронутые домашние, кэш- и рабочие тома, созданные до обновления, с образом `1.2.8`; не используйте повторно тома, которые уже запускались с v1.2.9.
+В v1.3.0 сохраняется Paperclip 2026.831.1, поэтому новых миграций Paperclip и переопределения значения native runner по умолчанию нет. Для отката восстановите нетронутые домашние, кэш- и рабочие тома, созданные до обновления, с образом `1.2.9`; не используйте повторно тома, которые уже запускались с v1.3.0.
 
 В v1.1.9 Paperclip мигрирует с 2026.824.1 на 2026.831.1 через миграции `0223`–`0230`. Устаревшие поля `brandColor` и `attachmentMaxBytes` удаляются, а незавершённые сеансы входа сбрасываются; войдите снова после обновления. Для отката восстановите нетронутую резервную копию с образом `1.1.8`. Никогда не запускайте `1.1.8` с базой данных, уже мигрированной v1.1.9.
 

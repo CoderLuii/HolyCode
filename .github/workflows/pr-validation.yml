@@ -1,8 +1,13 @@
-name: HolyCode - PR Validation
+name: HolyCode - Manual hosted validation fallback
 
 on:
-  pull_request:
   workflow_dispatch:
+    inputs:
+      confirm_hosted_execution:
+        description: Separately authorized hosted execution; normal validation runs locally
+        type: boolean
+        required: true
+        default: false
 
 concurrency:
   group: pr-validation-${{ github.event.pull_request.number || github.ref }}
@@ -20,7 +25,11 @@ jobs:
     steps:
       - name: Require main for manual validation
         if: github.event_name == 'workflow_dispatch'
-        run: test "$GITHUB_REF" = 'refs/heads/main'
+        env:
+          HOSTED_EXECUTION_APPROVED: ${{ inputs.confirm_hosted_execution }}
+        run: |
+          test "$HOSTED_EXECUTION_APPROVED" = true
+          test "$GITHUB_REF" = 'refs/heads/main'
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -44,7 +53,7 @@ jobs:
           python -m json.tool renovate.json >/tmp/renovate.json
 
       - name: Workflow YAML syntax
-        run: ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path) }'
+        run: ruby -e 'require "yaml"; Dir[".github/workflows/*.{yml,yaml}"].each { |path| YAML.load_file(path) }'
 
       - name: Compose config
         run: |

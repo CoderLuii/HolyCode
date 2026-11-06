@@ -433,7 +433,7 @@ services:
 
 > I tag di release usano esattamente `vX.Y.Z`. I tag Docker omettono la `v`. Dopo `v1.0.9` usa `v1.1.0`, dopo `v1.1.9` usa `v1.2.0` e dopo `v1.9.9` usa `v2.0.0`. `v1.0.10` fino a `v1.0.13` restano immutabili.
 
-> Current v1.2.9 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
+> Current v1.3.0 pins: Node.js 24.22.2, OpenCode 1.19.5, OpenSpec 1.14.3, Claude Code 2.1.318, npm 12.2.2, pnpm 12.16.1, PM2 7.1.2, Wrangler 4.157.0 (Miniflare 5.20261103.0-beta, workerd 1.20261103.1), Lighthouse 13.6.0, pip 26.3, Playwright 1.64.1, certifi 2026.10.23, and GitHub CLI 2.103.3. Paperclip 2026.831.1, Claude Auth 2.2.1, TypeScript 6.0.3, and json-server 0.17.4 stay pinned. npm, PM2, and pip use their official payloads without dependency overlays or vendor repairs. Native image qualification is required before release. Hermes and managed oh-my-openagent remain unavailable; external CLIProxyAPI endpoints remain supported.
 
 </details>
 
@@ -684,7 +684,7 @@ Arresta il container ed esegui il backup dei volumi home, cache e workspace prim
 
 Se aggiorni da una release precedente a `v1.1.3`, scarica il profilo seccomp indicato sopra e aggiungi `security_opt` al servizio `holycode` prima di ricreare il container.
 
-La v1.2.9 mantiene Paperclip 2026.831.1, quindi non aggiunge una nuova migrazione Paperclip né modifica il valore predefinito del runner nativo. Per tornare indietro, ripristina i volumi home, cache e workspace intatti creati prima dell'aggiornamento con l'immagine `1.2.8`; non riutilizzare volumi già avviati con la v1.2.9.
+La v1.3.0 mantiene Paperclip 2026.831.1, quindi non aggiunge una nuova migrazione Paperclip né modifica il valore predefinito del runner nativo. Per tornare indietro, ripristina i volumi home, cache e workspace intatti creati prima dell'aggiornamento con l'immagine `1.2.9`; non riutilizzare volumi già avviati con la v1.3.0.
 
 v1.1.9 migra Paperclip da 2026.824.1 a 2026.831.1 con le migrazioni `0223`–`0230`. I campi ritirati `brandColor` e `attachmentMaxBytes` vengono rimossi e le sessioni di accesso in corso vengono azzerate; accedi di nuovo dopo l'aggiornamento. Per tornare indietro, ripristina il backup intatto con l'immagine `1.1.8`. Non avviare mai `1.1.8` con un database già migrato da v1.1.9.
 

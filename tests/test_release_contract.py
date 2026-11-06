@@ -95,7 +95,7 @@ class ReleaseContractTests(unittest.TestCase):
             "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.3.1",
             "ARG PAPERCLIP_JSDOM_VERSION=30.1.3",
             "ARG OPENSPEC_VERSION=1.14.3",
-            "ARG PAPERCLIP_UNDICI_VERSION=8.12.3",
+            "ARG PAPERCLIP_UNDICI_VERSION=8.12.4",
             "ARG CLAUDE_AUTH_PLUGIN_VERSION=2.2.1",
             "ARG TYPESCRIPT_VERSION=6.0.3",
             "ARG NPM_VERSION=12.2.2",
@@ -347,7 +347,7 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertEqual(old_count, int(match.group(2)), lines[index])
             self.assertEqual(new_count, int(match.group(4)), lines[index])
         self.assertIn("verify-pip-vendor-record.py", self.dockerfile)
-        self.assertIn("ARG PAPERCLIP_UNDICI_VERSION=8.12.3", self.dockerfile)
+        self.assertIn("ARG PAPERCLIP_UNDICI_VERSION=8.12.4", self.dockerfile)
         self.assertNotIn("python3 python3-pip python3-venv", self.dockerfile)
         self.assertIn("python3 python3-venv", self.dockerfile)
         self.assertIn("python3 -m venv /tmp/holycode-pip-bootstrap", self.dockerfile)
@@ -483,11 +483,11 @@ class ReleaseContractTests(unittest.TestCase):
         for value in (
             "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.3.1",
             "ARG PAPERCLIP_JSDOM_VERSION=30.1.3",
-            "ARG PAPERCLIP_UNDICI_VERSION=8.12.3",
+            "ARG PAPERCLIP_UNDICI_VERSION=8.12.4",
             "sha512-Mn0gK8V+5BkOqm22J2ocU+1BrqnNH8QcK9kmA7SkRuawDOeq2ABC2BIZq9gRnF3z68x/I7J/ZU8jl6DcshCVUA==",
             'fail("Paperclip Cursor SDK version mismatch",',
             "sha512-hQMUPvRgN7KxsfIytDQji7bimuJeRQa6Qo5+iuiZQk5CafeRxLIA10/cG5YCBFNpD9RO3oqIiN4CO1Y44kxqXg==",
-            "sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==",
+            "sha512-8Mx+uNKKER2bA4AdtedkqRbwUCIJFr2nJckXRe5yrDqzePqwLP7VNcctN8/XdmDSbF7mS+jJKIszlL+vbam1VA==",
             'adapter.dependencies["@cursor/sdk"]!=="^1.0.28"',
             'sdk.dependencies["@connectrpc/connect-node"]!==undefined',
             'jsdom.dependencies.undici!=="^8.12.1"',
@@ -519,6 +519,45 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("EXPECTED_PAPERCLIP_UNDICI", self.smoke)
         self.assertIn('JSDOM.fromURL', self.smoke)
         self.assertIn('require.resolve(\\"undici/package.json\\"', self.smoke)
+
+    def test_paperclip_owner_guard_accepts_official_undici_patch_and_rejects_drift(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node is required for the extracted build-guard fixture")
+        fixture = json.loads(
+            (ROOT / "tests" / "fixtures" / "paperclip-undici-8.12.4.json").read_text(encoding="utf-8")
+        )
+        guard = re.search(
+            r"node -e '([^'\n]*Paperclip Undici resolved version mismatch[^'\n]*)'",
+            self.dockerfile,
+        )
+        self.assertIsNotNone(guard)
+        expected = [
+            re.search(rf"^ARG PAPERCLIP_{name}_VERSION=(\S+)$", self.dockerfile, re.MULTILINE).group(1)
+            for name in ("CURSOR_SDK", "JSDOM", "UNDICI")
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "node_modules"
+            for name, manifest in fixture["packages"].items():
+                package = root / name / "package.json"
+                package.parent.mkdir(parents=True, exist_ok=True)
+                package.write_text(json.dumps(manifest), encoding="utf-8")
+            script = guard.group(1).replace(
+                '"/usr/local/lib/node_modules/paperclipai/node_modules"',
+                json.dumps(root.as_posix()),
+            )
+            result = subprocess.run([node, "-e", script, *expected], capture_output=True, text=True, timeout=10)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertIn(fixture["packages"]["undici"]["dist"]["integrity"], self.dockerfile)
+            for name, field, wrong in (("undici", "version", "8.12.5"), ("jsdom", "dependencies", {"undici": "^9.0.0"})):
+                with self.subTest(name=name, wrong=wrong):
+                    package = root / name / "package.json"
+                    original = fixture["packages"][name]
+                    package.write_text(json.dumps({**original, field: wrong}), encoding="utf-8")
+                    result = subprocess.run([node, "-e", script, *expected], capture_output=True, text=True, timeout=10)
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertIn("mismatch", result.stderr)
+                    package.write_text(json.dumps(original), encoding="utf-8")
 
     def test_npm_12_2_1_uses_its_published_transitive_graph(self):
         self.assertIn('npm install -g --ignore-scripts "npm@${NPM_VERSION}"', self.dockerfile)
@@ -978,12 +1017,13 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertNotIn("config/security-exceptions-v1.2.4.json", workflow)
             self.assertNotIn("USE_ARM64_CHROMIUM_EXCEPTION", workflow)
 
-    def test_release_waits_for_verified_publication_without_weakening_binding(self):
-        self.assertIn("for _ in $(seq 1 180); do", self.publish)
-        self.assertIn('"/repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME"', self.publish)
-        self.assertIn('.tag_name == $tag', self.publish)
-        self.assertIn('.name == $tag', self.publish)
-        self.assertIn('.draft == false', self.publish)
+    def test_manual_release_requires_an_unpublished_source_bound_draft(self):
+        self.assertEqual(self.publish.count("--require-draft"), 3)
+        self.assertIn('--sha "$GITHUB_SHA"', self.publish)
+        self.assertIn('--version "$RELEASE_VERSION"', self.publish)
+        self.assertNotIn("for _ in $(seq 1 180); do", self.publish)
+        self.assertNotIn("gh release upload --clobber", self.publish)
+        self.assertIn("Require matching source-bound draft release", self.publish)
 
     def test_protected_scanner_failures_retain_reports_and_block_promotion(self):
         for name, step_id in (
@@ -1035,14 +1075,14 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("chromium-sandbox", self.dockerfile)
         self.assertIn("test -u /usr/lib/chromium/chrome-sandbox", self.dockerfile)
 
-    def test_v1_2_9_uses_v1_2_7_as_its_git_predecessor(self):
-        self.assertIn("RELEASE_VERSION: v1.2.9", self.protected)
-        self.assertIn("PREVIOUS_VERSION: v1.2.8", self.protected)
+    def test_v1_3_0_uses_v1_2_9_as_its_git_predecessor(self):
+        self.assertIn("RELEASE_VERSION: v1.3.0", self.protected)
+        self.assertIn("PREVIOUS_VERSION: v1.2.9", self.protected)
         self.assertIn(
-            "coderluii/holycode:1.2.8@sha256:e3b53026050ef69998045f273f01f13131e5f7b6e52d5e9978e7ea26c68133da",
+            "coderluii/holycode:1.2.9@sha256:3d0bdce2a62f4eb6a5b03ec644b608d2c370da143474c6c6a81474ef1a16c439",
             self.protected,
         )
-        self.assertIn("needs: protected-validation", self.publish)
+        self.assertIn("needs: release-validation", self.publish)
         self.assertNotIn("./.github/workflows/protected-validation.yml", self.publish)
         self.assertIn("Download protected candidate digest", self.publish)
         self.assertNotIn("event=workflow_dispatch", self.publish)
@@ -1061,9 +1101,9 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.1.9.md").is_file())
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.2.0.md").is_file())
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.2.1.md").is_file())
-        self.assertIn("v1.2.9 release pins", self.readme)
-        self.assertIn("dependency-audit-v1.2.9.md", self.readme)
-        self.assertIn("v1.2.9", self.dockerhub)
+        self.assertIn("v1.3.0 release pins", self.readme)
+        self.assertIn("dependency-audit-v1.3.0.md", self.readme)
+        self.assertIn("v1.3.0", self.dockerhub)
         self.assertIn("@anthropic-ai/claude-code@2.1.318", self.readme)
         self.assertIn("@anthropic-ai/claude-code@2.1.318", self.dockerhub)
         self.assertIn("Linux Python 3.13 hash locks", audit)
@@ -1106,7 +1146,7 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("not a zero-vulnerability claim", self.dockerhub)
         self.assertIn("js-yaml 4.3.2", self.notices)
         self.assertIn("Paperclip-scoped Cursor SDK 1.3.1", self.notices)
-        self.assertIn("Paperclip-scoped jsdom 30.1.3 and Undici 8.12.3", self.notices)
+        self.assertIn("Paperclip-scoped jsdom 30.1.3 and Undici 8.12.4", self.notices)
         self.assertNotIn("Undici 6.29.0 replacement", self.readme)
         self.assertIn("npm 12.2.2", self.notices)
         self.assertIn("Prisma 7.10.1", self.notices)
@@ -1132,12 +1172,12 @@ class ReleaseContractTests(unittest.TestCase):
             with self.subTest(notice=value):
                 self.assertIn(value, self.notices)
 
-    def test_current_translation_summaries_match_v1_2_9(self):
+    def test_current_translation_summaries_match_v1_3_0(self):
         for path in sorted((ROOT / "docs" / "translations").glob("README.*.md")):
             translation = path.read_text(encoding="utf-8")
             with self.subTest(translation=path.name):
                 for value in (
-                    "v1.2.9",
+                    "v1.3.0",
                     "| Node.js | 24.22.2 (LTS) |",
                     "OpenCode 1.19.5",
                     "OpenSpec 1.14.3",
@@ -1147,12 +1187,12 @@ class ReleaseContractTests(unittest.TestCase):
                     "Miniflare 5.20261103.0-beta",
                     "workerd 1.20261103.1",
                     "Playwright 1.64.1",
-                    "`1.2.8`",
+                    "`1.2.9`",
                 ):
                     self.assertIn(value, translation)
 
     def test_release_apt_refresh_matches_preparation_date(self):
-        self.assertIn("ARG RELEASE_APT_REFRESH=2026-11-04", self.dockerfile)
+        self.assertIn("ARG RELEASE_APT_REFRESH=2026-11-05", self.dockerfile)
 
     def test_openspec_is_pinned_installed_and_telemetry_disabled(self):
         self.assertIn(
@@ -1391,8 +1431,8 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("bash scripts/test_plugin_modes.sh", self.protected)
         self.assertIn("group: docker-release", self.publish)
         self.assertIn("cancel-in-progress: false", self.publish)
-        self.assertIn("Require matching published GitHub release", self.publish)
-        self.assertIn(".name == $tag", self.publish)
+        self.assertIn("Require matching source-bound draft release", self.publish)
+        self.assertIn("scripts/check_release_target.py", self.publish)
         self.assertIn("docker buildx imagetools create", self.publish)
         self.assertIn('[ "$expected_digest" = "$CANDIDATE_DIGEST" ]', self.publish)
         self.assertIn("git merge-base --is-ancestor", self.publish)
@@ -1435,12 +1475,12 @@ class ReleaseContractTests(unittest.TestCase):
             self.renovate_extraction,
         )
         for pin in (
-            "docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0",
             "docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1",
             "docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0",
         ):
             with self.subTest(pin=pin):
                 self.assertIn(pin, self.publish)
+        self.assertNotIn("docker/setup-qemu-action@", self.publish)
         setup_node = (
             "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0"
         )
