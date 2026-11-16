@@ -4,6 +4,8 @@ Use one manual GitHub Actions workflow for native qualification and release deli
 
 Both workflows are manual-only. Pushes, PRs, tags and published releases do not start them. No continuously running self-hosted runner is required. Native AMD64 and ARM64 remain mandatory; emulation does not qualify a release. All browser checks use isolated headless contexts, controlled viewports and saved artifacts. Never open reports or personal browser sessions automatically.
 
+The [workflow review and measured timings](release-workflow-review.md) explain the verified failure causes, changes and optimization limits.
+
 ## Before committing or pushing
 
 Work from a clean isolated checkout of current `main`. Preserve unrelated worktrees, edits and persistent data. Match existing patterns and keep changes coherent. Use the pinned Node version from the workflow and Linux tools for Linux-specific checks:
@@ -84,7 +86,7 @@ Native caches accelerate builds but never count as runtime, scan, rollback or so
 python scripts/report_release_timings.py --run-id RUN_ID --output artifacts/release-timings.json
 ```
 
-Repeat `--run-id` to collect samples. Keep each run's SHA, conclusion, total duration, jobs and steps. Compare validation with validation and release with release. Queue time, caches, source and upstream package availability affect timing. Failed/incomplete runs do not prove speedups. The timing reporter records rerun attempts but excludes them from benchmark medians because the total includes time between attempts. Record two successful runs of the same candidate before claiming a repeatable improvement. Historical calculations are not new native benchmarks.
+Repeat `--run-id` to collect samples. Keep each run's SHA, conclusion, total duration, initial wait, execution interval, jobs and steps. Execution starts at the first non-skipped job and includes later queues/setup. Skipped jobs have no duration; rerun execution intervals are omitted. Compare validation with validation and release with release. Queue time, caches, source and upstream package availability affect timing. Failed/incomplete runs do not prove speedups. The timing reporter records rerun attempts but excludes them from benchmark medians because the total includes time between attempts. Record two successful runs of the same candidate before claiming a repeatable improvement. Historical calculations are not new native benchmarks.
 
 Optimize the measured bottleneck one change at a time. Keep changes only when coverage stays intact and repeated timing improves. Stop when improvements fall within normal variation, weaken checks or require disproportionate complexity. Every future release cannot be guaranteed faster than its predecessor.
 

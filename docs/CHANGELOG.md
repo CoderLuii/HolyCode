@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Changed
 
+- Document verified release failure causes and native timings; separate initial waiting from execution in timing reports
+
 - Separate AMD64 and ARM64 Trivy caches while retaining complete scans and evidence
 - Cache source-check npm downloads using tracked toolchain/configuration inputs without skipping checks
 - Use one manual native qualification workflow with validation-only mode by default, release-only promotion and recorded job timings; remove duplicate pre-tag image builds

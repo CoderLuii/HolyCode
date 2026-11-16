@@ -1,0 +1,3133 @@
+{
+  "repository": "CoderLuii/HolyCode",
+  "scope": "Total includes initial waiting; execution starts at the first non-skipped job and retains subsequent queues/setup. Rerun execution is omitted. Sources, caches and runner load affect comparisons.",
+  "runs": [
+    {
+      "run_id": 43802342043,
+      "sha": "e0a835f11fab206726c38655c1da0cf5ff143907",
+      "conclusion": "success",
+      "workflow_id": 258229716,
+      "run_name": "validate HolyCode",
+      "run_attempt": 1,
+      "benchmark_eligible": true,
+      "elapsed_seconds": 1251.0,
+      "initial_wait_seconds": 4.0,
+      "execution_elapsed_seconds": 1247.0,
+      "jobs": [
+        {
+          "name": "validate-source",
+          "conclusion": "success",
+          "elapsed_seconds": 69.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Require explicit manual mode",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Validate release metadata and commit binding",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Require unpublished image aliases and a matching draft",
+              "conclusion": "skipped",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Static release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 50.0
+            },
+            {
+              "name": "Post Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/amd64, amd64, ubuntu-24.04)",
+          "conclusion": "success",
+          "elapsed_seconds": 700.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 130.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 7.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 544.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/arm64, arm64, ubuntu-24.04-arm)",
+          "conclusion": "success",
+          "elapsed_seconds": 490.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 48.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 422.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 8.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "compose-candidate",
+          "conclusion": "success",
+          "elapsed_seconds": 23.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 11.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Download and verify both native candidate digests",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Compose exact attested native candidates",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Upload candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/arm64, arm64, ubuntu-24.04-arm, arm64, bcb16a65b7266413fea05e9dc35215...",
+          "conclusion": "success",
+          "elapsed_seconds": 435.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 71.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 65.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 31.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 96.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 46.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 99.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/amd64, amd64, ubuntu-24.04, amd64, 9157cdc9372b478a8cd51dd53f5e9c74a7...",
+          "conclusion": "success",
+          "elapsed_seconds": 441.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 69.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 73.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 34.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 107.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 43.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 85.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "release-validation",
+          "conclusion": "success",
+          "elapsed_seconds": 4.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Enforce release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "promote-candidate",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        },
+        {
+          "name": "update-dockerhub-description",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        }
+      ]
+    },
+    {
+      "run_id": 43804687643,
+      "sha": "59018efb027edfb84ee40c5ee306d0842773024d",
+      "conclusion": "success",
+      "workflow_id": 258229716,
+      "run_name": "validate HolyCode",
+      "run_attempt": 1,
+      "benchmark_eligible": true,
+      "elapsed_seconds": 937.0,
+      "initial_wait_seconds": 4.0,
+      "execution_elapsed_seconds": 933.0,
+      "jobs": [
+        {
+          "name": "validate-source",
+          "conclusion": "success",
+          "elapsed_seconds": 78.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Require explicit manual mode",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Validate release metadata and commit binding",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Require unpublished image aliases and a matching draft",
+              "conclusion": "skipped",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Static release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 53.0
+            },
+            {
+              "name": "Post Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Post Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/arm64, arm64, ubuntu-24.04-arm)",
+          "conclusion": "success",
+          "elapsed_seconds": 212.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 79.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 100.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 20.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/amd64, amd64, ubuntu-24.04)",
+          "conclusion": "success",
+          "elapsed_seconds": 275.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 128.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 117.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 16.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "compose-candidate",
+          "conclusion": "success",
+          "elapsed_seconds": 20.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Download and verify both native candidate digests",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Compose exact attested native candidates",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Upload candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/arm64, arm64, ubuntu-24.04-arm, arm64, bcb16a65b7266413fea05e9dc35215...",
+          "conclusion": "success",
+          "elapsed_seconds": 543.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 69.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 66.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 32.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 100.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 101.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 63.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 86.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/amd64, amd64, ubuntu-24.04, amd64, 9157cdc9372b478a8cd51dd53f5e9c74a7...",
+          "conclusion": "success",
+          "elapsed_seconds": 313.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 76.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 53.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 31.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 106.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 8.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "release-validation",
+          "conclusion": "success",
+          "elapsed_seconds": 4.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "promote-candidate",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        },
+        {
+          "name": "update-dockerhub-description",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        }
+      ]
+    },
+    {
+      "run_id": 43806275480,
+      "sha": "59018efb027edfb84ee40c5ee306d0842773024d",
+      "conclusion": "success",
+      "workflow_id": 258229716,
+      "run_name": "validate HolyCode",
+      "run_attempt": 1,
+      "benchmark_eligible": true,
+      "elapsed_seconds": 928.0,
+      "initial_wait_seconds": 4.0,
+      "execution_elapsed_seconds": 924.0,
+      "jobs": [
+        {
+          "name": "validate-source",
+          "conclusion": "success",
+          "elapsed_seconds": 52.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Require explicit manual mode",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Validate release metadata and commit binding",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Require unpublished image aliases and a matching draft",
+              "conclusion": "skipped",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 7.0
+            },
+            {
+              "name": "Static release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 34.0
+            },
+            {
+              "name": "Post Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/amd64, amd64, ubuntu-24.04)",
+          "conclusion": "success",
+          "elapsed_seconds": 298.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 118.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 149.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 15.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/arm64, arm64, ubuntu-24.04-arm)",
+          "conclusion": "success",
+          "elapsed_seconds": 146.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 31.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 97.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "compose-candidate",
+          "conclusion": "success",
+          "elapsed_seconds": 24.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 9.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Download and verify both native candidate digests",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Compose exact attested native candidates",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Upload candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/arm64, arm64, ubuntu-24.04-arm, arm64, bcb16a65b7266413fea05e9dc35215...",
+          "conclusion": "success",
+          "elapsed_seconds": 533.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 75.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 70.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 31.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 106.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 66.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 89.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 74.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/amd64, amd64, ubuntu-24.04, amd64, 9157cdc9372b478a8cd51dd53f5e9c74a7...",
+          "conclusion": "success",
+          "elapsed_seconds": 311.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 79.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 54.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 31.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 104.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 7.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "release-validation",
+          "conclusion": "success",
+          "elapsed_seconds": 6.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Enforce release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "promote-candidate",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        },
+        {
+          "name": "update-dockerhub-description",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        }
+      ]
+    },
+    {
+      "run_id": 43807835944,
+      "sha": "2c57dc322b75376d2b570b35584d1c02d57e1377",
+      "conclusion": "success",
+      "workflow_id": 258229716,
+      "run_name": "validate HolyCode",
+      "run_attempt": 1,
+      "benchmark_eligible": true,
+      "elapsed_seconds": 1010.0,
+      "initial_wait_seconds": 3.0,
+      "execution_elapsed_seconds": 1007.0,
+      "jobs": [
+        {
+          "name": "validate-source",
+          "conclusion": "success",
+          "elapsed_seconds": 46.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require explicit manual mode",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate release metadata and commit binding",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require unpublished image aliases and a matching draft",
+              "conclusion": "skipped",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Static release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 33.0
+            },
+            {
+              "name": "Post Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/arm64, arm64, ubuntu-24.04-arm)",
+          "conclusion": "success",
+          "elapsed_seconds": 212.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 68.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 106.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 23.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/amd64, amd64, ubuntu-24.04)",
+          "conclusion": "success",
+          "elapsed_seconds": 392.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 229.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 10.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 134.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "compose-candidate",
+          "conclusion": "success",
+          "elapsed_seconds": 34.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 11.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Download and verify both native candidate digests",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Compose exact attested native candidates",
+              "conclusion": "success",
+              "elapsed_seconds": 8.0
+            },
+            {
+              "name": "Upload candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/amd64, amd64, ubuntu-24.04, amd64, 9157cdc9372b478a8cd51dd53f5e9c74a7...",
+          "conclusion": "success",
+          "elapsed_seconds": 519.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 93.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 61.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 32.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 114.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 74.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 111.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 7.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/arm64, arm64, ubuntu-24.04-arm, arm64, bcb16a65b7266413fea05e9dc35215...",
+          "conclusion": "success",
+          "elapsed_seconds": 500.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 75.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 69.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 32.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 103.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 51.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 135.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 8.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "release-validation",
+          "conclusion": "success",
+          "elapsed_seconds": 5.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Enforce release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "update-dockerhub-description",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        },
+        {
+          "name": "promote-candidate",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        }
+      ]
+    },
+    {
+      "run_id": 43808692359,
+      "sha": "2c57dc322b75376d2b570b35584d1c02d57e1377",
+      "conclusion": "success",
+      "workflow_id": 258229716,
+      "run_name": "validate HolyCode",
+      "run_attempt": 1,
+      "benchmark_eligible": true,
+      "elapsed_seconds": 1288.0,
+      "initial_wait_seconds": 523.0,
+      "execution_elapsed_seconds": 765.0,
+      "jobs": [
+        {
+          "name": "validate-source",
+          "conclusion": "success",
+          "elapsed_seconds": 53.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Require explicit manual mode",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Validate release metadata and commit binding",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Require unpublished image aliases and a matching draft",
+              "conclusion": "skipped",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 7.0
+            },
+            {
+              "name": "Static release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 34.0
+            },
+            {
+              "name": "Post Set up Node for Renovate validation",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Verify Docker Hub credentials before native builds",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/amd64, amd64, ubuntu-24.04)",
+          "conclusion": "success",
+          "elapsed_seconds": 307.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 149.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 7.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 133.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "build-candidate (linux/arm64, arm64, ubuntu-24.04-arm)",
+          "conclusion": "success",
+          "elapsed_seconds": 169.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Require native build architecture",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Free up disk space",
+              "conclusion": "success",
+              "elapsed_seconds": 52.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 98.0
+            },
+            {
+              "name": "Record immutable native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Upload native candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Build and push attested candidate",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 6.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            }
+          ]
+        },
+        {
+          "name": "compose-candidate",
+          "conclusion": "success",
+          "elapsed_seconds": 28.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 13.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Download and verify both native candidate digests",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Compose exact attested native candidates",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Upload candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Set up Docker Buildx",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/arm64, arm64, ubuntu-24.04-arm, arm64, bcb16a65b7266413fea05e9dc35215...",
+          "conclusion": "success",
+          "elapsed_seconds": 311.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 68.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 67.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 36.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 98.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "protected-validation (linux/amd64, amd64, ubuntu-24.04, amd64, 9157cdc9372b478a8cd51dd53f5e9c74a7...",
+          "conclusion": "success",
+          "elapsed_seconds": 306.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 3.0
+            },
+            {
+              "name": "Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Pull exact candidate digest",
+              "conclusion": "success",
+              "elapsed_seconds": 75.0
+            },
+            {
+              "name": "Smoke test tools and Chromium sandbox",
+              "conclusion": "success",
+              "elapsed_seconds": 53.0
+            },
+            {
+              "name": "Validate offline plugin modes",
+              "conclusion": "success",
+              "elapsed_seconds": 32.0
+            },
+            {
+              "name": "Validate Hermes migration guard",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Validate Chromium security floor and refreshed availability",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Validate upgrade, persistence, and rollback",
+              "conclusion": "success",
+              "elapsed_seconds": 101.0
+            },
+            {
+              "name": "Install Trivy CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Install Docker Scout CLI",
+              "conclusion": "success",
+              "elapsed_seconds": 2.0
+            },
+            {
+              "name": "Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Docker Scout vulnerability reports",
+              "conclusion": "success",
+              "elapsed_seconds": 4.0
+            },
+            {
+              "name": "Docker Scout fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Summarize Docker Scout vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 5.0
+            },
+            {
+              "name": "Validate Trivy fixable critical and high findings",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Collect architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 7.0
+            },
+            {
+              "name": "Upload architecture evidence",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Enforce protected scanner gates",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Trivy fixable critical and high gate",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Post Trivy vulnerability report",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to Docker Hub for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Generate SPDX SBOM for Docker Scout",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Login to GHCR",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Post Checkout exact workflow commit",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            }
+          ]
+        },
+        {
+          "name": "release-validation",
+          "conclusion": "success",
+          "elapsed_seconds": 5.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "elapsed_seconds": 0.0
+            },
+            {
+              "name": "Enforce release validation",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "elapsed_seconds": 1.0
+            }
+          ]
+        },
+        {
+          "name": "update-dockerhub-description",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        },
+        {
+          "name": "promote-candidate",
+          "conclusion": "skipped",
+          "elapsed_seconds": null,
+          "steps": []
+        }
+      ]
+    }
+  ],
+  "successful_median_seconds": null,
+  "successful_execution_median_seconds": null
+}

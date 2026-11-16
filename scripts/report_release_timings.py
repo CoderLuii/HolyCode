@@ -20,15 +20,21 @@ def elapsed(start: str, end: str) -> float:
 def summarize(run: dict, jobs: list[dict]) -> dict:
     if not run.get("conclusion"):
         raise ValueError("wait for the run to complete before measuring it")
+    starts = [job["started_at"] for job in jobs
+              if job.get("started_at") and job.get("conclusion") != "skipped"]
+    first_start = min(starts) if starts and run.get("run_attempt", 1) == 1 else None
     return {
         "run_id": run["id"], "sha": run["head_sha"], "conclusion": run["conclusion"],
         "workflow_id": run.get("workflow_id"), "run_name": run.get("display_title"),
         "run_attempt": run.get("run_attempt", 1),
         "benchmark_eligible": run.get("run_attempt", 1) == 1 and run["conclusion"] == "success",
         "elapsed_seconds": elapsed(run["created_at"], run["updated_at"]),
+        "initial_wait_seconds": elapsed(run["created_at"], first_start) if first_start else None,
+        "execution_elapsed_seconds": elapsed(first_start, run["updated_at"]) if first_start else None,
         "jobs": [
             {"name": job["name"], "conclusion": job["conclusion"],
-             "elapsed_seconds": elapsed(job["started_at"], job["completed_at"]),
+             "elapsed_seconds": (elapsed(job["started_at"], job["completed_at"])
+                                 if job["conclusion"] != "skipped" else None),
              "steps": [{"name": step["name"], "conclusion": step.get("conclusion"),
                         "elapsed_seconds": elapsed(step["started_at"], step["completed_at"])}
                        for step in job["steps"] if step.get("started_at") and step.get("completed_at")]}
@@ -66,11 +72,14 @@ def main() -> int:
     runs = [read_run(args.repository, run_id) for run_id in args.run_id]
     identities = {(run["workflow_id"], run["sha"], run["run_name"]) for run in runs}
     successful = [run["elapsed_seconds"] for run in runs if run["benchmark_eligible"]] if len(identities) == 1 else []
+    executions = [run["execution_elapsed_seconds"] for run in runs
+                  if run["benchmark_eligible"] and run["execution_elapsed_seconds"] is not None] if len(identities) == 1 else []
     report = {
         "repository": args.repository,
-        "scope": "Actual completed run durations, including queue/setup. Different sources, caches and runner load can affect comparisons.",
+        "scope": "Total includes initial waiting; execution starts at the first non-skipped job and retains subsequent queues/setup. Rerun execution is omitted. Sources, caches and runner load affect comparisons.",
         "runs": runs,
         "successful_median_seconds": statistics.median(successful) if successful else None,
+        "successful_execution_median_seconds": statistics.median(executions) if executions else None,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
