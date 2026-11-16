@@ -29,7 +29,7 @@ ARG CLAUDE_CODE_VERSION=2.1.318
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@cursor/sdk
-ARG PAPERCLIP_CURSOR_SDK_VERSION=1.3.1
+ARG PAPERCLIP_CURSOR_SDK_VERSION=1.4.0
 # renovate: datasource=npm depName=jsdom
 ARG PAPERCLIP_JSDOM_VERSION=30.1.3
 # renovate: datasource=npm depName=@fission-ai/openspec
@@ -493,7 +493,7 @@ RUN npm i -g --ignore-scripts \
 # Paperclip's current Cursor SDK no longer installs Connect's Node transport.
 # The remaining Undici is jsdom's 8.x dependency; guard the resolved owners.
 RUN test "$(npm view "@cursor/sdk@${PAPERCLIP_CURSOR_SDK_VERSION}" dist.integrity)" = \
-      "sha512-Mn0gK8V+5BkOqm22J2ocU+1BrqnNH8QcK9kmA7SkRuawDOeq2ABC2BIZq9gRnF3z68x/I7J/ZU8jl6DcshCVUA==" && \
+      "sha512-I3ICV4z8Qcj1DikmbVrAAIYMm5LzxJ/Q9uygkRnq3XXeF+5uzCoUYEqQMEsDh5RpkJ5IY9DZNHgG8adCEwRgbg==" && \
     test "$(npm view "jsdom@${PAPERCLIP_JSDOM_VERSION}" dist.integrity)" = \
       "sha512-hQMUPvRgN7KxsfIytDQji7bimuJeRQa6Qo5+iuiZQk5CafeRxLIA10/cG5YCBFNpD9RO3oqIiN4CO1Y44kxqXg==" && \
     test "$(npm view "undici@${PAPERCLIP_UNDICI_VERSION}" dist.integrity)" = \

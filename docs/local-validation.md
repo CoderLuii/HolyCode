@@ -67,6 +67,7 @@ Native caches accelerate builds but never count as runtime, scan, rollback or so
 
 - Save the first actionable error, run, SHA, image digest and stage. Classify product/test, dependency, tooling, transport, quota/billing and permission failures separately.
 - Reproduce deterministic failures narrowly. Do not retry unchanged failures. Allow at most one bounded retry of clearly transient transport errors. After two unsuccessful corrections to the same problem, stop the release attempt and present the blocker.
+- For an owner-graph version mismatch, first install the exact parent package in a disposable prefix under the pinned Node/npm versions. Verify the actual resolved graph, official tarball integrity and existing consumer checks before changing expectations. Registry metadata alone is not compatibility evidence. Current unreleased corrections are recorded in [the dependency audit](dependency-audit-unreleased.md).
 - Changed source/image inputs require fresh affected qualification. Never reuse runtime/scanner results for another image.
 - Report-transfer failures do not require rebuilding qualified images. Resume the affected stage only with matching inputs and retained prerequisite evidence. Missing evidence is not success.
 - GitHub job reruns use the original SHA and rerun dependent jobs. Check publication state first. Partial promotion or asset upload needs reconciliation: the immutable-alias guard intentionally blocks ordinary retries once aliases exist. Never delete public aliases or add `--clobber` to bypass it.

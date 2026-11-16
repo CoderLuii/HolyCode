@@ -178,15 +178,15 @@ architecture, and lifecycle-script body before running the exact embedded Postgr
 postinstall needed to hydrate its packaged library symlinks. Paperclip then runs as
 an unprivileged user. Used only when ENABLE_PAPERCLIP=true.
 
-### Paperclip-scoped Cursor SDK 1.3.1
+### Paperclip-scoped Cursor SDK 1.4.0
 
 - License: Cursor SDK License (use subject to Cursor's Terms of Service)
 - Copyright: Anysphere Inc.
 - Source: https://github.com/cursor/cursor
-- npm: https://www.npmjs.com/package/@cursor/sdk/v/1.3.1
+- npm: https://www.npmjs.com/package/@cursor/sdk/v/1.4.0
 
 The published npm payload includes `LICENSE.md` with the Cursor SDK License
-notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.3.1` through its
+notice. Paperclip's Cursor adapter resolves `@cursor/sdk 1.4.0` through its
 `^1.0.28` declaration. The installed SDK no longer declares Connect's Node
 transport. This records the bundled notice; it is not legal clearance for
 Cursor service use.

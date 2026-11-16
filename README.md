@@ -485,7 +485,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | OpenSpec | 1.14.3; telemetry disabled, initialize a project explicitly with `openspec init --tools opencode` |
 | npm | 12.2.2 official payload, with its own node-gyp 13.0.0 and Undici 6.29.1; no dependency overlays |
 | PM2 | 7.1.2 official payload with upstream-owned `js-yaml` 4.3.2; no `get-uri`, `basic-ftp`, or dependency overlays |
-| Paperclip | 2026.831.1 compatibility hold; its current Cursor SDK 1.3.1 and jsdom/Undici 30.1.3/8.12.4 graph is checked without an Undici replacement; no new migration or native-runner default override |
+| Paperclip | 2026.831.1 compatibility hold; unreleased source expects Cursor SDK 1.4.0 and its jsdom/Undici 30.1.3/8.12.4 graph is checked without an Undici replacement; no new migration or native-runner default override |
 | Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
 | s6-overlay | 3.2.3.2 |

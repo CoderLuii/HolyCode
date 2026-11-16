@@ -92,7 +92,7 @@ class ReleaseContractTests(unittest.TestCase):
             "ARG OPENCODE_VERSION=1.19.5",
             "ARG CLAUDE_CODE_VERSION=2.1.318",
             "ARG PAPERCLIP_VERSION=2026.831.1",
-            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.3.1",
+            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.4.0",
             "ARG PAPERCLIP_JSDOM_VERSION=30.1.3",
             "ARG OPENSPEC_VERSION=1.14.3",
             "ARG PAPERCLIP_UNDICI_VERSION=8.12.4",
@@ -481,10 +481,10 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_paperclip_resolved_owner_graph_is_guarded_without_obsolete_overlay(self):
         for value in (
-            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.3.1",
+            "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.4.0",
             "ARG PAPERCLIP_JSDOM_VERSION=30.1.3",
             "ARG PAPERCLIP_UNDICI_VERSION=8.12.4",
-            "sha512-Mn0gK8V+5BkOqm22J2ocU+1BrqnNH8QcK9kmA7SkRuawDOeq2ABC2BIZq9gRnF3z68x/I7J/ZU8jl6DcshCVUA==",
+            "sha512-I3ICV4z8Qcj1DikmbVrAAIYMm5LzxJ/Q9uygkRnq3XXeF+5uzCoUYEqQMEsDh5RpkJ5IY9DZNHgG8adCEwRgbg==",
             'fail("Paperclip Cursor SDK version mismatch",',
             "sha512-hQMUPvRgN7KxsfIytDQji7bimuJeRQa6Qo5+iuiZQk5CafeRxLIA10/cG5YCBFNpD9RO3oqIiN4CO1Y44kxqXg==",
             "sha512-8Mx+uNKKER2bA4AdtedkqRbwUCIJFr2nJckXRe5yrDqzePqwLP7VNcctN8/XdmDSbF7mS+jJKIszlL+vbam1VA==",
@@ -549,7 +549,7 @@ class ReleaseContractTests(unittest.TestCase):
             result = subprocess.run([node, "-e", script, *expected], capture_output=True, text=True, timeout=10)
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertIn(fixture["packages"]["undici"]["dist"]["integrity"], self.dockerfile)
-            for name, field, wrong in (("undici", "version", "8.12.5"), ("jsdom", "dependencies", {"undici": "^9.0.0"})):
+            for name, field, wrong in (("@cursor/sdk", "version", "1.4.1"), ("undici", "version", "8.12.5"), ("jsdom", "dependencies", {"undici": "^9.0.0"})):
                 with self.subTest(name=name, wrong=wrong):
                     package = root / name / "package.json"
                     original = fixture["packages"][name]
@@ -1139,7 +1139,7 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("not a zero-vulnerability claim", self.readme)
         self.assertIn("not a zero-vulnerability claim", self.dockerhub)
         self.assertIn("js-yaml 4.3.2", self.notices)
-        self.assertIn("Paperclip-scoped Cursor SDK 1.3.1", self.notices)
+        self.assertIn("Paperclip-scoped Cursor SDK 1.4.0", self.notices)
         self.assertIn("Paperclip-scoped jsdom 30.1.3 and Undici 8.12.4", self.notices)
         self.assertNotIn("Undici 6.29.0 replacement", self.readme)
         self.assertIn("npm 12.2.2", self.notices)

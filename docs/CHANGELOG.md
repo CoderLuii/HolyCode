@@ -4,6 +4,16 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Use one manual native qualification workflow with validation-only mode by default, release-only promotion and recorded job timings; remove duplicate pre-tag image builds
+
+### Fixed
+
+- Accept Paperclip's compatible official Cursor SDK 1.4.0 resolution with updated integrity and consumer checks; preserve Paperclip 2026.831.1 and its jsdom/Undici graph
+
 ## [1.3.0] - 11/06/2026
 
 ### Changed
