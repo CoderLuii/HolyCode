@@ -51,6 +51,23 @@ class ReleaseSimplificationTests(unittest.TestCase):
         self.assertIn("validate-holycode-chromium-version", source)
         self.assertIn('dpkg --compare-versions "$installed" ge "$available"', source)
 
+    def test_scanner_cache_is_shared_within_one_architecture_but_not_between_them(self):
+        source = (ROOT / ".github/workflows/docker-publish.yml").read_text(encoding="utf-8")
+        protected = self.job(source, "protected-validation")
+        blocks = re.split(r"(?m)^      - name: ", protected)
+        scanners = [block for block in blocks if "uses: aquasecurity/trivy-action@" in block]
+        self.assertEqual(len(scanners), 3)
+        paths = []
+        for block in scanners:
+            match = re.search(r"(?m)^          cache-dir: (.+)$", block)
+            self.assertIsNotNone(match, "Each scanner must select an architecture-specific cache")
+            paths.append(match.group(1))
+        rendered = {arch: {path.replace("${{ matrix.suffix }}", arch) for path in paths}
+                    for arch in ("amd64", "arm64")}
+        self.assertEqual(len(rendered["amd64"]), 1)
+        self.assertEqual(len(rendered["arm64"]), 1)
+        self.assertTrue(rendered["amd64"].isdisjoint(rendered["arm64"]))
+
 
 if __name__ == "__main__":
     unittest.main()

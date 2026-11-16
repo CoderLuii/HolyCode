@@ -63,6 +63,8 @@ Chromium uses one disposable container and one repository refresh for all three 
 
 Source checks reuse npm downloads through the pinned setup-node action. The cache key hashes the source workflow (including its Node pin), Renovate configuration and exact extraction script; both manual workflows use the same key. Cache hits never skip validation or prove compatibility. Cache misses are normal.
 
+All three Trivy steps share one cache directory within each architecture, but AMD64 and ARM64 use distinct directories. The pinned action uses a daily key; distinct paths give separate cache versions and prevent one architecture from repeatedly restoring the other's layer-analysis cache. Vulnerability/secret scans and report validation still run in full.
+
 Native caches accelerate builds but never count as runtime, scan, rollback or source-identity evidence. Keep pinned scanner archives/actions, non-root operation, sandbox/seccomp and closed browser port. Do not custom-patch dependencies to force an update through.
 
 ## Failure and resume rules

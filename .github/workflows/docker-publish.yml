@@ -396,6 +396,7 @@ jobs:
         with:
           version: v0.76.1
           skip-setup-trivy: true
+          cache-dir: ${{ runner.temp }}/trivy-${{ matrix.suffix }}
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: spdx-json
           output: holycode-${{ matrix.suffix }}.spdx.json
@@ -484,6 +485,7 @@ jobs:
         with:
           version: v0.76.1
           skip-setup-trivy: true
+          cache-dir: ${{ runner.temp }}/trivy-${{ matrix.suffix }}
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret
@@ -497,6 +499,7 @@ jobs:
         with:
           version: v0.76.1
           skip-setup-trivy: true
+          cache-dir: ${{ runner.temp }}/trivy-${{ matrix.suffix }}
           image-ref: holycode-protected-validation:${{ matrix.suffix }}
           format: json
           scanners: vuln,secret
