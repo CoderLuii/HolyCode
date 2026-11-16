@@ -62,3 +62,12 @@ The current low-risk changes have native evidence. The remaining time includes i
 Those are separate experiments requiring new evidence, not justified shortcuts for this release task. No claim of an absolute fastest workflow is possible, and a future release with changed dependencies or GitHub runner conditions may take longer. Revisit optimization when completed-run evidence identifies a safe worthwhile change; do not spend repeated hosted runs chasing seconds within normal variation.
 
 The timing rows above are workflow qualification samples. Plan 1x uses this workflow for the v1.3.1 maintenance release; its source-bound native evidence and publication results belong to that release. No product release aliases or site deployment were published by the validation-only samples above.
+
+
+## v1.3.1 delivery result
+
+The [v1.3.1 release run](https://github.com/CoderLuii/HolyCode/actions/runs/43828503867) passed all nine jobs from `d1c5c780e2ae330f983d0188b9b5f857741e0286`: 17m05s total, 17m02s execution and 3s initial wait. It promoted the qualified graph without rebuilding; both registries' version/latest aliases and all 24 downloaded release assets were verified before publication. This release changed the base image and dependencies, so its cold scanner work is not comparable to the earlier unchanged-image 11m04s warm validation sample. One successful release is not a repeatable speed benchmark.
+
+The first release attempt, [43825219105](https://github.com/CoderLuii/HolyCode/actions/runs/43825219105), failed in the protected smoke checks because an exact assertion still expected pnpm's previous embedded Undici. Official pnpm 12.21.0 contains Undici 7.30.2. The repair updates that strict expectation and adds an integrity/manifest fixture plus regression coverage that rejects both the obsolete and a wrong newer version. Official package payload and HTTP/offline consumers passed locally before fresh native qualification. No dependency patch, skipped check or unchanged retry was used. The failed timing sample remains in the JSON alongside the successful run.
+
+Site synchronization followed product publication. A provider-added analytics script made the first site's HTML differ from the sealed build. That site-only problem was corrected at the Pages project setting and the same qualified site files redeployed; product images were not rebuilt. Keep reporting and site recovery separate from completed product qualification.
