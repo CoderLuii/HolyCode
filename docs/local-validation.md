@@ -61,6 +61,8 @@ There is no separately typed version input to disagree with source. The current 
 
 Chromium uses one disposable container and one repository refresh for all three packages. Every package still passes both security-floor and installed-versus-available checks. Keep scanner execution, malformed reports, project-owned findings and secrets blocking. Known third-party findings remain advisory under the evidence policy.
 
+Source checks reuse npm downloads through the pinned setup-node action. The cache key hashes the source workflow (including its Node pin), Renovate configuration and exact extraction script; both manual workflows use the same key. Cache hits never skip validation or prove compatibility. Cache misses are normal.
+
 Native caches accelerate builds but never count as runtime, scan, rollback or source-identity evidence. Keep pinned scanner archives/actions, non-root operation, sandbox/seccomp and closed browser port. Do not custom-patch dependencies to force an update through.
 
 ## Failure and resume rules

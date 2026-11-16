@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Changed
 
+- Cache source-check npm downloads using tracked toolchain/configuration inputs without skipping checks
 - Use one manual native qualification workflow with validation-only mode by default, release-only promotion and recorded job timings; remove duplicate pre-tag image builds
 
 ### Fixed
