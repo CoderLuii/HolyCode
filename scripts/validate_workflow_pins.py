@@ -8,6 +8,11 @@ import sys
 from pathlib import Path
 
 
+if __package__:
+    from .validate_version import validate_version
+else:
+    from validate_version import validate_version
+
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -83,10 +88,20 @@ def collect_errors() -> list[str]:
     workflow_versions = re.findall(r"(?m)^  RELEASE_VERSION: (\S+)\s*$", publish_text)
     if len(image_versions) != 1 or image_versions != workflow_versions:
         errors.append("Dockerfile release must match the single workflow RELEASE_VERSION")
+    predecessors = re.findall(r"(?m)^  PREVIOUS_VERSION: (\S+)\s*$", publish_text)
+    previous_images = re.findall(r"(?m)^  PREVIOUS_IMAGE: coderluii/holycode:([0-9]\.[0-9]\.[0-9])@sha256:([0-9a-f]{64})\s*$", publish_text)
+    if len(predecessors) != 1 or len(previous_images) != 1 or predecessors[0] != "v" + previous_images[0][0]:
+        errors.append("previous version must match one immutable predecessor image")
+    elif len(image_versions) == 1:
+        try:
+            validate_version(image_versions[0], predecessors[0])
+        except ValueError as error:
+            errors.append(str(error))
     for required in (
-        "confirm_hosted_execution:",
-        "HOSTED_EXECUTION_APPROVED: ${{ inputs.confirm_hosted_execution }}",
-        'test "$HOSTED_EXECUTION_APPROVED" = true',
+        "mode:",
+        "default: validate",
+        "RELEASE_MODE: ${{ inputs.mode }}",
+        'case "$RELEASE_MODE" in validate|release) ;; *) exit 1 ;; esac',
         "python scripts/check_release_target.py",
         "--require-draft",
     ):
@@ -129,10 +144,6 @@ def collect_errors() -> list[str]:
         "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
         "version: v0.76.1",
-        "PREVIOUS_IMAGE: coderluii/holycode:1.2.9@sha256:"
-        "3d0bdce2a62f4eb6a5b03ec644b608d2c370da143474c6c6a81474ef1a16c439",
-        "PREVIOUS_VERSION: v1.2.9",
-        "RELEASE_VERSION: v1.3.0",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",
@@ -143,7 +154,7 @@ def collect_errors() -> list[str]:
         "holycode-${{ matrix.suffix }}.trivy-accepted.json",
         "bash scripts/test_plugin_modes.sh",
         'ref: ${{ github.sha }}',
-        'git rev-parse origin/main',
+        'python scripts/validate_release_source.py',
         "Pull exact candidate digest",
         "scripts/test_upgrade_rollback.sh",
     ):
@@ -179,88 +190,23 @@ def collect_errors() -> list[str]:
         "confirm_hosted_execution:",
         "HOSTED_EXECUTION_APPROVED: ${{ inputs.confirm_hosted_execution }}",
         'test "$HOSTED_EXECUTION_APPROVED" = true',
-        "if: github.event_name == 'workflow_dispatch'",
         "test \"$GITHUB_REF\" = 'refs/heads/main'",
-        "runner: ubuntu-24.04",
-        "runner: ubuntu-24.04-arm",
-        "platform: linux/amd64",
-        "platform: linux/arm64",
-        "bash scripts/smoke_image.sh",
-        "bash scripts/test_plugin_modes.sh",
-        "scout_arch: amd64",
-        "scout_arch: arm64",
-        "scout_sha256: 9157cdc9372b478a8cd51dd53f5e9c74a7e34056ea291c65520bf76016fa72f4",
-        "scout_sha256: bcb16a65b7266413fea05e9dc352159485609e62a6cbd049207118b0aa7d8611",
-        "trivy_sha256: c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0",
-        "trivy_sha256: e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f",
-        "SCOUT_VERSION: 1.29.0",
-        "TRIVY_VERSION: 0.76.1",
-        "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
-        'docker-scout cves "sbom://$SCOUT_SBOM"',
-        "--scanner scout",
-        "--scanner trivy",
-        "version: v0.76.1",
-        "ignore-unfixed: true",
-        "holycode-pretag-${{ github.sha }}-${{ matrix.suffix }}-evidence",
-        "holycode-${{ matrix.suffix }}.commit-sha.txt",
-        "holycode-${{ matrix.suffix }}.dpkg-inventory.txt",
-        "holycode-${{ matrix.suffix }}.image-id.txt",
-        "holycode-${{ matrix.suffix }}.scout-fixable.sarif",
-        "holycode-${{ matrix.suffix }}.scout-accepted.json",
-        "holycode-${{ matrix.suffix }}.trivy-fixable.json",
-        "holycode-${{ matrix.suffix }}.trivy-accepted.json",
-        "Validate Chromium security floor and refreshed availability",
-        "--accept-upstream-vulnerabilities",
-        "--accepted-findings",
-        "SCOUT_GATE_OUTCOME: ${{ steps.scout_gate.outcome }}",
-        "TRIVY_GATE_OUTCOME: ${{ steps.trivy_gate.outcome }}",
-        'test "$SCOUT_GATE_OUTCOME" = "success"',
-        'test "$TRIVY_GATE_OUTCOME" = "success"',
+        "python -m unittest discover -s tests",
+        "python scripts/validate_workflow_pins.py",
+        "python scripts/validate_chromium_seccomp.py",
+        "bash scripts/validate_renovate_extraction.sh 44.129.0",
     ):
         if required_text not in pr_text:
             errors.append(f"pr-validation.yml must contain {required_text!r}")
-    if "github.event_name == 'pull_request' || github.ref" in pr_text:
-        errors.append("pr-validation.yml must fail rejected manual refs, not skip every job")
-    if "bash scripts/validate_renovate_extraction.sh 44.129.0" not in pr_text:
-        errors.append("pr-validation.yml must validate Renovate extraction with the audited pin")
-    if pr_text.count("scanners: vuln,secret") != 2:
-        errors.append("manual pre-tag validation must run both Trivy gates with vuln and secret scanners")
-    if pr_text.count("skip-setup-trivy: true") != 3:
-        errors.append("manual pre-tag validation must use the integrity-bound Trivy installation")
-    if pr_text.count("--accept-upstream-vulnerabilities") != 2:
-        errors.append(
-            "manual pre-tag validation must apply the upstream vulnerability policy to both scanners"
-        )
-    if pr_text.count("--accepted-findings") != 2:
-        errors.append("manual pre-tag validation must emit accepted findings from both scanners")
-    for forbidden in (
-        "USE_ARM64_CHROMIUM_EXCEPTION",
-        "config/security-exceptions-v1.2.4.json",
-    ):
+    for forbidden in ("docker build", "build-and-smoke-test:", "packages: write"):
         if forbidden in pr_text:
-            errors.append(f"pr-validation.yml must not use expired policy {forbidden!r}")
-    manual_steps = (
-        "Install Trivy CLI",
-        "Generate pre-tag SPDX SBOM for Docker Scout",
-        "Install Docker Scout CLI for pre-tag validation",
-        "Login to Docker Hub for pre-tag Docker Scout",
-        "Generate pre-tag Docker Scout vulnerability reports",
-        "Docker Scout pre-tag fixable critical and high gate",
-        "Generate pre-tag Trivy vulnerability report",
-        "Trivy pre-tag fixable critical and high gate",
-        "Validate pre-tag Trivy fixable critical and high findings",
-        "Collect pre-tag architecture evidence",
-        "Upload pre-tag architecture evidence",
-        "Enforce pre-tag scanner gates",
-    )
-    for step_name in manual_steps:
-        condition = re.compile(
-            rf"- name: {re.escape(step_name)}\n"
-            rf"(?:\s+id: [^\n]+\n)?"
-            rf"\s+if: (?:always\(\) && )?github\.event_name == 'workflow_dispatch'"
-        )
-        if not condition.search(pr_text):
-            errors.append(f"pr-validation.yml must limit {step_name!r} to manual runs")
+            errors.append(f"source-only validation must not contain {forbidden!r}")
+    for job in ("promote-candidate", "update-dockerhub-description"):
+        match = re.search(rf"(?ms)^  {job}:\n(.*?)(?=^  [a-z][a-z-]*:|\Z)", publish_text)
+        if not match or "if: inputs.mode == 'release'" not in match.group(1):
+            errors.append(f"{job} must require release mode")
+    if "commit_count" in publish_text:
+        errors.append("release qualification must allow intervening main commits")
 
     return errors
 

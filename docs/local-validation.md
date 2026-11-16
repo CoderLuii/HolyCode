@@ -1,88 +1,96 @@
-# Local validation and release results
+# Release and validation guide
 
-Run normal qualification on maintainer-controlled infrastructure. GitHub stores the release and displays the results. You can explicitly authorize the manual hosted release route described below. No unattended self-hosted runner is installed.
+Use one manual GitHub Actions workflow for native qualification and release delivery. Run local source checks before committing or pushing. Do not run a second pre-tag image build first. The optional **HolyCode - Source checks** workflow is for development, not a release prerequisite.
 
-Use native AMD64 and native ARM64 hosts. Keep the same source, runtime, sandbox, plugin, upgrade/persistence/rollback, scanner, secret, inventory, SPDX and provenance gates. Emulation does not replace a native architecture check. All browser automation uses isolated headless contexts and controlled viewports.
+Both workflows are manual-only. Pushes, PRs, tags and published releases do not start them. No continuously running self-hosted runner is required. Native AMD64 and ARM64 remain mandatory; emulation does not qualify a release. All browser checks use isolated headless contexts, controlled viewports and saved artifacts. Never open reports or personal browser sessions automatically.
 
-## Before running checks
+## Before committing or pushing
 
-Review the exact source, select the locked tools and register the command plan with the trusted local controller. Keep state, evidence and credentials outside the checkout and test containers. Do not run unreviewed pull-request code with status or release credentials.
+Work from a clean isolated checkout of current `main`. Preserve unrelated worktrees, edits and persistent data. Match existing patterns and keep changes coherent. Use the pinned Node version from the workflow and Linux tools for Linux-specific checks:
 
-Freeze the tracked source as a canonical descriptor containing the repository, commit, tree and every path's mode, Git blob ID, size and SHA256. Verify raw worktree bytes against the Git tree before and after the commands. Freeze the controller, its imports and tool inventory too. A changed source, command or tool invalidates the result.
+```bash
+python -m unittest discover -s tests
+python scripts/validate_workflow_pins.py
+python scripts/validate_chromium_seccomp.py
+python -m json.tool renovate.json >/dev/null
+python -m json.tool config/npm-global-script-policy.json >/dev/null
+ruby -e 'require "yaml"; Dir[".github/workflows/*.{yml,yaml}"].each { |path| YAML.load_file(path) }'
+docker compose -f docker-compose.yaml config --no-interpolate >/dev/null
+docker compose -f docker-compose.full.yaml config --no-interpolate >/dev/null
+bash scripts/validate_renovate_extraction.sh 44.129.0
+```
 
-The trusted host records actual command arguments, working directory, times, exit status, stdout/stderr hashes and required artifacts. A PASS field alone is insufficient. These hashes detect substitutions; they are not an independent execution attestation against a malicious maintainer host.
+A Windows pass with a skipped Linux check is partial evidence. Record the gap. Native qualification runs once in the manual workflow; source tests alone do not qualify images.
 
-## Local status contexts
+## Validate without publishing a release
 
-| Context | Required result |
+After an authorized push makes the exact source available on `main`:
+
+```bash
+gh workflow run docker-publish.yml --ref main -f mode=validate
+```
+
+`validate` is the default. It accepts non-release commit subjects, runs the full native/runtime/scanner pipeline and publishes run-scoped candidate tags to GHCR. It does not promote version or `latest` aliases, upload release assets, publish a GitHub release or update the Docker Hub description. No draft is required. This still consumes hosted minutes and registry storage; dispatch deliberately.
+
+## Prepare and deliver a release
+
+1. Select the next single-digit version, such as `v1.3.1` after `v1.3.0`.
+2. Update `ARG RELEASE_VERSION` in `Dockerfile` and the matching workflow `RELEASE_VERSION`. Update workflow `PREVIOUS_VERSION` and `PREVIOUS_IMAGE` to the actual published predecessor and its verified immutable digest. The pin validator checks agreement. Do not edit historical audits to make a new release pass.
+3. Update the changelog, dependency audit, affected public docs and runtime fixtures. Keep accepted upstream findings explicit; acceptance is not a fix or safety claim.
+4. Finish local checks, commit the coherent release change directly on `main` with subject `vX.Y.Z`, and push only when authorized. Other reviewed main commits may exist since the previous release. The workflow checks ancestry and exact source, not an arbitrary commit count. Do not invent a release PR to work around rules.
+5. Create a source-bound draft with matching version/tag/title and a body starting `## MM/DD/YYYY`. Never reuse public versions or immutable assets. Draft-reading jobs require `contents: write`; read-only tokens cannot see drafts.
+6. Dispatch once:
+
+```bash
+gh workflow run docker-publish.yml --ref main -f mode=release
+```
+
+There is no separately typed version input to disagree with source. The current main tip and commit subject must match the release source. The owner-authorized direct-main path remains policy; retain the Actions-owned `release-validation` context. If repository rules prevent that path, report the conflict instead of changing rules or opening a PR silently.
+
+## What runs once
+
+| Stage | Required result |
 | --- | --- |
-| `local/source-validation` | Full Python suite, workflow/release and seccomp validation, JSON/YAML/Compose checks, external-only CLIProxyAPI check and Renovate extraction |
-| `local/native-amd64` | Exact native image/build identity, first-party files, all pretag/protected checks, complete scanner evidence, inventories, SPDX and provenance |
-| `local/native-arm64` | The same coverage on native ARM64 |
-| `local/release-integrity` | Actual published release/tag/source, registry graphs, release asset bytes and applicable moving-alias readback |
+| validate-source | Exact source/main/ancestry and versions; publication-only draft/alias guard; credentials; full source/static suite |
+| build-candidate | Parallel native AMD64/ARM64 builds, immutable digests, SBOM and maximum BuildKit provenance |
+| compose-candidate | Combine exact native manifests and bound attestations; reject missing, changed or duplicate descriptors |
+| protected-validation | Pull combined digest on both native runners; smoke/sandbox, plugins, removed-Hermes refusal/data preservation, Chromium floor/current availability, upgrade/persistence/untouched-snapshot rollback, Trivy/Scout, secret policy, inventories and SPDX |
+| release-validation | Every prerequisite succeeds; failures, cancellations and skips block promotion |
+| promote-candidate | Release mode only: recheck draft/unused aliases, promote the qualified graph without rebuilding, verify registries and upload evidence without clobbering |
+| update-dockerhub-description | Release mode only, after promotion; failure does not invalidate image qualification |
 
-The integrity context is post-publication. Do not require it before a merge or create a publication/merge dependency cycle. Local statuses do not impersonate existing Actions-owned checks. Review required-context/provider changes separately before changing repository rules.
+Chromium uses one disposable container and one repository refresh for all three packages. Every package still passes both security-floor and installed-versus-available checks. Keep scanner execution, malformed reports, project-owned findings and secrets blocking. Known third-party findings remain advisory under the evidence policy.
 
-The hosted release route uses the Actions-owned `release-validation` aggregate. Require that check for hosted delivery; do not substitute successful `local/*` statuses for its actual jobs or post local success from hosted results. A new release commit or newly built image needs evidence for that exact source and candidate digest. Local results for an earlier commit or image remain historical.
+Native caches accelerate builds but never count as runtime, scan, rollback or source-identity evidence. Keep pinned scanner archives/actions, non-root operation, sandbox/seccomp and closed browser port. Do not custom-patch dependencies to force an update through.
 
-`pending` means qualification or reporting is in progress. `success` requires every mandatory stage and evidence check to pass. Test failures report `failure`; unavailable tools, interrupted execution, bad evidence and uncertain outcomes report `error`. Older attempts cannot overwrite a newer run's result.
+## Failure and resume rules
 
-## Reporter commands
+- Save the first actionable error, run, SHA, image digest and stage. Classify product/test, dependency, tooling, transport, quota/billing and permission failures separately.
+- Reproduce deterministic failures narrowly. Do not retry unchanged failures. Allow at most one bounded retry of clearly transient transport errors. After two unsuccessful corrections to the same problem, stop the release attempt and present the blocker.
+- Changed source/image inputs require fresh affected qualification. Never reuse runtime/scanner results for another image.
+- Report-transfer failures do not require rebuilding qualified images. Resume the affected stage only with matching inputs and retained prerequisite evidence. Missing evidence is not success.
+- GitHub job reruns use the original SHA and rerun dependent jobs. Check publication state first. Partial promotion or asset upload needs reconciliation: the immutable-alias guard intentionally blocks ordinary retries once aliases exist. Never delete public aliases or add `--clobber` to bypass it.
+- A description-only failure can rerun that job without rebuilding images. An unavailable runner or account quota is an infrastructure blocker, not permission to spend days creating a new controller.
+- Record the cause and prevention check before retrying. Keep release concurrency enabled. Never prune shared Docker resources, stop unrelated containers or alter Docker/WSL limits. Workflow cleanup applies only to disposable hosted runners.
 
-For local qualification, the reporter validates the trusted controller's registered plan and receipts, then reports them for the exact commit. It does not execute tests. Use the same repository, commit, context and unique run ID for all three commands:
-
-```bash
-python scripts/report_local_status.py begin \
-  --state-dir "$STATE_DIR" --repo CoderLuii/HolyCode --sha "$SHA" \
-  --run-id "$RUN_ID" --context local/source-validation --plan source-plan.json
-
-# Execute the registered source checks through the trusted local controller.
-
-python scripts/report_local_status.py finish \
-  --state-dir "$STATE_DIR" --repo CoderLuii/HolyCode --sha "$SHA" \
-  --run-id "$RUN_ID" --context local/source-validation --evidence source-evidence.json
-
-python scripts/report_local_status.py sync \
-  --state-dir "$STATE_DIR" --repo CoderLuii/HolyCode --sha "$SHA" \
-  --run-id "$RUN_ID" --context local/source-validation
-```
-
-An unpublished commit gets a local pending record first. Finish its local qualification before pushing. Once the approved push makes that exact SHA available on GitHub, `sync` publishes pending and the verified terminal result. Do not push an unqualified branch just to enable reporting.
-
-When retesting an already-published SHA, add `--published` to `begin` so GitHub receives pending before tests start. A denied pending write does not authorize a successful terminal result. Do not bypass the shared state directory or reuse run IDs.
-
-Authenticate through the trusted host's `gh` session. The reporter captures credentials in memory and does not pass them to tests. Fine-grained tokens need commit-status write permission; classic tokens need `repo:status` or `repo`. Report an access failure instead of probing with a fabricated success or adding scopes silently. Private paths and raw credential-bearing errors never belong in status descriptions or public evidence.
-
-## Publish a locally qualified release
-
-When you use the local route, qualify the exact committed source and both native images before pushing through the established direct-main path. Publish the sealed image graph once and verify all remote bytes locally. Prepare the complete assets and sanitized qualification summary in a draft release, verify them, then publish the draft last.
-
-Post `local/release-integrity` success only after actual published readback. Verify historical version tags independently of moving `main` and `latest`; check moving aliases only while the release remains designated current, with a final identity recheck. Never overwrite a published version or immutable release asset to retry a check.
-
-Synchronize the separate website after product publication. Build, test, audit and capture locally, upload that same qualified build, and verify the immutable deployment and public domain from local headless contexts.
-
-## Opt-in hosted release
-
-Both workflow files remain manual-only. Their `confirm_hosted_execution` input defaults to false. Pushing a commit, opening a pull request, tagging or publishing a release does not start them. Use the hosted route only when you have separately authorized it for the exact release commit on `main`.
-
-The publisher in `.github/workflows/docker-publish.yml` runs the following sequence:
-
-1. `validate-source` checks the source-bound draft, verifies Docker Hub credentials before builds, and runs the source/static checks once.
-2. `build-candidate` builds AMD64 on `ubuntu-24.04` and ARM64 on `ubuntu-24.04-arm` in parallel. Each native build publishes its own immutable candidate digest with SBOM and provenance attestations. QEMU is not used.
-3. `compose-candidate` reads the two per-architecture digest artifacts from the same run, verifies their native platforms and attestation targets, and combines their exact descriptors. It rejects a combined index that drops or changes a native manifest or attestation.
-4. `protected-validation` pulls that combined candidate by digest on both native runners. It runs the four protected runtime checks, including sandbox, offline plugins, Chromium availability and upgrade/persistence/rollback, and collects the complete scanner, secret, inventory and SPDX evidence once per architecture. It does not rebuild the candidate or repeat the separate pretag workflow.
-5. `release-validation` succeeds only when source validation, both native builds, composition and the complete protected matrix succeed. A failed, cancelled or skipped prerequisite blocks promotion.
-6. `promote-candidate` promotes the verified combined graph through the existing guarded release path.
-
-For an explicitly authorized hosted release, dispatch the exact version from `main`:
+## Measure completed runs
 
 ```bash
-gh workflow run docker-publish.yml --ref main \
-  -f confirm_hosted_execution=true -f release_version=v1.3.0
+python scripts/report_release_timings.py --run-id RUN_ID --output artifacts/release-timings.json
 ```
 
-The manual publisher requires an exact source-bound draft and absent version image aliases. It rechecks those preconditions immediately before promotion and uploads without clobbering existing release assets. A read-only precondition cannot lock out an unrelated concurrent publisher: keep operator exclusion and workflow concurrency in force. Publish the completed draft only after all checks and readbacks are verified.
+Repeat `--run-id` to collect samples. Keep each run's SHA, conclusion, total duration, jobs and steps. Compare validation with validation and release with release. Queue time, caches, source and upstream package availability affect timing. Failed/incomplete runs do not prove speedups. The timing reporter records rerun attempts but excludes them from benchmark medians because the total includes time between attempts. Record two successful runs of the same candidate before claiming a repeatable improvement. Historical calculations are not new native benchmarks.
 
-Hosted builds create a fresh candidate from the dispatched commit. Passing local checks on an earlier source does not qualify that new candidate. Keep the local reporter states and the hosted Actions results separate. The manual PR-validation workflow remains available for a separately requested validation run; the publisher does not dispatch it.
+Optimize the measured bottleneck one change at a time. Keep changes only when coverage stays intact and repeated timing improves. Stop when improvements fall within normal variation, weaken checks or require disproportionate complexity. Every future release cannot be guaranteed faster than its predecessor.
 
-The cancelled v1.2.9 Actions run remains an accurate historical record. New local statuses do not turn that old cancellation into a hosted success.
+## Finish publication; synchronize the site separately
+
+Verify version tags, registry graphs, attestations, release assets and checksums before publishing the completed draft. Image signing is not configured; do not claim signatures. Preserve immutable releases and use the next version for later fixes.
+
+After publication, synchronize site facts, qualify one site build locally/headlessly, deploy those exact bytes and verify immutable and canonical HTTPS URLs. Site or description failures must not restart product builds or releases.
+
+## Explicit local fallback
+
+Use local native delivery only when explicitly selected and both native hosts are ready before starting. The older `report_local_status.py` and its `local/source-validation`, `local/native-amd64`, `local/native-arm64` and post-publication `local/release-integrity` contexts remain supported. They validate registered plans and receipts; they do not run tests. Preserve trusted controller/source/tool/digest binding and pending/error semantics. Do not impersonate Actions-owned checks or substitute local statuses for the hosted aggregate.
+
+Historical dependency audits describe their original release routes. This guide defines the current route. Do not rebuild a private orchestration system as an unplanned fallback during delivery.

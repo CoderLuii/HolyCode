@@ -1,4 +1,5 @@
 import unittest
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -6,24 +7,43 @@ from unittest.mock import patch
 
 from scripts import validate_workflow_pins
 from scripts.validate_workflow_pins import collect_errors
+from scripts.validate_version import Version
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReleaseMetadataTests(unittest.TestCase):
+    def test_validator_accepts_next_consistent_release_without_rewriting_policy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflows = root / ".github/workflows"
+            shutil.copytree(ROOT / ".github/workflows", workflows)
+            dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+            current = re.search(r"(?m)^ARG RELEASE_VERSION=(\S+)$", dockerfile).group(1)
+            following = str(Version.parse(current).next())
+            (root / "Dockerfile").write_text(dockerfile.replace("ARG RELEASE_VERSION=" + current, "ARG RELEASE_VERSION=" + following), encoding="utf-8")
+            path = workflows / "docker-publish.yml"
+            text = path.read_text(encoding="utf-8")
+            previous = re.search(r"(?m)^  PREVIOUS_VERSION: (\S+)$", text).group(1)
+            text = text.replace("  RELEASE_VERSION: " + current, "  RELEASE_VERSION: " + following)
+            text = text.replace("  PREVIOUS_VERSION: " + previous, "  PREVIOUS_VERSION: " + current)
+            text = text.replace("PREVIOUS_IMAGE: coderluii/holycode:" + previous[1:] + "@", "PREVIOUS_IMAGE: coderluii/holycode:" + current[1:] + "@")
+            path.write_text(text, encoding="utf-8")
+            with patch.object(validate_workflow_pins, "ROOT", root), patch.object(validate_workflow_pins, "WORKFLOWS", workflows):
+                self.assertEqual([], collect_errors())
+
     def test_workflow_validator_accepts_current_release_metadata(self):
         self.assertEqual([], collect_errors())
 
     def test_previous_image_and_version_match_released_baseline(self):
-        publish = (ROOT / ".github/workflows/docker-publish.yml").read_text()
-        self.assertIn("PREVIOUS_VERSION: v1.2.9", publish)
-        self.assertIn("RELEASE_VERSION: v1.3.0", publish)
-        self.assertIn(
-            "PREVIOUS_IMAGE: coderluii/holycode:1.2.9@sha256:"
-            "3d0bdce2a62f4eb6a5b03ec644b608d2c370da143474c6c6a81474ef1a16c439",
-            publish,
-        )
+        publish = (ROOT / ".github/workflows/docker-publish.yml").read_text(encoding="utf-8")
+        previous = re.search(r"(?m)^  PREVIOUS_VERSION: (\S+)$", publish).group(1)
+        image = re.search(r"(?m)^  PREVIOUS_IMAGE: coderluii/holycode:(\S+)@sha256:([0-9a-f]{64})$", publish)
+        current = re.search(r"(?m)^  RELEASE_VERSION: (\S+)$", publish).group(1)
+        self.assertIsNotNone(image)
+        self.assertEqual("v" + image.group(1), previous)
+        self.assertEqual(str(Version.parse(previous).next()), current)
 
     def test_validator_rejects_a_different_image_release(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -26,3 +26,7 @@ Contributions welcome. Here's how.
 ## Questions?
 
 Open an issue. Discussions are disabled in this repository.
+
+## Maintainer releases
+
+Run the [release guide](../docs/local-validation.md). Maintainer releases go directly through `main`; contributor PRs do not change that delivery path. Use one manual release workflow. The optional source-check workflow is for development, not a prerequisite that rebuilds images before release qualification.

@@ -1,19 +1,17 @@
-name: HolyCode - Manual hosted release fallback
-run-name: ${{ inputs.release_version }} hosted fallback
+name: HolyCode - Release
+run-name: ${{ inputs.mode }} HolyCode
 
 on:
   workflow_dispatch:
     inputs:
-      confirm_hosted_execution:
-        description: Separately authorized hosted execution; normal releases run locally
-        type: boolean
+      mode:
+        description: Validate a candidate, or promote a qualified release
+        type: choice
         required: true
-        default: false
-      release_version:
-        description: Exact version with a source-bound draft release
-        type: string
-        required: true
-        default: v1.3.0
+        default: validate
+        options:
+          - validate
+          - release
 
 concurrency:
   group: docker-release
@@ -40,11 +38,11 @@ jobs:
       contents: write
 
     steps:
-      - name: Require explicit hosted fallback authorization
+      - name: Require explicit manual mode
         env:
-          HOSTED_EXECUTION_APPROVED: ${{ inputs.confirm_hosted_execution }}
+          RELEASE_MODE: ${{ inputs.mode }}
         run: |
-          test "$HOSTED_EXECUTION_APPROVED" = true
+          case "$RELEASE_MODE" in validate|release) ;; *) exit 1 ;; esac
           test "$GITHUB_REF" = refs/heads/main
 
       - name: Checkout exact workflow commit
@@ -55,38 +53,16 @@ jobs:
 
       - name: Validate release metadata and commit binding
         env:
-          REQUESTED_REF: ${{ github.sha }}
-          REQUESTED_RELEASE_TITLE: ${{ inputs.release_version }}
-          REQUESTED_VERSION: ${{ inputs.release_version }}
+          RELEASE_MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
-
-          actual_sha="$(git rev-parse HEAD)"
           git fetch --no-tags origin main
-          [ "$REQUESTED_REF" = "$GITHUB_SHA" ]
-          [ "$actual_sha" = "$GITHUB_SHA" ]
-          [ "$actual_sha" = "$(git rev-parse origin/main)" ]
-          [ "$REQUESTED_VERSION" = "$RELEASE_VERSION" ]
-          [ "$REQUESTED_RELEASE_TITLE" = "$RELEASE_VERSION" ]
-
-          commit_title="$(git log -1 --format=%s HEAD)"
-          python scripts/validate_version.py \
-            --version "$RELEASE_VERSION" \
-            --previous-version "$PREVIOUS_VERSION" \
-            --tag-name "$RELEASE_VERSION" \
-            --commit-title "$commit_title" \
-            --release-title "$REQUESTED_RELEASE_TITLE"
-
-          git merge-base --is-ancestor "$PREVIOUS_VERSION" HEAD
-          commit_count="$(git rev-list --count "$PREVIOUS_VERSION..HEAD")"
-          if [ "$commit_count" -ne 1 ]; then
-            echo "Release range $PREVIOUS_VERSION..$RELEASE_VERSION contains $commit_count commits; expected exactly 1" >&2
-            exit 1
-          fi
-
-          echo "Validated exact candidate $actual_sha for $RELEASE_VERSION" >> "$GITHUB_STEP_SUMMARY"
+          python scripts/validate_release_source.py \
+            --mode "$RELEASE_MODE" --sha "$GITHUB_SHA" \
+            --version "$RELEASE_VERSION" --previous-version "$PREVIOUS_VERSION"
 
       - name: Require unpublished image aliases and a matching draft
+        if: inputs.mode == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -144,9 +120,11 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Require native build architecture
+        env:
+          NATIVE_ARCH: ${{ matrix.suffix }}
         run: |
           set -euo pipefail
-          case "${{ matrix.suffix }}:$(uname -m)" in
+          case "$NATIVE_ARCH:$(uname -m)" in
             amd64:x86_64|arm64:aarch64) ;;
             *) echo "Runner architecture does not match native build" >&2; exit 1 ;;
           esac
@@ -178,7 +156,7 @@ jobs:
           tags: ${{ env.CANDIDATE_IMAGE }}:validation-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.suffix }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ inputs.release_version }}
+            org.opencontainers.image.version=${{ env.RELEASE_VERSION }}
           cache-from: |
             type=gha,scope=release-${{ matrix.suffix }}
             type=gha
@@ -197,7 +175,7 @@ jobs:
       - name: Upload native candidate digest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: holycode-${{ inputs.release_version }}-${{ matrix.suffix }}-candidate
+          name: holycode-${{ env.RELEASE_VERSION }}-${{ matrix.suffix }}-candidate
           if-no-files-found: error
           path: candidate-${{ matrix.suffix }}.txt
 
@@ -292,7 +270,7 @@ jobs:
       - name: Upload candidate digest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: holycode-${{ inputs.release_version }}-candidate
+          name: holycode-${{ env.RELEASE_VERSION }}-candidate
           if-no-files-found: error
           path: candidate-digest.txt
 
@@ -351,25 +329,33 @@ jobs:
       - name: Validate offline plugin modes
         run: bash scripts/test_plugin_modes.sh "holycode-protected-validation:${{ matrix.suffix }}"
 
-      - name: Validate Chromium security floor and refreshed availability
+      - name: Validate Hermes migration guard
         run: |
           set -euo pipefail
           image="holycode-protected-validation:${{ matrix.suffix }}"
-          actual_arch="$(docker run --rm --entrypoint dpkg "$image" --print-architecture)"
-          [ "linux/$actual_arch" = "${{ matrix.platform }}" ]
+          volume="$(docker volume create)"
+          container=''
+          cleanup() {
+            if [ -n "$container" ]; then docker rm -f "$container" >/dev/null; fi
+            docker volume rm "$volume" >/dev/null
+          }
+          trap cleanup EXIT
+          docker run --rm --entrypoint sh -v "$volume:/home/opencode" "$image" \
+            -lc 'mkdir -p /home/opencode/.hermes && touch /home/opencode/.hermes/preserved'
+          container="$(docker create -v "$volume:/home/opencode" -e ENABLE_HERMES=true "$image")"
+          if timeout 30s docker start --attach "$container" >"$RUNNER_TEMP/hermes.log" 2>&1; then
+            echo "ENABLE_HERMES=true unexpectedly started the removed bundled service" >&2
+            exit 1
+          fi
+          [ "$(docker inspect --format '{{.State.Running}}' "$container")" = false ]
+          grep -F "bundled Hermes is temporarily unavailable" "$RUNNER_TEMP/hermes.log"
+          grep -F "/home/opencode/.hermes is preserved" "$RUNNER_TEMP/hermes.log"
+          docker run --rm --entrypoint test -v "$volume:/home/opencode" "$image" -f /home/opencode/.hermes/preserved
 
-          for package in chromium chromium-common chromium-sandbox; do
-            installed="$(docker run --rm --entrypoint dpkg-query "$image" -W -f='${Version}' "$package")"
-            available="$(docker run --rm --entrypoint sh "$image" -lc \
-              "apt-get update --error-on=any >/dev/null && apt-cache policy '$package' | awk '/Candidate:/ {print \$2}'")"
-            [ -n "$installed" ]
-            [ -n "$available" ]
-            bash scripts/validate_chromium_version.sh \
-              "$installed" "${{ matrix.platform }}" "$RELEASE_VERSION" "$(date -u +%F)"
-            dpkg --compare-versions "$installed" ge "$available"
-            printf '%s installed=%s available=%s platform=%s\n' \
-              "$package" "$installed" "$available" "${{ matrix.platform }}"
-          done
+      - name: Validate Chromium security floor and refreshed availability
+        run: |
+          bash scripts/check_chromium_packages.sh \
+            "holycode-protected-validation:${{ matrix.suffix }}" "${{ matrix.platform }}" "$RELEASE_VERSION"
 
       - name: Validate upgrade, persistence, and rollback
         env:
@@ -550,7 +536,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: holycode-${{ inputs.release_version }}-${{ matrix.suffix }}-evidence
+          name: holycode-${{ env.RELEASE_VERSION }}-${{ matrix.suffix }}-evidence
           if-no-files-found: error
           path: |
             holycode-${{ matrix.suffix }}.candidate-digest.txt
@@ -597,6 +583,7 @@ jobs:
           test "$PROTECTED_RESULT" = success
 
   promote-candidate:
+    if: inputs.mode == 'release'
     needs: release-validation
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -618,7 +605,7 @@ jobs:
           git fetch --no-tags --depth=1 origin main
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main
           current="$RELEASE_VERSION"
-          previous="$(git tag --list 'v*' --sort=-v:refname | grep -Fxv "$current" | head -n 1 || true)"
+          previous="$PREVIOUS_VERSION"
           commit_title="$(git log -1 --format=%s "$GITHUB_SHA")"
           python scripts/validate_version.py \
             --version "$current" \
@@ -707,7 +694,7 @@ jobs:
             "$GHCR_IMAGE:latest"
           )
 
-          for attempt in $(seq 1 12); do
+          for _ in $(seq 1 12); do
             ready=true
             for ref in "${refs[@]}"; do
               if ! docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
@@ -759,10 +746,10 @@ jobs:
           gh release upload "$RELEASE_VERSION" "${assets[@]}"
 
   update-dockerhub-description:
+    if: inputs.mode == 'release'
     needs: promote-candidate
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     steps:

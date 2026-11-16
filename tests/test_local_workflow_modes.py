@@ -171,7 +171,7 @@ class LocalWorkflowModeTests(unittest.TestCase):
                     code = script.replace("${{ matrix.suffix }}", arch)
                     result = subprocess.run(
                         [self.bash(), "--noprofile", "--norc", "-c", 'uname() { printf "%s\\n" "$FIXTURE_MACHINE"; };\n' + code],
-                        env={**os.environ, "FIXTURE_MACHINE": machine}, capture_output=True, text=True, timeout=15,
+                        env={**os.environ, "FIXTURE_MACHINE": machine, "NATIVE_ARCH": arch}, capture_output=True, text=True, timeout=15,
                     )
                     expected = (arch, machine) in (("amd64", "x86_64"), ("arm64", "aarch64"))
                     self.assertEqual(result.returncode == 0, expected, result.stderr)

@@ -32,7 +32,7 @@ OpenCode running in a container with everything already installed. 50+ dev tools
 
 **Chromium update.** v1.3.0 builds require official Debian `chromium`, `chromium-common`, and `chromium-sandbox` `156.0.8078.79-1~deb13u1` or newer on AMD64 and ARM64. Earlier images still need an upgrade; pull and restart to apply it. Fresh release scans determine which accepted upstream findings remain; this is not a zero-vulnerability claim. Avoid untrusted browser content and automation while known findings remain; see [the dependency audit](docs/dependency-audit-v1.3.0.md#security-delivery-policy). Keep the unprivileged user, setuid sandbox, seccomp profile, and closed browser port.
 
-Maintainer checks run on controlled local infrastructure. GitHub displays the actual results as `local/` commit statuses. See the [local validation guide](docs/local-validation.md).
+Maintainer releases use one manual native AMD64/ARM64 workflow. Validate locally before pushing; then qualify one candidate and promote those exact images. See the [release guide](docs/local-validation.md).
 
 **Hermes remains temporarily unbundled.** HolyCode leaves `/home/opencode/.hermes` untouched so you can restore the service if managed bundling returns.
 
