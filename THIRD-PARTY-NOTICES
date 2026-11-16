@@ -138,7 +138,7 @@ automation via Playwright and Puppeteer.
 - License: Apache-2.0
 - Copyright: Microsoft Corporation
 - Source: https://github.com/microsoft/playwright
-- Version: 1.64.1
+- Version: 1.65.2
 
 Installed via pip. Uses the system Chromium binary, not Playwright's
 bundled browsers.
@@ -150,12 +150,12 @@ permits the namespace syscalls required by Chromium's sandbox.
 ## Claude Code CLI
 
 - License: SEE LICENSE IN README.md
-- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.318
-- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.318.tgz
+- npm: https://www.npmjs.com/package/@anthropic-ai/claude-code/v/2.1.325
+- Artifact: https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.325.tgz
 - Legal agreements: https://code.claude.com/docs/en/legal-and-compliance
-- Version: 2.1.318
+- Version: 2.1.325
 
-Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.318`.
+Installed from the pinned npm package `@anthropic-ai/claude-code@2.1.325`.
 The pinned package must retain its `LICENSE.md` legal-agreements notice.
 Final native image validation must prove that the installed CLI and
 Linux native payload carry the same notice. This is artifact evidence, not a
@@ -207,7 +207,7 @@ Connect dependency declaration.
 - License: MIT
 - Copyright: GitHub, Inc.
 - Source: https://github.com/cli/cli
-- Version: 2.103.3
+- Version: 2.104.0
 
 Installed from the official upstream Linux release archive after SHA-256
 verification.
@@ -217,7 +217,7 @@ verification.
 - License: MIT
 - Copyright: Jesse Duffield
 - Source: https://github.com/jesseduffield/lazygit
-- Version: 0.66.2
+- Version: 0.66.3
 
 Installed from the official upstream Linux release archive after SHA-256
 verification.
@@ -226,13 +226,13 @@ verification.
 
 - License: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
 - Source: https://github.com/numpy/numpy
-- Version: 2.5.4
+- Version: 2.5.5
 
 ## pandas
 
 - License: BSD-3-Clause plus bundled third-party license texts
 - Source: https://github.com/pandas-dev/pandas
-- Version: 3.0.6
+- Version: 3.1.1
 
 The installed pandas distribution includes its primary license and bundled
 third-party notices in one license file. This notice does not reduce that file
@@ -276,9 +276,9 @@ and https://github.com/certifi/python-certifi.
 
 - License: Apache-2.0 OR MIT
 - Source: https://github.com/cloudflare/workers-sdk
-- Version: 4.157.0
+- Version: 4.162.0
 
-Wrangler owns Miniflare 5.20261103.0-beta, workerd 1.20261103.1, and esbuild
+Wrangler owns Miniflare 5.20261113.0-beta, workerd 1.20261113.1, and esbuild
 0.28.2. The
 installed package manifests declare MIT for Miniflare and Apache-2.0 for
 workerd. Their selected npm package roots do not include license files, so this
@@ -289,16 +289,26 @@ images must verify the installed package roots and separate workerd payloads.
 
 - License: MIT
 - Source: https://github.com/pnpm/pnpm
-- Version: 12.16.1
+- Version: 12.21.0
 
 The selected package manifest declares MIT. Its npm package has no license file
 at the package root, so this notice does not claim one is bundled.
+
+### pnpm bundled Undici
+
+- License: MIT
+- Source: https://github.com/nodejs/undici
+- Version: 7.30.2
+
+The official pnpm 12.21.0 tarball owns this internal copy. HolyCode preserves
+that payload and checks its exact embedded manifest; npm and Paperclip retain
+their separate owner graphs.
 
 ## Prettier
 
 - License: MIT
 - Source: https://github.com/prettier/prettier
-- Version: 3.9.10
+- Version: 3.10.1
 
 ## tsx
 
@@ -310,7 +320,7 @@ at the package root, so this notice does not claim one is bundled.
 
 - License: MIT
 - Source: https://github.com/vitejs/vite
-- Version: 8.3.5
+- Version: 8.3.8
 
 ## Lighthouse
 
@@ -338,7 +348,7 @@ include legacy-javascript.
 
 - License: MIT
 - Source: https://github.com/eslint/eslint
-- Version: 10.13.0
+- Version: 10.15.0
 
 ## drizzle-kit
 
@@ -387,7 +397,7 @@ LGPL-3.0-or-later.
 - License: MIT
 - Copyright: Junegunn Choi
 - Source: https://github.com/junegunn/fzf
-- Version: 0.74.5
+- Version: 0.75.0
 
 Installed from the official upstream Linux release archive after SHA-256
 verification.

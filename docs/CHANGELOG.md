@@ -4,12 +4,15 @@ All notable changes to HolyCode will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.3.1] - 11/16/2026
 
 ### Changed
 
+- Refresh the official Node 24.22.3 base, Claude Code 2.1.325, GitHub CLI 2.104.0, fzf 0.75.0 and lazygit 0.66.3
+- Update compatible pnpm, Vite, Prettier, ESLint, dotenv-cli and Wrangler owner graphs without third-party patches
+- Refresh Python 3.13 hash locks for Playwright 1.65.2, pandas 3.1.1, NumPy 2.5.5, Click 8.5.1, Markdown 3.11.3 and FastAPI 0.163.1
+- Update the pinned Docker login action and Trivy scanner while keeping native security and rollback gates
 - Document verified release failure causes and native timings; separate initial waiting from execution in timing reports
-
 - Separate AMD64 and ARM64 Trivy caches while retaining complete scans and evidence
 - Cache source-check npm downloads using tracked toolchain/configuration inputs without skipping checks
 - Use one manual native qualification workflow with validation-only mode by default, release-only promotion and recorded job timings; remove duplicate pre-tag image builds

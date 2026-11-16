@@ -4,13 +4,13 @@
 # ==============================================================================
 
 # renovate: datasource=github-releases depName=cli/cli
-ARG GITHUB_CLI_VERSION=2.103.3
+ARG GITHUB_CLI_VERSION=2.104.0
 # renovate: datasource=github-releases depName=junegunn/fzf
-ARG FZF_VERSION=0.74.5
+ARG FZF_VERSION=0.75.0
 # renovate: datasource=github-releases depName=jesseduffield/lazygit
-ARG LAZYGIT_VERSION=0.66.2
+ARG LAZYGIT_VERSION=0.66.3
 
-FROM node:24.22.2-trixie-slim@sha256:54f84b4cf8432b21aaffd5d3ce8d41e12cea0d10d33c09d2f3c9879d49d6b446
+FROM node:24.22.3-trixie-slim@sha256:af02d57b57719b9657a45199a79264a9437940cd55b3c7b3fc99615654f124a0
 
 # ---------- Build args ----------
 ARG GITHUB_CLI_VERSION
@@ -25,7 +25,7 @@ ARG EZA_VERSION=0.23.5
 # renovate: datasource=npm depName=opencode-ai
 ARG OPENCODE_VERSION=1.19.5
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.318
+ARG CLAUDE_CODE_VERSION=2.1.325
 # renovate: datasource=npm depName=paperclipai
 ARG PAPERCLIP_VERSION=2026.831.1
 # renovate: datasource=npm depName=@cursor/sdk
@@ -51,11 +51,11 @@ ARG PM2_JS_YAML_VERSION=4.3.2
 # renovate: datasource=npm depName=tsx
 ARG TSX_VERSION=4.23.15
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=12.16.1
+ARG PNPM_VERSION=12.21.0
 # renovate: datasource=npm depName=vite
-ARG VITE_VERSION=8.3.5
+ARG VITE_VERSION=8.3.8
 # renovate: datasource=npm depName=prettier
-ARG PRETTIER_VERSION=3.9.10
+ARG PRETTIER_VERSION=3.10.1
 # renovate: datasource=npm depName=prisma
 ARG PRISMA_VERSION=7.10.1
 # renovate: datasource=npm depName=deepmerge-ts
@@ -65,17 +65,17 @@ ARG PRISMA_MYSQL2_VERSION=3.24.4
 # renovate: datasource=npm depName=lighthouse
 ARG LIGHTHOUSE_VERSION=13.6.0
 # renovate: datasource=npm depName=wrangler
-ARG WRANGLER_VERSION=4.157.0
+ARG WRANGLER_VERSION=4.162.0
 # renovate: datasource=npm depName=miniflare
-ARG WRANGLER_MINIFLARE_VERSION=5.20261103.0-beta
+ARG WRANGLER_MINIFLARE_VERSION=5.20261113.0-beta
 # renovate: datasource=npm depName=sharp
 ARG WRANGLER_SHARP_VERSION=0.35.5
 # renovate: datasource=npm depName=@img/sharp-libvips-linux-x64
 ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.4
 # renovate: datasource=npm depName=eslint
-ARG ESLINT_VERSION=10.13.0
+ARG ESLINT_VERSION=10.15.0
 # renovate: datasource=pypi depName=numpy
-ARG NUMPY_VERSION=2.5.4
+ARG NUMPY_VERSION=2.5.5
 # renovate: datasource=pypi depName=pip
 ARG PIP_VERSION=26.3
 ARG PIP_VENDOR_MSGPACK_VERSION=1.2.4
@@ -83,8 +83,8 @@ ARG PIP_VENDOR_PKG_RESOURCES_VERSION=70.3.0
 ARG PIP_VENDOR_URLLIB3_VERSION=2.8.0
 # renovate: datasource=pypi depName=setuptools
 ARG SETUPTOOLS_VERSION=84.2.1
-ARG RELEASE_APT_REFRESH=2026-11-05
-ARG RELEASE_VERSION=v1.3.0
+ARG RELEASE_APT_REFRESH=2026-11-16
+ARG RELEASE_VERSION=v1.3.1
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.source=https://github.com/CoderLuii/HolyCode \
@@ -196,8 +196,8 @@ RUN ln -sf /usr/bin/batcat /usr/local/bin/bat 2>/dev/null || true
 
 # ---------- fzf ----------
 RUN FZF_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "cf058001da21724a469b714a29cf4aab9cbe860d218a0d6c1b5b661efad7784c";; \
-      *) echo "d47d7f882972c7d674dbbba998ffa4116e68379616ffac7695d0671e9a722c5f";; \
+      arm64) echo "bd0717badb6a5620387e014bb94209aac4d9eab6ab77b5348eabb0833aeb4d59";; \
+      *) echo "0d6640f83582d991cf429754baad64b07e3a4e439a6019670f4b91da1314141c";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/fzf.tar.gz \
       "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${TARGETARCH}.tar.gz" && \
@@ -218,8 +218,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ---------- GitHub CLI ----------
 RUN GH_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "ee32df2323c8847f5fac6cb6b4b69ca75828e9329a8f22f677021f7b3306ce63";; \
-      *) echo "4c806978ffce1cec70853302a56d70ac6da4f19bae7adca4e1a8ab00633dd91d";; \
+      arm64) echo "cb34cefc6f4e77b90731374a2b737516bb8f3033c6ca46aa949e5344f68069e3";; \
+      *) echo "98cb101ad87dbbd3f6b2f2bfcbd43197ccd07643140121d8a9cfaa91eadbc24e";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/gh.tar.gz \
       "https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_${TARGETARCH}.tar.gz" && \
@@ -232,8 +232,8 @@ RUN GH_SHA256=$(case "$TARGETARCH" in \
 # ---------- lazygit ----------
 RUN LAZYGIT_ARCH=$(case "$TARGETARCH" in arm64) echo "arm64";; *) echo "x86_64";; esac) && \
     LAZYGIT_SHA256=$(case "$TARGETARCH" in \
-      arm64) echo "79a3161eeb642f0473e23db6341f7baabd4a5933e921a9c1167c5d5c765c41a4";; \
-      *) echo "158efc9ddfa1241fab5fb3526bb442c8dc6c4b1904d73213b9e4e93e03c52034";; \
+      arm64) echo "ac0b48237f3d0283813e7154ec063237e519532feb0470c0881a1793ee78fd42";; \
+      *) echo "0a23f429a95f0d09db298b3c291536d818de066aa5a85c255806f0490ff6656b";; \
     esac) && \
     curl --disable --retry 8 --retry-all-errors --retry-max-time 300 --remove-on-error --connect-timeout 15 --max-time 300 -fsSL -o /tmp/lazygit.tar.gz \
       "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_${LAZYGIT_ARCH}.tar.gz" && \
@@ -353,7 +353,7 @@ RUN npm i -g --ignore-scripts \
     "vite@${VITE_VERSION}" esbuild@0.28.2 \
     "eslint@${ESLINT_VERSION}" "prettier@${PRETTIER_VERSION}" \
     nodemon@3.1.14 \
-    dotenv-cli@11.0.0 \
+    dotenv-cli@11.1.0 \
     "wrangler@${WRANGLER_VERSION}" \
     pm2@7.1.2 \
     "prisma@${PRISMA_VERSION}" drizzle-kit@0.31.11 \
@@ -404,29 +404,29 @@ RUN npm ls -g pm2 --all >/dev/null && \
     test ! -d /usr/local/lib/node_modules/pm2/node_modules/basic-ftp && \
     rm -rf /root/.npm
 
-# Wrangler 4.157.0 owns Miniflare 5.20261103.0-beta and workerd 1.20261103.1;
+# Wrangler 4.162.0 owns Miniflare 5.20261113.0-beta and workerd 1.20261113.1;
 # Miniflare owns the same workerd and the fixed Sharp release. Bind each owner.
 RUN WRANGLER_SHARP_INTEGRITY="sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g==" && \
     test "$(npm view "sharp@${WRANGLER_SHARP_VERSION}" dist.integrity)" = "$WRANGLER_SHARP_INTEGRITY" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}" && \
-    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261103.1" && \
+    test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261113.1" && \
     test "$(npm view "wrangler@${WRANGLER_VERSION}" dependencies.esbuild)" = "0.28.2" && \
     test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.sharp)" = "${WRANGLER_SHARP_VERSION}" && \
-    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261103.1" && \
+    test "$(npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261113.1" && \
     WRANGLER_PACKAGE=/usr/local/lib/node_modules/wrangler/package.json && \
     WRANGLER_NODE_MODULES=/usr/local/lib/node_modules/wrangler/node_modules && \
     WRANGLER_MINIFLARE_PACKAGE="$WRANGLER_NODE_MODULES/miniflare/package.json" && \
     WRANGLER_WORKERD_PACKAGE="$WRANGLER_NODE_MODULES/workerd/package.json" && \
     WRANGLER_SHARP_DIR="$WRANGLER_NODE_MODULES/sharp" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_PACKAGE")" = "${WRANGLER_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261103.1" || pkg.dependencies.esbuild!=="0.28.2") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.miniflare!==process.argv[2] || pkg.dependencies.workerd!=="1.20261113.1" || pkg.dependencies.esbuild!=="0.28.2") process.exit(1)' \
       "$WRANGLER_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" && \
     node -e 'const pkg=require(process.argv[1]); if(pkg.version!==process.argv[2] || pkg.dependencies.sharp!==process.argv[3]) process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" "${WRANGLER_MINIFLARE_VERSION}" "${WRANGLER_SHARP_VERSION}" && \
-    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261103.1") process.exit(1)' \
+    node -e 'const pkg=require(process.argv[1]); if(pkg.dependencies.workerd!=="1.20261113.1") process.exit(1)' \
       "$WRANGLER_MINIFLARE_PACKAGE" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_WORKERD_PACKAGE")" = \
-      "1.20261103.1" && \
+      "1.20261113.1" && \
     test "$(node -p 'require(process.argv[1]).version' "$WRANGLER_SHARP_DIR/package.json")" = \
       "${WRANGLER_SHARP_VERSION}" && \
     case "${TARGETARCH}" in \

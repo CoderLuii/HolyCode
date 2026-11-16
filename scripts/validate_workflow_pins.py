@@ -24,7 +24,7 @@ REQUIRED_PINS = {
     "actions/upload-artifact": ("cf430e030ddbb5b0abf93d22962f4752f3646cd9", "v7.0.2"),
     "docker/setup-qemu-action": ("99012661954931238ded8c8b007157a8430204e1", "v4.4.0"),
     "docker/setup-buildx-action": ("f87e5991a6d7451dcb8d9637bfbc97413f497069", "v4.4.1"),
-    "docker/login-action": ("81c6f93d4bc991e510b342a00b419b3bb4efc5c6", "v4.7.0"),
+    "docker/login-action": ("8aa5831fb8d48d8f76594c7ddde61ae58019f550", "v4.8.0"),
     "docker/build-push-action": ("c3c9e263c25d99ce0380d002d59b67737d91b0dc", "v7.4.0"),
     "peter-evans/dockerhub-description": ("1b9a80c056b620d92cedb9d9b5a223409c68ddfa", "v5.0.0"),
     "aquasecurity/trivy-action": ("ed142fd0673e97e23eac54620cfb913e5ce36c25", "v0.36.0"),
@@ -51,7 +51,7 @@ def manual_trigger_errors(text: str, name: str) -> list[str]:
         body = body[:boundary.start()]
     entries = re.findall(r"(?m)^  ([^\s#][^\n]*)", body)
     if len(entries) != 1 or not re.fullmatch(r"workflow_dispatch:\s*(?:#.*)?", entries[0]):
-        return [f"{name} must expose only workflow_dispatch; all qualification runs locally"]
+        return [f"{name} must expose only workflow_dispatch; hosted execution must be explicit"]
     return []
 
 
@@ -138,12 +138,12 @@ def collect_errors() -> list[str]:
         "SCOUT_VERSION: 1.29.0",
         "scout_sha256: 9157cdc9372b478a8cd51dd53f5e9c74a7e34056ea291c65520bf76016fa72f4",
         "scout_sha256: bcb16a65b7266413fea05e9dc352159485609e62a6cbd049207118b0aa7d8611",
-        "trivy_sha256: c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0",
-        "trivy_sha256: e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f",
+        "trivy_sha256: bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf",
+        "trivy_sha256: ab9d51f86e6a5fb936f605faff6b593ac51bc378fff4d3e8b9d58358b9c367c3",
         "docker/scout-cli/releases/download/v${SCOUT_VERSION}",
         "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
         'docker-scout cves "sbom://$SCOUT_SBOM"',
-        "version: v0.76.1",
+        "version: v0.76.2",
         "python -m unittest discover -s tests",
         "python scripts/validate_workflow_pins.py",
         "python scripts/validate_chromium_seccomp.py",

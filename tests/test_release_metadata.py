@@ -64,7 +64,7 @@ class ReleaseMetadataTests(unittest.TestCase):
         for name in ("pr-validation.yml", "docker-publish.yml"):
             with self.subTest(workflow=name):
                 workflow = (ROOT / ".github/workflows" / name).read_text()
-                self.assertIn("node-version: 24.22.2", workflow)
+                self.assertIn("node-version: 24.22.3", workflow)
                 self.assertIn(
                     "bash scripts/validate_renovate_extraction.sh 44.129.0", workflow
                 )

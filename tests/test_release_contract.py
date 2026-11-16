@@ -86,11 +86,11 @@ class ReleaseContractTests(unittest.TestCase):
     def test_release_dependency_pins(self):
         expected = (
             "ARG S6_OVERLAY_VERSION=3.2.3.2",
-            "ARG GITHUB_CLI_VERSION=2.103.3",
-            "ARG FZF_VERSION=0.74.5",
-            "ARG LAZYGIT_VERSION=0.66.2",
+            "ARG GITHUB_CLI_VERSION=2.104.0",
+            "ARG FZF_VERSION=0.75.0",
+            "ARG LAZYGIT_VERSION=0.66.3",
             "ARG OPENCODE_VERSION=1.19.5",
-            "ARG CLAUDE_CODE_VERSION=2.1.318",
+            "ARG CLAUDE_CODE_VERSION=2.1.325",
             "ARG PAPERCLIP_VERSION=2026.831.1",
             "ARG PAPERCLIP_CURSOR_SDK_VERSION=1.4.0",
             "ARG PAPERCLIP_JSDOM_VERSION=30.1.3",
@@ -104,33 +104,33 @@ class ReleaseContractTests(unittest.TestCase):
             "ARG PIP_VENDOR_PKG_RESOURCES_VERSION=70.3.0",
             "ARG SETUPTOOLS_VERSION=84.2.1",
             "ARG TSX_VERSION=4.23.15",
-            "ARG PNPM_VERSION=12.16.1",
-            "ARG VITE_VERSION=8.3.5",
-            "ARG PRETTIER_VERSION=3.9.10",
+            "ARG PNPM_VERSION=12.21.0",
+            "ARG VITE_VERSION=8.3.8",
+            "ARG PRETTIER_VERSION=3.10.1",
             "ARG PRISMA_VERSION=7.10.1",
             "ARG PRISMA_DEEPMERGE_VERSION=8.0.2",
             "ARG PRISMA_MYSQL2_VERSION=3.24.4",
             "ARG LIGHTHOUSE_VERSION=13.6.0",
-            "ARG WRANGLER_VERSION=4.157.0",
-            "ARG WRANGLER_MINIFLARE_VERSION=5.20261103.0-beta",
+            "ARG WRANGLER_VERSION=4.162.0",
+            "ARG WRANGLER_MINIFLARE_VERSION=5.20261113.0-beta",
             "ARG WRANGLER_SHARP_VERSION=0.35.5",
             "ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.4",
-            "ARG ESLINT_VERSION=10.13.0",
+            "ARG ESLINT_VERSION=10.15.0",
             "requests==2.34.2",
             "pillow==13.0.0",
             "postgresql-client-17 redis-tools sqlite3",
             "matplotlib==3.11.2",
             "fonttools==4.65.0",
-            "pandas==3.0.6",
+            "pandas==3.1.1",
             "tqdm==4.70.1",
-            "fastapi==0.143.5",
-            "playwright==1.64.1",
+            "fastapi==0.163.1",
+            "playwright==1.65.2",
             "uvicorn==0.54.0",
             "packaging==26.3",
             "setuptools==84.2.1",
-            "numpy==2.5.4",
+            "numpy==2.5.5",
             "lxml==6.1.3",
-            "markdown==3.11.2",
+            "markdown==3.11.3",
             "python-dotenv==1.2.4",
             "opentelemetry-api==1.45.1",
             "wheel==0.48.0",
@@ -168,7 +168,7 @@ class ReleaseContractTests(unittest.TestCase):
         for value in (
             'metadata.version("fonttools") == "4.65.0"',
             'metadata.version("matplotlib") == "3.11.2"',
-            'metadata.version("pandas") == "3.0.6"',
+            'metadata.version("pandas") == "3.1.1"',
             'metadata.version("tqdm") == "4.70.1"',
             'metadata.version("uvicorn") == "0.54.0"',
             'matplotlib.use("Agg")',
@@ -250,11 +250,11 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_github_cli_uses_official_release_archive(self):
         self.assertNotIn("AS github-cli-builder", self.dockerfile)
-        self.assertIn("ARG GITHUB_CLI_VERSION=2.103.3", self.dockerfile)
+        self.assertIn("ARG GITHUB_CLI_VERSION=2.104.0", self.dockerfile)
         self.assertIn("${GH_SHA256}  /tmp/gh.tar.gz", self.dockerfile)
         self.assertIn(
-            "FROM node:24.22.2-trixie-slim@sha256:"
-            "54f84b4cf8432b21aaffd5d3ce8d41e12cea0d10d33c09d2f3c9879d49d6b446",
+            "FROM node:24.22.3-trixie-slim@sha256:"
+            "af02d57b57719b9657a45199a79264a9437940cd55b3c7b3fc99615654f124a0",
             self.dockerfile,
         )
         self.assertIn("gh_${GITHUB_CLI_VERSION}_linux_${TARGETARCH}.tar.gz", self.dockerfile)
@@ -459,10 +459,10 @@ class ReleaseContractTests(unittest.TestCase):
             with self.subTest(lighthouse_consumer=value):
                 self.assertIn(value, self.smoke)
         for assertion in (
-            'assert metadata.version("playwright") == "1.64.1"',
+            'assert metadata.version("playwright") == "1.65.2"',
             'assert metadata.version("uvicorn") == "0.54.0"',
             'assert metadata.version("python-dotenv") == "1.2.4"',
-            'assert metadata.version("Markdown") == "3.11.2"',
+            'assert metadata.version("Markdown") == "3.11.3"',
             'assert metadata.version("opentelemetry-api") == "1.45.1"',
             'assert metadata.version("packaging") == "26.3"',
             'assert metadata.version("pip") == "26.3"',
@@ -595,7 +595,7 @@ class ReleaseContractTests(unittest.TestCase):
 
     def test_wrangler_miniflare_sharp_is_native_and_owner_guarded_without_overlay(self):
         for value in (
-            "ARG WRANGLER_MINIFLARE_VERSION=5.20261103.0-beta",
+            "ARG WRANGLER_MINIFLARE_VERSION=5.20261113.0-beta",
             "ARG WRANGLER_SHARP_VERSION=0.35.5",
             "ARG WRANGLER_SHARP_LIBVIPS_VERSION=1.3.4",
             "io.holycode.version.wrangler-miniflare",
@@ -607,9 +607,9 @@ class ReleaseContractTests(unittest.TestCase):
             "sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw==",
             "sha512-Y3dgX/6lE2QhQb+Gxy0WZxfg9MEm/JBjamZpS2IklP7xIQoKN4hzAm7KcMVGtaVDt3neE9OKBC7vAfonA/Lr1A==",
             'npm view "wrangler@${WRANGLER_VERSION}" dependencies.miniflare)" = "${WRANGLER_MINIFLARE_VERSION}"',
-            'npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261103.1"',
+            'npm view "wrangler@${WRANGLER_VERSION}" dependencies.workerd)" = "1.20261113.1"',
             'npm view "wrangler@${WRANGLER_VERSION}" dependencies.esbuild)" = "0.28.2"',
-            'npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261103.1"',
+            'npm view "miniflare@${WRANGLER_MINIFLARE_VERSION}" dependencies.workerd)" = "1.20261113.1"',
             'dependencies.sharp!==process.argv[3]',
             "WRANGLER_SHARP_TARBALL",
             "WRANGLER_SHARP_NATIVE_TARBALL",
@@ -664,7 +664,7 @@ class ReleaseContractTests(unittest.TestCase):
             "EXPECTED_WRANGLER_SHARP_LIBVIPS",
             "/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json",
             "/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json",
-            'pkg.version!==\\"1.20261103.1\\"',
+            'pkg.version!==\\"1.20261113.1\\"',
             "workerd_count=0",
             '$(find /usr/local/lib/node_modules -path "*/workerd/package.json" -type f | sort)',
             'test "$workerd_count" -gt 0',
@@ -1069,11 +1069,11 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("chromium-sandbox", self.dockerfile)
         self.assertIn("test -u /usr/lib/chromium/chrome-sandbox", self.dockerfile)
 
-    def test_v1_3_0_uses_v1_2_9_as_its_git_predecessor(self):
-        self.assertIn("RELEASE_VERSION: v1.3.0", self.protected)
-        self.assertIn("PREVIOUS_VERSION: v1.2.9", self.protected)
+    def test_v1_3_1_uses_v1_3_0_as_its_git_predecessor(self):
+        self.assertIn("RELEASE_VERSION: v1.3.1", self.protected)
+        self.assertIn("PREVIOUS_VERSION: v1.3.0", self.protected)
         self.assertIn(
-            "coderluii/holycode:1.2.9@sha256:3d0bdce2a62f4eb6a5b03ec644b608d2c370da143474c6c6a81474ef1a16c439",
+            "coderluii/holycode:1.3.0@sha256:0e720fccf15fe4a9c122d8c1b589812a11437e82376be4620341814d15f75b6f",
             self.protected,
         )
         self.assertIn("needs: release-validation", self.publish)
@@ -1095,11 +1095,11 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.1.9.md").is_file())
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.2.0.md").is_file())
         self.assertTrue((ROOT / "docs" / "dependency-audit-v1.2.1.md").is_file())
-        self.assertIn("v1.3.0 release pins", self.readme)
-        self.assertIn("dependency-audit-v1.3.0.md", self.readme)
-        self.assertIn("v1.3.0", self.dockerhub)
-        self.assertIn("@anthropic-ai/claude-code@2.1.318", self.readme)
-        self.assertIn("@anthropic-ai/claude-code@2.1.318", self.dockerhub)
+        self.assertIn("v1.3.1 release pins", self.readme)
+        self.assertIn("dependency-audit-v1.3.1.md", self.readme)
+        self.assertIn("v1.3.1", self.dockerhub)
+        self.assertIn("@anthropic-ai/claude-code@2.1.325", self.readme)
+        self.assertIn("@anthropic-ai/claude-code@2.1.325", self.dockerhub)
         self.assertIn("Linux Python 3.13 hash locks", audit)
         self.assertIn("Do not modify third-party package code or manifests", audit)
         self.assertIn("trace-engine 0.0.67", audit)
@@ -1153,40 +1153,40 @@ class ReleaseContractTests(unittest.TestCase):
             with self.subTest(security_policy=value):
                 self.assertIn(value, audit)
         for value in (
-            "@anthropic-ai/claude-code@2.1.318",
-            "Version: 0.66.2",
-            "Wrangler owns Miniflare 5.20261103.0-beta, workerd 1.20261103.1, and esbuild",
-            "Version: 0.74.5",
-            "Version: 2.103.3",
+            "@anthropic-ai/claude-code@2.1.325",
+            "Version: 0.66.3",
+            "Wrangler owns Miniflare 5.20261113.0-beta, workerd 1.20261113.1, and esbuild",
+            "Version: 0.75.0",
+            "Version: 2.104.0",
             "Playwright",
-            "Version: 1.64.1",
+            "Version: 1.65.2",
             "pandas",
-            "Version: 3.0.6",
+            "Version: 3.1.1",
         ):
             with self.subTest(notice=value):
                 self.assertIn(value, self.notices)
 
-    def test_current_translation_summaries_match_v1_3_0(self):
+    def test_current_translation_summaries_match_v1_3_1(self):
         for path in sorted((ROOT / "docs" / "translations").glob("README.*.md")):
             translation = path.read_text(encoding="utf-8")
             with self.subTest(translation=path.name):
                 for value in (
-                    "v1.3.0",
-                    "| Node.js | 24.22.2 (LTS) |",
+                    "v1.3.1",
+                    "| Node.js | 24.22.3 (LTS) |",
                     "OpenCode 1.19.5",
                     "OpenSpec 1.14.3",
-                    "Claude Code 2.1.318",
-                    "pnpm 12.16.1",
-                    "Wrangler 4.157.0",
-                    "Miniflare 5.20261103.0-beta",
-                    "workerd 1.20261103.1",
-                    "Playwright 1.64.1",
-                    "`1.2.9`",
+                    "Claude Code 2.1.325",
+                    "pnpm 12.21.0",
+                    "Wrangler 4.162.0",
+                    "Miniflare 5.20261113.0-beta",
+                    "workerd 1.20261113.1",
+                    "Playwright 1.65.2",
+                    "`1.3.0`",
                 ):
                     self.assertIn(value, translation)
 
     def test_release_apt_refresh_matches_preparation_date(self):
-        self.assertIn("ARG RELEASE_APT_REFRESH=2026-11-05", self.dockerfile)
+        self.assertIn("ARG RELEASE_APT_REFRESH=2026-11-16", self.dockerfile)
 
     def test_openspec_is_pinned_installed_and_telemetry_disabled(self):
         self.assertIn(
@@ -1484,14 +1484,14 @@ class ReleaseContractTests(unittest.TestCase):
             "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2"
         )
         self.assertIn(upload_artifact, self.protected)
-        self.assertIn("node-version: 24.22.2", self.pr_validation)
-        self.assertIn("node-version: 24.22.2", self.protected)
+        self.assertIn("node-version: 24.22.3", self.pr_validation)
+        self.assertIn("node-version: 24.22.3", self.protected)
         self.assertIn(
-            "docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0",
+            "docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0",
             self.publish,
         )
         self.assertIn(
-            "docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0",
+            "docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0",
             self.protected,
         )
         self.assertIn("Trivy fixable critical and high gate", self.protected)
@@ -1549,10 +1549,10 @@ class ReleaseContractTests(unittest.TestCase):
         for workflow in (self.protected,):
             for value in (
                 "trivy_arch: 64bit",
-                "trivy_sha256: c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0",
+                "trivy_sha256: bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf",
                 "trivy_arch: ARM64",
-                "trivy_sha256: e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f",
-                "TRIVY_VERSION: 0.76.1",
+                "trivy_sha256: ab9d51f86e6a5fb936f605faff6b593ac51bc378fff4d3e8b9d58358b9c367c3",
+                "TRIVY_VERSION: 0.76.2",
                 "aquasecurity/trivy/releases/download/v${TRIVY_VERSION}",
             ):
                 with self.subTest(value=value):
@@ -1597,12 +1597,53 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("ts.createProgram", self.smoke)
         self.assertIn('pnpm --version | grep -Fx "$EXPECTED_PNPM"', self.smoke)
         self.assertIn(
-            'node -e "console.log(require(\\"/usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json\\").version)" | grep -Fx "6.29.1"',
+            'pnpm bundled Undici version mismatch: expected 7.30.2',
             self.smoke,
         )
         self.assertIn("pnpm install --offline --ignore-scripts", self.smoke)
         self.assertIn("pnpm-lock.yaml", self.smoke)
         self.assertIn("pnpm run verify", self.smoke)
+
+    def test_pnpm_bundled_undici_guard_matches_the_official_payload(self):
+        fixture = json.loads(
+            (ROOT / "tests" / "fixtures" / "pnpm-12.21.0.json").read_text(encoding="utf-8")
+        )
+        version = re.search(r"^ARG PNPM_VERSION=(\S+)$", self.dockerfile, re.MULTILINE).group(1)
+        self.assertEqual(fixture["pnpm"]["version"], version)
+        policy = json.loads((ROOT / "config" / "npm-global-script-policy.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            fixture["pnpm"]["dist"]["integrity"],
+            policy["blockedScripts"][f"pnpm@{version}"]["integrity"],
+        )
+        bundled = fixture["bundledUndici"]
+        self.assertEqual(
+            bundled["manifestSha256"],
+            hashlib.sha256(bundled["manifestText"].encode("utf-8")).hexdigest(),
+        )
+        manifest = json.loads(bundled["manifestText"])
+        self.assertEqual("undici", manifest["name"])
+        self.assertEqual(bundled["version"], manifest["version"])
+        guard = re.search(r"node -e '([^'\n]*pnpm bundled Undici version mismatch[^'\n]*)'", self.smoke)
+        self.assertIsNotNone(guard)
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node is required for the extracted pnpm guard fixture")
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory) / "package.json"
+            package.write_text(bundled["manifestText"], encoding="utf-8")
+            script = guard.group(1).replace(
+                '"/usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json"',
+                json.dumps(package.as_posix()),
+            )
+            result = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=10)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual(bundled["version"], result.stdout.strip())
+            for wrong in ("6.29.1", "7.30.3"):
+                with self.subTest(version=wrong):
+                    package.write_text(json.dumps({**manifest, "version": wrong}), encoding="utf-8")
+                    result = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=10)
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertIn("pnpm bundled Undici version mismatch", result.stderr)
 
     def test_non_python_runtime_behavior_contracts_are_exercised(self):
         for value in (
@@ -1763,11 +1804,11 @@ class ReleaseContractTests(unittest.TestCase):
         policy = json.loads((ROOT / "config" / "npm-global-script-policy.json").read_text(encoding="utf-8"))
         self.assertEqual(policy["npmVersion"], "12.2.2")
         self.assertEqual(
-            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.318"]["integrity"],
-            "sha512-OTJgLxcvWefv8IdTsq5n90Z2IxEhLwKqHUBhwZYE4odXzKA/Tb6p2Zb5Iy9Vq7JIVcNZzn9cPxW5sb42wLF95Q==",
+            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.325"]["integrity"],
+            "sha512-OUxCb0sx734zJh9zGTP9oF01gZ44DCGFaw7hgD4byepjRRGyvHzgUOwC7dlCgVIljV6CiEVDjq+anY3GUvKFQw==",
         )
         self.assertEqual(
-            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.318"]["scripts"],
+            policy["allowScripts"]["@anthropic-ai/claude-code@2.1.325"]["scripts"],
             {"postinstall": "node install.cjs"},
         )
         self.assertEqual(
@@ -1777,18 +1818,18 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertNotIn("esbuild@0.28.1", policy["blockedScripts"])
         self.assertIn("esbuild@0.28.2", policy["blockedScripts"])
         self.assertEqual(
-            policy["blockedScripts"]["workerd@1.20261103.1"]["integrity"],
-            "sha512-GgcAnUH94uY8BEDc7CUyX3qsuLVbiidV+SZqJhasxbKi+f2dtR5xrgBC18uLbnaBFarlNFCYfr8JAIL2xJpnZw==",
+            policy["blockedScripts"]["workerd@1.20261113.1"]["integrity"],
+            "sha512-FJP8Bm1jiiJTE2xpSIhT9JkMaKzU54y9Jk0q7n3BLWyWdUNsn35QGCqARcqXGwO3FGkvahhYqUEG2bJzlgcfhw==",
         )
         self.assertNotIn("pnpm@12.14.0", policy["blockedScripts"])
-        self.assertIn("pnpm@12.16.1", policy["blockedScripts"])
+        self.assertIn("pnpm@12.21.0", policy["blockedScripts"])
         self.assertEqual(
-            policy["blockedScripts"]["pnpm@12.16.1"]["scripts"],
+            policy["blockedScripts"]["pnpm@12.21.0"]["scripts"],
             {"preinstall": "node install.js", "postinstall": "node install.js"},
         )
         self.assertEqual(
-            policy["blockedScripts"]["pnpm@12.16.1"]["integrity"],
-            "sha512-CR0d7nknV1Zhsl2rPCrjHK/BxU1rce1qZgDPDByxBDSkR+rhQBXxsj4ua+3u1535SpMuIWTSgyKA3OP7MvZW0Q==",
+            policy["blockedScripts"]["pnpm@12.21.0"]["integrity"],
+            "sha512-Zv2CeO4ok1zpUXktNDZ/869cQyonVkRYIwKVM4NbjaUpu+C+UTCv1W7QcT+4eJ5Hutgtk71a4v5UsVVi1idu8A==",
         )
         self.assertIn("prisma@7.10.1", policy["blockedScripts"])
         self.assertIn("@prisma/engines@7.10.1", policy["blockedScripts"])

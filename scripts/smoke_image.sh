@@ -365,17 +365,17 @@ from tqdm import tqdm
 import uvicorn
 
 assert metadata.version("numpy") == "$EXPECTED_NUMPY"
-assert metadata.version("playwright") == "1.64.1"
+assert metadata.version("playwright") == "1.65.2"
 assert metadata.version("requests") == "2.34.2"
 assert metadata.version("Pillow") == "13.0.0"
-assert metadata.version("pandas") == "3.0.6"
+assert metadata.version("pandas") == "3.1.1"
 assert metadata.version("matplotlib") == "3.11.2"
 assert metadata.version("fonttools") == "4.65.0"
 assert metadata.version("tqdm") == "4.70.1"
-assert metadata.version("fastapi") == "0.143.5"
+assert metadata.version("fastapi") == "0.163.1"
 assert metadata.version("uvicorn") == "0.54.0"
 assert metadata.version("python-dotenv") == "1.2.4"
-assert metadata.version("Markdown") == "3.11.2"
+assert metadata.version("Markdown") == "3.11.3"
 assert metadata.version("opentelemetry-api") == "1.45.1"
 assert metadata.version("packaging") == "26.3"
 assert metadata.version("wheel") == "0.48.0"
@@ -508,7 +508,7 @@ PY
   jq -e ".loggedIn == false and .authMethod == \"none\"" /tmp/claude-auth-status.json >/dev/null
 
   pnpm --version | grep -Fx "$EXPECTED_PNPM"
-  node -e "console.log(require(\"/usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json\").version)" | grep -Fx "6.29.1"
+  node -e 'const pkg=require("/usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json"); if(pkg.version!=="7.30.2") {console.error("pnpm bundled Undici version mismatch: expected 7.30.2, got "+pkg.version);process.exit(1)}; console.log(pkg.version)'
   tsc --version | grep -Fx "Version $EXPECTED_TYPESCRIPT"
   command -v tsserver
   typescript_workspace="$(mktemp -d)"
@@ -597,9 +597,9 @@ EOF
   wrangler_miniflare_package=/usr/local/lib/node_modules/wrangler/node_modules/miniflare/package.json
   wrangler_workerd_package=/usr/local/lib/node_modules/wrangler/node_modules/workerd/package.json
   wrangler_sharp_dir=/usr/local/lib/node_modules/wrangler/node_modules/sharp
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261103.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261103.1\") process.exit(1)" "$wrangler_miniflare_package"
-  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261103.1\") process.exit(1)" "$wrangler_workerd_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER || pkg.dependencies.miniflare!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.workerd!==\"1.20261113.1\" || pkg.dependencies.esbuild!==\"0.28.2\") process.exit(1)" "$wrangler_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_MINIFLARE || pkg.dependencies.sharp!==process.env.EXPECTED_WRANGLER_SHARP || pkg.dependencies.workerd!==\"1.20261113.1\") process.exit(1)" "$wrangler_miniflare_package"
+  node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261113.1\") process.exit(1)" "$wrangler_workerd_package"
   node -e "const pkg=require(process.argv[1]); if(pkg.version!==process.env.EXPECTED_WRANGLER_SHARP) process.exit(1)" "$wrangler_sharp_dir/package.json"
   case "$(uname -m)" in
     x86_64) wrangler_sharp_arch=x64 ;;
@@ -723,7 +723,7 @@ EOF
   workerd_count=0
   while IFS= read -r package_json; do
     workerd_dir="${package_json%/package.json}"
-    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261103.1\") process.exit(1)" "$package_json"
+    node -e "const pkg=require(process.argv[1]); if(pkg.version!==\"1.20261113.1\") process.exit(1)" "$package_json"
     test -x "$workerd_dir/bin/workerd"
     "$workerd_dir/bin/workerd" --version >/dev/null
     workerd_count=$((workerd_count + 1))

@@ -36,7 +36,7 @@ gh workflow run docker-publish.yml --ref main -f mode=validate
 
 ## Prepare and deliver a release
 
-1. Select the next single-digit version, such as `v1.3.1` after `v1.3.0`.
+1. Select the next single-digit version, such as `v1.3.2` after `v1.3.1`.
 2. Update `ARG RELEASE_VERSION` in `Dockerfile` and the matching workflow `RELEASE_VERSION`. Update workflow `PREVIOUS_VERSION` and `PREVIOUS_IMAGE` to the actual published predecessor and its verified immutable digest. The pin validator checks agreement. Do not edit historical audits to make a new release pass.
 3. Update the changelog, dependency audit, affected public docs and runtime fixtures. Keep accepted upstream findings explicit; acceptance is not a fix or safety claim.
 4. Finish local checks, commit the coherent release change directly on `main` with subject `vX.Y.Z`, and push only when authorized. Other reviewed main commits may exist since the previous release. The workflow checks ancestry and exact source, not an arbitrary commit count. Do not invent a release PR to work around rules.

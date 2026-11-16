@@ -1,4 +1,4 @@
-# Unreleased dependency corrections
+# Dependency correction background
 
 ## Paperclip-owned Cursor SDK 1.4.0
 
@@ -10,4 +10,4 @@ Local Linux verification under Node 24.22.2 and npm 12.2.2 installed the officia
 
 The version guard still rejects an unexpected SDK version. Keep that strict check: changing the expectation requires official package integrity and consumer compatibility evidence, not merely a newer registry version. Before another expensive native build, check owner-graph changes under the pinned package manager in a disposable prefix.
 
-This is unreleased source maintenance. Published v1.3.0 images, assets and historical dependency audits remain unchanged. Run the complete validation-only native workflow on the corrected source, then repeat comparable successful timing measurements before claiming faster full releases. Product publication remains a separate explicit action.
+This correction passed native validation before v1.3.1 release preparation. Published v1.3.0 images, assets and historical dependency audits remain unchanged. The [v1.3.1 audit](dependency-audit-v1.3.1.md) records the new release scope and required source-bound native qualification. Earlier validation samples do not qualify a changed release image.

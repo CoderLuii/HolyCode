@@ -30,7 +30,7 @@
 
 OpenCode running in a container with everything already installed. 50+ dev tools, 10+ AI providers, a sandboxed headless browser, persistent state, and Paperclip on top. Drop it on any machine and pick up exactly where you left off.
 
-**Chromium update.** v1.3.0 builds require official Debian `chromium`, `chromium-common`, and `chromium-sandbox` `156.0.8078.79-1~deb13u1` or newer on AMD64 and ARM64. Earlier images still need an upgrade; pull and restart to apply it. Fresh release scans determine which accepted upstream findings remain; this is not a zero-vulnerability claim. Avoid untrusted browser content and automation while known findings remain; see [the dependency audit](docs/dependency-audit-v1.3.0.md#security-delivery-policy). Keep the unprivileged user, setuid sandbox, seccomp profile, and closed browser port.
+**Chromium update.** v1.3.1 builds require official Debian `chromium`, `chromium-common`, and `chromium-sandbox` `156.0.8078.79-1~deb13u1` or newer on AMD64 and ARM64. Earlier images still need an upgrade; pull and restart to apply it. Fresh release scans determine which accepted upstream findings remain; this is not a zero-vulnerability claim. Avoid untrusted browser content and automation while known findings remain; see [the dependency audit](docs/dependency-audit-v1.3.1.md#security-delivery-policy). Keep the unprivileged user, setuid sandbox, seccomp profile, and closed browser port.
 
 Maintainer releases use one manual native AMD64/ARM64 workflow. Validate locally before pushing; then qualify one candidate and promote those exact images. See the [release guide](docs/local-validation.md) and [measured workflow results](docs/release-workflow-review.md).
 
@@ -469,7 +469,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 
 | Runtime | Version |
 |---------|---------|
-| Node.js | 24.22.2 (LTS) |
+| Node.js | 24.22.3 (LTS) |
 | npm | 12.2.2 |
 | Python | 3.13 (Trixie) |
 | pip | Bundled with Python 3.13 |
@@ -477,7 +477,7 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 </details>
 
 <details>
-<summary><strong>v1.3.0 release pins</strong></summary>
+<summary><strong>v1.3.1 release pins</strong></summary>
 
 | Component | Version |
 |-----------|---------|
@@ -485,18 +485,18 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | OpenSpec | 1.14.3; telemetry disabled, initialize a project explicitly with `openspec init --tools opencode` |
 | npm | 12.2.2 official payload, with its own node-gyp 13.0.0 and Undici 6.29.1; no dependency overlays |
 | PM2 | 7.1.2 official payload with upstream-owned `js-yaml` 4.3.2; no `get-uri`, `basic-ftp`, or dependency overlays |
-| Paperclip | 2026.831.1 compatibility hold; unreleased source expects Cursor SDK 1.4.0 and its jsdom/Undici 30.1.3/8.12.4 graph is checked without an Undici replacement; no new migration or native-runner default override |
+| Paperclip | 2026.831.1 compatibility hold; official Cursor SDK 1.4.0 and jsdom/Undici 30.1.3/8.12.4 graphs are checked without an Undici replacement; no new migration or native-runner default override |
 | Hermes | Bundled service temporarily removed; existing `.hermes` data is preserved |
 | CLIProxyAPI | Bundled sidecar removed; external endpoints remain supported |
 | s6-overlay | 3.2.3.2 |
 | eza | 0.23.5 |
-| fzf | 0.74.5 |
-| lazygit / delta | 0.66.2 / 0.20.1, official checksum-verified release binaries |
-| pnpm | 12.16.1 |
-| Vite | 8.3.5 |
-| ESLint | 10.13.0 |
-| Prettier | 3.9.10 |
-| Wrangler | 4.157.0 with Miniflare 5.20261103.0-beta, workerd 1.20261103.1, and upstream-owned, integrity-verified `sharp` 0.35.5; legacy service environments are not supported |
+| fzf | 0.75.0 |
+| lazygit / delta | 0.66.3 / 0.20.1, official checksum-verified release binaries |
+| pnpm | 12.21.0 |
+| Vite | 8.3.8 |
+| ESLint | 10.15.0 |
+| Prettier | 3.10.1 |
+| Wrangler | 4.162.0 with Miniflare 5.20261113.0-beta, workerd 1.20261113.1, and upstream-owned, integrity-verified `sharp` 0.35.5; legacy service environments are not supported |
 | Prisma | 7.10.1 with its published `deepmerge-ts` 8.0.2 and `mysql2` 3.24.4 dependency graph |
 | Lighthouse | 13.6.0 with trace engine 0.0.67 and upstream-declared `third-party-web` 0.30.0; no `legacy-javascript` |
 | pip | 26.3 official payload; vendored msgpack 1.2.4, pkg_resources from setuptools 70.3.0, urllib3 2.8.0, and certifi 2026.10.23; no vendor repairs |
@@ -504,22 +504,24 @@ Prefer Podman? HolyCode uses the same container image there too. The Podman guid
 | Netlify CLI and `serve` | Removed |
 | Hermes, Vercel, sharp-cli, concurrently, LHCI | Not bundled |
 | Matplotlib / tqdm | 3.11.2 / 4.70.1 |
-| FastAPI / Uvicorn | 0.143.5 / 0.54.0 |
-| Playwright / pandas | 1.64.1 / 3.0.6 |
-| Claude stable | 2.1.318 |
-| GitHub CLI | 2.103.3, official checksum-verified release archive |
+| FastAPI / Uvicorn | 0.163.1 / 0.54.0 |
+| Playwright / pandas | 1.65.2 / 3.1.1 |
+| Claude stable | 2.1.325 |
+| GitHub CLI | 2.104.0, official checksum-verified release archive |
 | tsx | 4.23.15 |
 | TypeScript | 6.0.3, held because TypeScript 7 removes the `tsserver` command and changes the stable programmatic API surface |
-| NumPy | 2.5.4 on Python 3.13 |
+| NumPy | 2.5.5 on Python 3.13 |
 | json-server | 0.17.4, held on the stable release instead of the 1.0 beta |
 | opencode-claude-auth default | 2.2.1, integrity-verified and installed offline from the image; issue #11 closed after the reporter switched plugins, with no verified Claude Auth fix |
 | oh-my-openagent | HolyCode-managed installation suspended; legacy active entry disabled once while settings, skills, and cache remain |
 
 The official npm, PM2 and pip distributions keep their published dependency graphs. Native AMD64 and ARM64 consumer checks are release gates; see the release assets for the tested image identities and results.
 
-Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. Manual main-branch validation also runs Docker Scout and Trivy natively on AMD64 and ARM64 before a tag is created. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
+Release assets use digests, checksums, and action SHAs for hardening. npm lifecycle scripts are installed disabled, then their exact package version, integrity, architecture, and script body are validated before the approved scripts run. Manual main-branch validation also runs Docker Scout and Trivy natively on AMD64 and ARM64 before release promotion or publication. HolyCode publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans, but it does not claim universal freshness or that future rebuilds will retain the same scanner result.
 
-The dated adoption, hold, and removal decisions, plus the required release gates, are in the [v1.3.0 dependency audit](docs/dependency-audit-v1.3.0.md).
+OpenSpec stays on 1.14.3; its 2.0 migration needs separate command and project-format compatibility checks.
+
+The dated adoption, hold, and removal decisions, plus the required release gates, are in the [v1.3.1 dependency audit](docs/dependency-audit-v1.3.1.md).
 
 </details>
 
@@ -779,7 +781,7 @@ Plugin cache is mounted separately at `./local-cache/opencode` by default so you
 
 Rebuild the container anytime. Run `docker compose pull && docker compose up -d` and your sessions, settings, and configs come back automatically.
 
-The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.318`. npm lifecycle scripts are disabled during installation. HolyCode validates each script package's version, integrity, architecture, and script body before running only the approved OpenCode, Claude Code, and Paperclip embedded PostgreSQL steps. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file, and new virtual environments can bootstrap audited packaging tools from the image's offline seed. Debian packages still resolve from current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. User-installed plugins remain outside the image SBOM. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising universal freshness or zero total findings.
+The Dockerfile pins direct npm, PyPI, and GitHub-release versions. Binary release assets use checksums, container bases use digests, and GitHub Actions use commit SHAs. Claude Code is installed from `@anthropic-ai/claude-code@2.1.325`. npm lifecycle scripts are disabled during installation. HolyCode validates each script package's version, integrity, architecture, and script body before running only the approved OpenCode, Claude Code, and Paperclip embedded PostgreSQL steps. The supported Claude Auth plugin is included as an integrity-verified offline payload. Python packages use a hash-locked requirements file, and new virtual environments can bootstrap audited packaging tools from the image's offline seed. Debian packages still resolve from current Trixie repositories at build time, so a later rebuild is not guaranteed to be byte-for-byte identical. User-installed plugins remain outside the image SBOM. Each release publishes per-platform SBOM and provenance attestations and runs per-platform vulnerability scans without promising universal freshness or zero total findings.
 
 **SQLite WAL note.** The sessions database uses Write-Ahead Logging. Don't copy the `.db` file while the container is running. Stop the container first if you need to back up or migrate the database file.
 
@@ -848,7 +850,7 @@ docker compose pull
 docker compose up -d
 ```
 
-`v1.3.0` keeps Paperclip at 2026.831.1, so this release adds no Paperclip migration or native-runner default override. To roll back, stop the stack, select `coderluii/holycode:1.2.9`, restore the untouched home, local-cache, and workspace copies you made before upgrading, and start the stack again. Do not reuse volumes that the newer image has already started against when testing the rollback.
+`v1.3.1` keeps Paperclip at 2026.831.1, so this release adds no Paperclip migration or native-runner default override. To roll back, stop the stack, select `coderluii/holycode:1.3.0`, restore the untouched home, local-cache, and workspace copies you made before upgrading, and start the stack again. Do not reuse volumes that the newer image has already started against when testing the rollback.
 
 `v1.1.9` upgrades Paperclip from 2026.824.1 to 2026.831.1 and applies migrations `0223` through `0230`. Migrations remove the retired `brandColor` and `attachmentMaxBytes` company fields, reset transient in-progress login sessions, and require users to restart login. Keep your untouched pre-upgrade copies until onboarding, Skills, agents, projects, workspaces, connections, and provider authentication pass your checks.
 

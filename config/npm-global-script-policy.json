@@ -22,12 +22,12 @@
       },
       "reason": "Paperclip requires the packaged PostgreSQL library symlinks before it drops to the unprivileged runtime user."
     },
-    "@anthropic-ai/claude-code@2.1.318": {
+    "@anthropic-ai/claude-code@2.1.325": {
       "architectures": [
         "amd64",
         "arm64"
       ],
-      "integrity": "sha512-OTJgLxcvWefv8IdTsq5n90Z2IxEhLwKqHUBhwZYE4odXzKA/Tb6p2Zb5Iy9Vq7JIVcNZzn9cPxW5sb42wLF95Q==",
+      "integrity": "sha512-OUxCb0sx734zJh9zGTP9oF01gZ44DCGFaw7hgD4byepjRRGyvHzgUOwC7dlCgVIljV6CiEVDjq+anY3GUvKFQw==",
       "scripts": {
         "postinstall": "node install.cjs"
       },
@@ -101,23 +101,23 @@
       },
       "reason": "The packaged Prisma engine is verified by the CLI smoke test."
     },
-    "workerd@1.20261103.1": {
+    "workerd@1.20261113.1": {
       "architectures": [
         "amd64",
         "arm64"
       ],
-      "integrity": "sha512-GgcAnUH94uY8BEDc7CUyX3qsuLVbiidV+SZqJhasxbKi+f2dtR5xrgBC18uLbnaBFarlNFCYfr8JAIL2xJpnZw==",
+      "integrity": "sha512-FJP8Bm1jiiJTE2xpSIhT9JkMaKzU54y9Jk0q7n3BLWyWdUNsn35QGCqARcqXGwO3FGkvahhYqUEG2bJzlgcfhw==",
       "scripts": {
         "postinstall": "node install.js"
       },
       "reason": "Wrangler ships the platform binary, which is executed directly during validation."
     },
-    "pnpm@12.16.1": {
+    "pnpm@12.21.0": {
       "architectures": [
         "amd64",
         "arm64"
       ],
-      "integrity": "sha512-CR0d7nknV1Zhsl2rPCrjHK/BxU1rce1qZgDPDByxBDSkR+rhQBXxsj4ua+3u1535SpMuIWTSgyKA3OP7MvZW0Q==",
+      "integrity": "sha512-Zv2CeO4ok1zpUXktNDZ/869cQyonVkRYIwKVM4NbjaUpu+C+UTCv1W7QcT+4eJ5Hutgtk71a4v5UsVVi1idu8A==",
       "scripts": {
         "preinstall": "node install.js",
         "postinstall": "node install.js"
