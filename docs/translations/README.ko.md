@@ -24,6 +24,8 @@
 
 </p>
 
+<p align="center"><a href="https://holyarrs.com/sponsor"><img src="https://holyarrs.com/sponsors/holycode.gif" alt="Sponsors"></a></p>
+
 ### 하나의 컨테이너. 모든 도구. 어떤 프로바이더든.
 
 OpenCode가 컨테이너 안에서 실행되며 모든 것이 이미 설치되어 있습니다. 50개 이상의 개발 도구, 10개 이상의 AI 프로바이더, 헤드리스 브라우저, 영속 상태. 어떤 머신에든 배포하고 정확히 멈춘 곳에서 다시 시작하세요.

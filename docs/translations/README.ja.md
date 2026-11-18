@@ -24,6 +24,8 @@
 
 </p>
 
+<p align="center"><a href="https://holyarrs.com/sponsor"><img src="https://holyarrs.com/sponsors/holycode.gif" alt="Sponsors"></a></p>
+
 ### ひとつのコンテナ。すべてのツール。あらゆるプロバイダー。
 
 OpenCode がコンテナ内で動作し、すべてが事前にインストール済み。50以上の開発ツール、10以上のAIプロバイダー、ヘッドレスブラウザ、永続状態。どのマシンにでも展開して、止めたところから正確に再開できます。

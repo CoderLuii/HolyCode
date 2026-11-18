@@ -24,6 +24,8 @@
 
 </p>
 
+<p align="center"><a href="https://holyarrs.com/sponsor"><img src="https://holyarrs.com/sponsors/holycode.gif" alt="Sponsors"></a></p>
+
 ### एक कंटेनर। हर टूल। कोई भी प्रोवाइडर।
 
 OpenCode एक कंटेनर में चलता है जिसमें सब कुछ पहले से इंस्टॉल है। 50+ dev टूल, 10+ AI प्रोवाइडर, हेडलेस ब्राउज़र, परसिस्टेंट स्टेट। किसी भी मशीन पर डालें और ठीक वहीं से शुरू करें जहाँ छोड़ा था।

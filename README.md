@@ -24,6 +24,8 @@
 
 </p>
 
+<p align="center"><a href="https://holyarrs.com/sponsor"><img src="https://holyarrs.com/sponsors/holycode.gif" alt="Sponsors"></a></p>
+
 ### One container. Every tool. Any provider.
 
 > **Stop maintaining. Start building.** A hosted AI workstation. Always-on Linux box. [holycode.cloud](https://holycode.cloud/?ref=hcode-readme)

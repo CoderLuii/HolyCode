@@ -24,6 +24,8 @@
 
 </p>
 
+<p align="center"><a href="https://holyarrs.com/sponsor"><img src="https://holyarrs.com/sponsors/holycode.gif" alt="Sponsors"></a></p>
+
 ### Un contenedor. Todas las herramientas. Cualquier proveedor.
 
 OpenCode ejecutándose en un contenedor con todo ya instalado. Más de 50 herramientas de desarrollo, más de 10 proveedores de IA, navegador sin cabeza, estado persistente. Ponlo en cualquier máquina y continúa exactamente donde lo dejaste.

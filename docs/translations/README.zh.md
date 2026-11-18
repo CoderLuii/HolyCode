@@ -24,6 +24,8 @@
 
 </p>
 
+<p align="center"><a href="https://holyarrs.com/sponsor"><img src="https://holyarrs.com/sponsors/holycode.gif" alt="Sponsors"></a></p>
+
 ### 一个容器。所有工具。任意提供商。
 
 OpenCode 在容器中运行，一切都已预先安装。50+ 开发工具，10+ AI 提供商，无头浏览器，持久状态。部署到任何机器上，从上次离开的地方继续。

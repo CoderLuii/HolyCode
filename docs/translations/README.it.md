@@ -24,6 +24,8 @@
 
 </p>
 
+<p align="center"><a href="https://holyarrs.com/sponsor"><img src="https://holyarrs.com/sponsors/holycode.gif" alt="Sponsors"></a></p>
+
 ### Un container. Tutti gli strumenti. Qualsiasi provider.
 
 OpenCode in esecuzione in un container con tutto già installato. 50+ strumenti di sviluppo, 10+ provider AI, browser headless, stato persistente. Portalo su qualsiasi macchina e riprendi esattamente da dove avevi lasciato.
